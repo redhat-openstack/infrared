@@ -1,43 +1,65 @@
 ---
-- name: get cloud variables
-  shell: |
-      for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
-      source {{ auth_file_path }}
-      echo -n "{{ cloudname }}: \
-        {'auth': \
-          { 'auth_url': '$OS_AUTH_URL', \
-            'username': '$OS_USERNAME', \
-            'password': '$OS_PASSWORD', \
-            $(if [ -n "$OS_USER_DOMAIN_NAME" ]; then echo "'user_domain_name': '${OS_USER_DOMAIN_NAME}',"; fi) \
-            $(if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then echo "'project_domain_name': '${OS_PROJECT_DOMAIN_NAME}',"; fi) \
-            'project_name': '${OS_PROJECT_NAME:-$OS_TENANT_NAME}' \
-          } $(if [ -n "$OS_IDENTITY_API_VERSION" ]; then echo ", 'identity_api_version': '${OS_IDENTITY_API_VERSION}'"; fi) }"
-  register: cloud_details
+# From 17 tripleo generates clouds.yaml, so just copy it
+- block:
+    - name: obtain generated clouds.yaml
+      fetch:
+          src: "~/.config/openstack/clouds.yaml"
+          dest: "{{ inventory_dir }}/clouds.yaml"
 
-- name: Set clouds_yaml fact
-  set_fact:
-      clouds_yaml: "{{ cloud_details.stdout|from_yaml }}"
+    - name: upload clouds.yaml to shade node
+      copy:
+          src: "{{ inventory_dir }}/clouds.yaml"
+          dest: "~/clouds.yaml"
+      delegate_to: "{{ groups.shade | first }}"
+      # in case when undercloud is also shade host original file is enough no copy needed
+      when: "{{ (groups.shade | first) != (groups.undercloud | first) }}"
 
-- name: Add cacert to clouds_yaml fact
-  set_fact:
-      clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': undercloud_cacert }}, recursive=True) }}"
   when:
-      - undercloud_cacert is defined
-      - not install.tls.everywhere
+    - install.version|default(undercloud_version) | openstack_release >= 17
 
-- name: create clouds.yaml if doesn't exist
-  blockinfile:
-      content: 'clouds:'
-      dest: "~/clouds.yaml"
-      marker: "#{mark} HEADER"
-      create: yes
-  delegate_to: "{{ groups.shade | first }}"
-
-- name: insert cloud parameters
-  blockinfile:
-      dest: "~/clouds.yaml"
-      block: |5
-            {{ clouds_yaml|to_nice_yaml(indent=4) }}
-      insertbefore: "#END {{ cloudname }} SECTION"
-      marker: "#{mark} {{ cloudname }} PARAMETERS"
-  delegate_to: "{{ groups.shade | first }}"
+# For older versions we want to generate our own clouds.yaml
+- block:
+    - name: get cloud variables
+      shell: |
+          for key in $( set | awk '{FS="="}  /^OS_/ {print $1}' ); do unset $key ; done
+          source {{ auth_file_path }}
+          echo -n "{{ cloudname }}: \
+            {'auth': \
+              { 'auth_url': '$OS_AUTH_URL', \
+                'username': '$OS_USERNAME', \
+                'password': '$OS_PASSWORD', \
+                $(if [ -n "$OS_USER_DOMAIN_NAME" ]; then echo "'user_domain_name': '${OS_USER_DOMAIN_NAME}',"; fi) \
+                $(if [ -n "$OS_PROJECT_DOMAIN_NAME" ]; then echo "'project_domain_name': '${OS_PROJECT_DOMAIN_NAME}',"; fi) \
+                'project_name': '${OS_PROJECT_NAME:-$OS_TENANT_NAME}' \
+              } $(if [ -n "$OS_IDENTITY_API_VERSION" ]; then echo ", 'identity_api_version': '${OS_IDENTITY_API_VERSION}'"; fi) }"
+      register: cloud_details
+    
+    - name: Set clouds_yaml fact
+      set_fact:
+          clouds_yaml: "{{ cloud_details.stdout|from_yaml }}"
+    
+    - name: Add cacert to clouds_yaml fact
+      set_fact:
+          clouds_yaml: "{{ clouds_yaml | combine({cloudname: {'cacert': undercloud_cacert }}, recursive=True) }}"
+      when:
+          - undercloud_cacert is defined
+          - not install.tls.everywhere
+    
+    - name: create clouds.yaml if doesn't exist
+      blockinfile:
+          content: 'clouds:'
+          dest: "~/clouds.yaml"
+          marker: "#{mark} HEADER"
+          create: yes
+      delegate_to: "{{ groups.shade | first }}"
+    
+    - name: insert cloud parameters
+      blockinfile:
+          dest: "~/clouds.yaml"
+          block: |5
+                {{ clouds_yaml|to_nice_yaml(indent=4) }}
+          insertbefore: "#END {{ cloudname }} SECTION"
+          marker: "#{mark} {{ cloudname }} PARAMETERS"
+      delegate_to: "{{ groups.shade | first }}"
+  when:
+    - install.version|default(undercloud_version) | openstack_release < 17
