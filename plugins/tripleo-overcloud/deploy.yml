@@ -245,8 +245,6 @@
             v2_file: "{{ install.overcloud.stack }}rc"
             auth_file_path: "{{ ansible_user_dir }}/{{ rc_file_path.stat.exists | ternary(v3_file, v2_file) }}"
             cloudname: "{{ install.overcloud.stack }}"
-      when:
-        - install.version|default(undercloud_version) | openstack_release < 17
       tags:
           - clouds_file
 
