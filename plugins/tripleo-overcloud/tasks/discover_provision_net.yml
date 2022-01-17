@@ -8,7 +8,7 @@
 - name: get ctlplane subnets prefixes
   shell: |
       source ~/stackrc
-      neutron subnet-show {{ item }} | grep -owP 'cidr.*\|\s\K.*[^\|]+' | tr -d ' '
+      openstack subnet show {{ item }} -f value -c cidr
   with_items: "{{ ctlplane_subnets.stdout.split(',') }}"
   register: subnet_prefixes
 
