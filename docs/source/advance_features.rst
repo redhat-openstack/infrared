@@ -6,7 +6,7 @@ Injection points
 
 Different people have different use cases which we cannot anticipate in advance.
 To solve (partially) this need, we structured our playbooks in a way that breaks the logic into standalone plays.
-Furthermore, each logical play can be overriden by the user at the invocation level.
+Furthermore, each logical play can be overridden by the user at the invocation level.
 
 Lets look at an example to make this point more clear.
 Looking at our ``virsh`` main playbook, you will see::
@@ -197,7 +197,7 @@ Hide Ansible's STDOUT & STDERR
 ------------------------------
 The ``IR_ANSIBLE_NO_STDOUT`` & ``IR_ANSIBLE_NO_STDERR`` control whether the output from STDOUT & STDERR will be displayed or not.
 
-  .. note::  These have no effect on log files explaind
+  .. note::  These have no effect on log files explained
 
 Log Ansible's output to files
 -----------------------------
