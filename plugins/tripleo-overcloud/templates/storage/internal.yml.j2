@@ -72,7 +72,7 @@ parameter_defaults:
 {# This block add a ceph.conf override (under [global]) to force rgw to return same headers as swift and enable versioning#}
     CephConfigOverrides:
 {% if ('ipv6' in install.network.protocol and install.version|default(undercloud_version)|openstack_release >= 17.0 ) %}
-         global:
+        global:
             ms_bind_ipv4: false
             ms_bind_ipv6: true
 {% endif %}

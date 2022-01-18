@@ -15,17 +15,6 @@
       - not install.storage.external
       - storage_backend|default('') == 'ceph'
       - install.version|default(undercloud_version) | openstack_release >= 17
-      - not ('ipv6' in install.network.protocol)
-
-- name: append cephadm TripleO template (BZ:2002639 ipv6 vs ceph in 17)
-  lineinfile:
-      dest: "{{ containers_ir_deploy_script }}"
-      line: '-e {{ install.heat.templates.basedir }}/environments/cephadm/cephadm-rbd-only.yaml \'
-  when:
-      - not install.storage.external
-      - storage_backend|default('') == 'ceph'
-      - install.version|default(undercloud_version) | openstack_release >= 17
-      - ('ipv6' in install.network.protocol)
 
 - name: append the ovn HA OSP 13 template line to the base overcloud deploy script
   lineinfile:
