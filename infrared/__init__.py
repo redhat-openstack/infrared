@@ -215,8 +215,8 @@ PLUGINS_REGISTRY = {
         'desc': 'Deploy and run Tobiko test cases',
         'type': 'test'
     },
-    'tripleo-inventory': {
-        'src': 'https://github.com/rhos-infra/tripleo-inventory.git',
+    'tripleo-clouds-inventory': {
+        'src': 'https://github.com/rhos-infra/tripleo-clouds-inventory.git',
         'src_path': 'infrared_plugin',
         'desc': 'Generates Tripleo inventory',
         'type': 'other'
