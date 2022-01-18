@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "233f144c_922c3cfd",
+        "filename": "plugins/tripleo-overcloud/tasks/discover_provision_net.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-01-18T10:24:52Z",
+      "side": 1,
+      "message": "(see the next comment) I think this was overlooked when porting away from neutron to openstack network, but this entire line can be probably replaced by\n\nopenstack network show -f value -c subnets {{ uc_provision_net|default(\u0027ctlplane\u0027) }}",
+      "revId": "992672c2f8cfafb9f5ee3b3ad1d7b7d455261e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "036fc820_1b8f845e",
+        "filename": "plugins/tripleo-overcloud/tasks/discover_provision_net.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-01-18T10:24:52Z",
+      "side": 1,
+      "message": "can\u0027t you remove the grep part and replace everything with\n\nopenstack subnet show -f value -c cidr {{ item }}\n\n?",
+      "range": {
+        "startLine": 11,
+        "startChar": 41,
+        "endLine": 11,
+        "endChar": 85
+      },
+      "revId": "992672c2f8cfafb9f5ee3b3ad1d7b7d455261e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
