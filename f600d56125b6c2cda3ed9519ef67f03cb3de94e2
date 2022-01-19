@@ -37,6 +37,40 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "87f5dd82_11dcd825",
+        "filename": "plugins/tripleo-overcloud/build_templates.yml",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-01-19T16:15:16Z",
+      "side": 1,
+      "message": "imo would be better to always place file under same path/name\n\nthat way there is no need for ceph_deploy_script fact, and any following steps (or e.g. log collection, failure analysis can stay same, no need to figure out where which file was it - also this file gets log-collected [regardless if user provided or IR generated] right?)",
+      "revId": "f600d56125b6c2cda3ed9519ef67f03cb3de94e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "afd99f0f_ea178f2c",
+        "filename": "plugins/tripleo-overcloud/tasks/network.yml",
+        "patchSetId": 7
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-01-19T16:15:16Z",
+      "side": 1,
+      "message": "see my other comment, this would have to be dynamic file name too or conditionally excluded if script provided?",
+      "revId": "f600d56125b6c2cda3ed9519ef67f03cb3de94e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "60c1c7a2_9b64deb4",
         "filename": "plugins/tripleo-overcloud/templates/overcloud_ceph_deploy.sh.j2",
         "patchSetId": 7
@@ -48,6 +82,30 @@
       "writtenOn": "2022-01-19T15:55:39Z",
       "side": 1,
       "message": "this will break the upstream scenario",
+      "range": {
+        "startLine": 8,
+        "startChar": 39,
+        "endLine": 8,
+        "endChar": 47
+      },
+      "revId": "f600d56125b6c2cda3ed9519ef67f03cb3de94e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "370e649e_660150dc",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_ceph_deploy.sh.j2",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-01-19T16:15:16Z",
+      "side": 1,
+      "message": "will it break or that case needs to specify namespace as ir param?\ncurrently this is part of deploy.yaml (from where it is moved here)\n\niirc all such values (namespace, tags and such) even for ceph should always default to values from puddle/compose provided container_image_prepare.yaml file (and overriden where different version wants to be tested) ... maybe if needed there could/should be support for additional \u0027default input\u0027 source, but then that should be resolved and calculated outside of this file",
+      "parentUuid": "60c1c7a2_9b64deb4",
       "range": {
         "startLine": 8,
         "startChar": 39,
