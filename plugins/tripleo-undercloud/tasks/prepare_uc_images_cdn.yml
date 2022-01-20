@@ -54,7 +54,7 @@
 
     - name: get puddle url from the repos
       vars:
-          repod_file: "/etc/yum.repos.d/rhos-release-{{ target_install_version }}.repo"
+          repod_file: "/etc/yum.repos.d/rhos-release-{{ target_install_version }}*.repo"
       shell: |
           cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
       register: containers_puddle_base_url
