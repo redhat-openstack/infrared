@@ -6,6 +6,16 @@
       repo_folder: 'pytest-repo/'
       output_prefix: '{{ item }}-{{ ansible_date_time.epoch }}.xml'
   tasks:
+      - name: Set the directory to store all the generated test results - default location
+        set_fact:
+          test_results_dir: "{{ inventory_dir }}/test_results"
+        when: test.results.dir is not defined
+
+      - name: Set the directory to store all the generated test results - user defined location
+        set_fact:
+          test_results_dir: "{{ test.results.dir }}"
+        when: test.results.dir is defined
+
       - block:
         # TODO(aopincar): Check executables path (which) and if missing or not before editing the file
         - name: "Add '/usr/local/bin' to secure_path in RHEL8"
@@ -68,6 +78,14 @@
         fetch:
           src: "{{ output_prefix }}"
           dest: "{{ inventory_dir }}/pytest_results/{{ output_prefix }}"
+          flat: yes
+          fail_on_missing: yes
+        loop: "{{ test.file }}"
+
+      - name: Fetch JUnit XML results file in {{ test_results_dir }}
+        fetch:
+          src: "{{ output_prefix }}"
+          dest: "{{ test_results_dir }}/{{ output_prefix }}"
           flat: yes
           fail_on_missing: yes
         loop: "{{ test.file }}"

@@ -3,6 +3,16 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
+      - name: Set the directory to store all the generated test results - default location
+        set_fact:
+          test_results_dir: "{{ inventory_dir }}/test_results"
+        when: test.results.dir is not defined
+
+      - name: Set the directory to store all the generated test results - user defined location
+        set_fact:
+          test_results_dir: "{{ test.results.dir }}"
+        when: test.results.dir is defined
+
       - name: set test suite name and pattern
         set_fact:
             test_suite: "{{ test.tests | basename | splitext | first }}"
@@ -42,6 +52,9 @@
       - name: fetch resulting file
         fetch:
             src: "{{ setup.ospdui.dir }}/{{ test_suite }}.xml"
-            dest: "{{ inventory_dir }}/ospdui_results/{{ test_suite }}.xml"
+            dest: "{{ item }}"
             flat: yes
             fail_on_missing: yes
+        with_items:
+          - "{{ inventory_dir }}/ospdui_results/{{ test_suite }}.xml"
+          - "{{ test_results_dir }}/{{ test_suite }}.xml"
