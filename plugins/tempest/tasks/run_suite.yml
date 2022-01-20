@@ -1,3 +1,7 @@
+- name: Set the directory to store all the generated test results
+  set_fact:
+      test_results_dir: "{{ test.results.dir if test.results.dir is defined else inventory_dir + '/test_results' }}"
+
 - name: set facts for test suite
   set_fact:
       test_suite: "{{ test_suite_file | basename | splitext | first }}"
@@ -200,25 +204,34 @@
       - name: Fetch subunit results file
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.subunit"
-            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.subunit"
+            dest: "{{ item }}"
             flat: yes
             fail_on_missing: yes
+        with_items:
+          - "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.subunit"
+          - "{{ test_results_dir }}/{{ test_output_filename }}.subunit"
 
       - name: Fetch JUnit XML results file
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.xml"
-            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
+            dest: "{{ item }}"
             flat: yes
             fail_on_missing: yes
+        with_items:
+          - "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
+          - "{{ test_results_dir }}/{{ test_output_filename }}.xml"
         when:
             results_formats.junitxml is defined
 
       - name: Fetch HTML results file
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.html"
-            dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
+            dest: "{{ item }}"
             flat: yes
             fail_on_missing: no
+        with_items:
+          - "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
+          - "{{ test_results_dir }}/{{ test_output_filename }}.html"
         when:
             results_formats.html is defined
 
