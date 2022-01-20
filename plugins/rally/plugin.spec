@@ -6,6 +6,13 @@ subparsers:
         groups:
             - title: Rally
               options:
+                  results-dir:
+                      type: Value
+                      help: |
+                        Directory to store all the generated test results.
+                        The directory location is on the Ansible control node,
+                        and not on the Ansible Manage node/host that the test plugin is running on.
+                      default: '{{ inventory_dir }}/test_results'
                   openstackrc:
                       type: Value
                       help: |

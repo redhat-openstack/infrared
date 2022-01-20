@@ -65,3 +65,17 @@
       - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
       - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
       - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
+
+- name: Fetch Results to the active profile in {{ test.results.dir }}
+  fetch:
+      src: "{{ item }}"
+      dest: "{{ test.results.dir  }}"
+      flat: yes
+  with_items:
+#     - "{{ rally.outputdir }}/index.html"
+      - "{{ rally.outputdir }}/results-{{ timestamp }}.html"
+      - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      - "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
