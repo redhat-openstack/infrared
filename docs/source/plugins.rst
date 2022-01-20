@@ -87,9 +87,9 @@ For example, to access ``dictionary-val`` use ``{{ provision.dictionary.val }}``
 
 .. note:: the vars-dict defined by `Complex option types`_ is nested under ``plugin_type`` root key, and passed
  to Ansible using ``--extra-vars`` meaning that any vars file that has ``plugin_type`` as a root key, will be
- overriden by that vars-dict. See `Ansible variable precidence`_ for more details.
+ overridden by that vars-dict. See `Ansible variable precedence`_ for more details.
 
-.. _Ansible variable precidence: http://docs.ansible.com/ansible/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable
+.. _Ansible variable precedence: http://docs.ansible.com/ansible/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable
 
 Include Groups
 ~~~~~~~~~~~~~~
