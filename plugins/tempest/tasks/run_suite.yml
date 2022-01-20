@@ -22,6 +22,16 @@
       with_fileglob:
           - "{{ inventory_dir }}/tempest_results/tempest-results-{{ test_suite }}.*.subunit"
 
+    - name: find max file seq - Support Unified location of test result files
+      vars:
+          file_name: "{{ item | basename | splitext | first }}"
+          seq_number: "{{ file_name | regex_replace('^(?P<basename>.+)\\.(?P<seq_num>\\d+)$', '\\g<seq_num>') }}"
+      set_fact:
+          max_seq_number: "{{ [seq_number|int, max_seq_number|int] | max }}"
+          test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
+      with_fileglob:
+          - "{{ inventory_dir }}/test_results/tempest/tempest-results-{{ test_suite }}.*.subunit"
+
     - name: set the output file suffix to the highest number + 1
       set_fact:
           test_output_filename: "tempest-results-{{ test_suite }}.{{ max_seq_number | int + 1 }}"
@@ -217,6 +227,31 @@
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.html"
             dest: "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
+            flat: yes
+            fail_on_missing: no
+        when:
+            results_formats.html is defined
+
+      - name: Fetch subunit results file - Support Unified location of test result files
+        fetch:
+            src: "{{ test.dir }}/{{ test_output_filename }}.subunit"
+            dest: "{{ inventory_dir }}/test_results/tempest/{{ test_output_filename }}.subunit"
+            flat: yes
+            fail_on_missing: yes
+
+      - name: Fetch JUnit XML results file - Support Unified location of test result files
+        fetch:
+            src: "{{ test.dir }}/{{ test_output_filename }}.xml"
+            dest: "{{ inventory_dir }}/test_results/tempest/{{ test_output_filename }}.xml"
+            flat: yes
+            fail_on_missing: yes
+        when:
+            results_formats.junitxml is defined
+
+      - name: Fetch HTML results file - Support Unified location of test result files
+        fetch:
+            src: "{{ test.dir }}/{{ test_output_filename }}.html"
+            dest: "{{ inventory_dir }}/test_results/tempest/{{ test_output_filename }}.html"
             flat: yes
             fail_on_missing: no
         when:
