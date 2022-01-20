@@ -6,6 +6,9 @@ subparsers:
         groups:
             - title: Rally
               options:
+                  results-dir:
+                      type: Value
+                      help: Directory to store all the generated test results
                   openstackrc:
                       type: Value
                       help: |

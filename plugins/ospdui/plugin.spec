@@ -8,6 +8,9 @@ subparsers:
         groups:
             - title: Setup
               options:
+                  results-dir:
+                      type: Value
+                      help: Directory to store all the generated test results
                   openstack-version:
                       type: Value
                       help: |

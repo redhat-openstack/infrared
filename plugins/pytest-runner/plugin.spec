@@ -7,6 +7,9 @@ subparsers:
         groups:
             - title: Test Control
               options:
+                  results-dir:
+                      type: Value
+                      help: Directory to store all the generated test results
                   run:
                       type: Bool
                       help: |

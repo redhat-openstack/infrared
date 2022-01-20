@@ -8,6 +8,9 @@ subparsers:
         groups:
             - title: Tempest
               options:
+                  results-dir:
+                      type: Value
+                      help: Directory to store all the generated test results
                   tempest-config:
                       type: Bool
                       help: |

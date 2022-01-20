@@ -1,3 +1,13 @@
+- name: Set the directory to store all the generated test results - default location
+  set_fact:
+      test_results_dir: "{{ inventory_dir }}/test_results"
+  when: test.results.dir is not defined
+
+- name: Set the directory to store all the generated test results - user defined location
+  set_fact:
+      test_results_dir: "{{ test.results.dir }}"
+  when: test.results.dir is defined
+
 - name: Create Output Directory
   file:
       path: "{{ rally.outputdir }}"
@@ -56,6 +66,20 @@
   fetch:
       src: "{{ item }}"
       dest: "{{ inventory_dir }}/rally_results/"
+      flat: yes
+  with_items:
+#     - "{{ rally.outputdir }}/index.html"
+      - "{{ rally.outputdir }}/results-{{ timestamp }}.html"
+      - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      - "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
+
+- name: Fetch Results to the active profile in {{ test_results_dir }}
+  fetch:
+      src: "{{ item }}"
+      dest: "{{ test_results_dir }}"
       flat: yes
   with_items:
 #     - "{{ rally.outputdir }}/index.html"
