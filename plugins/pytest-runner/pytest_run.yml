@@ -71,3 +71,11 @@
           flat: yes
           fail_on_missing: yes
         loop: "{{ test.file }}"
+
+      - name: Fetch JUnit XML results file - Support Unified location of test result files
+        fetch:
+          src: "{{ output_prefix }}"
+          dest: "{{ inventory_dir }}/test_results/{{ output_prefix }}"
+          flat: yes
+          fail_on_missing: yes
+        loop: "{{ test.file }}"

@@ -45,3 +45,10 @@
             dest: "{{ inventory_dir }}/ospdui_results/{{ test_suite }}.xml"
             flat: yes
             fail_on_missing: yes
+
+      - name: fetch resulting file - Support Unified location of test result files
+        fetch:
+            src: "{{ setup.ospdui.dir }}/{{ test_suite }}.xml"
+            dest: "{{ inventory_dir }}/test_results/{{ test_suite }}.xml"
+            flat: yes
+            fail_on_missing: yes
