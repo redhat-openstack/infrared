@@ -6,6 +6,10 @@ subparsers:
         groups:
             - title: Rally
               options:
+                  results-dir:
+                      type: Value
+                      help: Directory to store all the generated test results
+                      default: '{{ inventory_dir }}/test_results'
                   openstackrc:
                       type: Value
                       help: |

@@ -71,3 +71,11 @@
           flat: yes
           fail_on_missing: yes
         loop: "{{ test.file }}"
+
+      - name: Fetch JUnit XML results file in {{ test.results.dir }}
+        fetch:
+          src: "{{ output_prefix }}"
+          dest: "{{ test.results.dir }}/{{ output_prefix }}"
+          flat: yes
+          fail_on_missing: yes
+        loop: "{{ test.file }}"

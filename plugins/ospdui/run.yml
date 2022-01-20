@@ -42,6 +42,9 @@
       - name: fetch resulting file
         fetch:
             src: "{{ setup.ospdui.dir }}/{{ test_suite }}.xml"
-            dest: "{{ inventory_dir }}/ospdui_results/{{ test_suite }}.xml"
+            dest: "{{ item }}"
             flat: yes
             fail_on_missing: yes
+        with_items:
+          - "{{ inventory_dir }}/ospdui_results/{{ test_suite }}.xml"
+          - "{{ test.results.dir }}/{{ test_suite }}.xml"
