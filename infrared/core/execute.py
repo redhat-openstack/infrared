@@ -59,6 +59,10 @@ class IRStdoutFd(IRStdFd):
     def close():
         sys.stdout = sys.__stdout__
 
+    @staticmethod
+    def fileno():
+        return 1
+
 
 class IRStderrFd(IRStdFd):
 
