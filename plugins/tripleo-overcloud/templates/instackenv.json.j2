@@ -49,13 +49,21 @@
       , "capabilities":
         {
           "boot_mode":"uefi",
-          "profile":"{{ uefi[host_data.name.split('-')[0]]|default(host_data.name.split('-')[0]) }}",
+          {% if host_data.name.split('-')|length > 2 %}
+            "profile":"{{ uefi[host_data.name.split('-')[1]]|default(host_data.name.split('-')[1]) }}"
+          {% else %}
+            "profile":"{{ uefi[host_data.name.split('-')[0]]|default(host_data.name.split('-')[0]) }}"
+          {% endif %}
           "boot_option":"local"
         }
       {% elif install.version|default(undercloud_version)|openstack_release >= 17 %}
        , "capabilities":
         {
-          "profile":"{{ uefi[host_data.name.split('-')[0]]|default(host_data.name.split('-')[0]) }}"
+          {% if host_data.name.split('-')|length > 2 %}
+            "profile":"{{ uefi[host_data.name.split('-')[1]]|default(host_data.name.split('-')[1]) }}"
+          {% else %}
+            "profile":"{{ uefi[host_data.name.split('-')[0]]|default(host_data.name.split('-')[0]) }}"
+          {% endif %}
         }
       {% endif %}
     }{% if not loop.last %},{% endif %}
