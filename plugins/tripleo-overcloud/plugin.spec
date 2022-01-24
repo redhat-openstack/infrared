@@ -155,6 +155,22 @@ subparsers:
                       type: Value
                       help: tag used with the ceph container
 
+                  registry-ceph-url:
+                      type: Value
+                      help: url of used ceph container registry
+
+                  registry-ceph-username:
+                      type: Value
+                      help: |
+                          username for used ceph container registry
+                          Note: use this alongside --registry-ceph-url and --registry-ceph-password
+
+                  registry-ceph-password:
+                      type: Value
+                      help: |
+                          password for used ceph container registry
+                          Note: use this alongside --registry-ceph-url and --registry-ceph-username
+
             - title: Deployment Description
               options:
                   version:
@@ -650,6 +666,14 @@ subparsers:
                         If not supplied, Infrared will try to discover storage nodes and select appropriate backed.
                         The 'lvm' value will be used when storage nodes were not found.
                         NOTE: when not using external storage, this will set the default for "--storage-nodes" to 1.
+
+                  ceph-script:
+                      type: Value
+                      help: |
+                            The absolute path to a custom ceph deployment script.
+                            If not set, it will auto generate a deployment according to the
+                            provided templates / options.
+                            Note: This should be used for OSP 17 and above
 
                   ceph-cluster-name:
                       type: Value
