@@ -107,6 +107,7 @@
             --stack "{{ install.overcloud.stack }}" \
             --network-data "{{ template_base }}/network/network_data_v2.yaml" \
             /home/stack/templates/overcloud-baremetal-deployed.yaml \
+            --roles-data "{{ template_base }}/roles/roles_data.yaml" \
             | tee -a /home/stack/overcloud_ceph_deployment.log
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17.0)
