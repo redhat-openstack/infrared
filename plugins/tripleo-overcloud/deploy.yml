@@ -119,19 +119,20 @@
             - not install.storage.external
             - ceph_node_cnt|int < 3
 
-      - name: Deploy Ceph separately from OC(Deployed Ceph topology)
-        shell: |
-            source ~/stackrc
-            set -o pipefail
-            openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
-            --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
-            --container-namespace 192.168.24.1:8787/rh-osbs \
-            --stack "{{ install.overcloud.stack }}" \
-            {% if ceph_node_cnt|int < 3 %} --config {{ ansible_user_dir }}/initial-ceph.conf{% endif %} \
-            --network-data "{{ template_base }}/network/network_data_v2.yaml" \
-            /home/stack/templates/overcloud-baremetal-deployed.yaml \
-            {% if roles_data_file.stat.exists %}--roles-data {{ roles_data_file.stat.path }}{% endif %} \
-            | tee -a /home/stack/overcloud_ceph_deployment.log
+      - block:
+          - name: create ceph deploy script
+            template:
+                src: templates/overcloud_ceph_deploy.sh.j2
+                dest: "~/overcloud_ceph_deploy.sh"
+                mode: 0755
+                force: true
+
+          - name: Deploy Ceph separately from OC(Deployed Ceph topology)
+            shell: |
+                source ~/stackrc
+                set -o pipefail
+                bash ~/overcloud_ceph_deploy.sh \
+                  |& tee -a /home/stack/overcloud_ceph_deployment.log
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17.0)
             - install.storage.backend|default('') == 'ceph'
