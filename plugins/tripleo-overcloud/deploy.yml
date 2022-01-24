@@ -97,9 +97,10 @@
       - template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
   any_errors_fatal: true
   tasks:
-      - name: Deploy Ceph separately from OC(Deployed Ceph topology)
+      - name: Deploy Ceph separately from overcloud with overcloud ceph deploy script
         shell: |
             source ~/stackrc
+<<<<<<< HEAD
             set -o pipefail
             openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
             --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
@@ -109,6 +110,10 @@
             /home/stack/templates/overcloud-baremetal-deployed.yaml \
             --roles-data "{{ template_base }}/roles/roles_data.yaml" \
             | tee -a /home/stack/overcloud_ceph_deployment.log
+=======
+            bash {{ ceph_deploy_script }} &> ceph_install.log
+        register: ceph_deploy
+>>>>>>> Convert overcloud ceph deploy to bash script
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17.0)
             - install.storage.backend|default('') == 'ceph'
