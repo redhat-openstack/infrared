@@ -228,11 +228,6 @@
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
 
-      - name: set overcloud_deploy script
-        set_fact:
-           overcloud_deploy_script: '~/overcloud_deploy.sh'
-        tags: deploy
-
       - name: append 'extra-deploy-params' to deploy script
         lineinfile:
             dest: "{{ overcloud_deploy_script }}"
