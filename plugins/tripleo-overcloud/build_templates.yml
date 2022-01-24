@@ -228,6 +228,11 @@
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
 
+      - name: set overcloud_ceph_deploy script
+        set_fact:
+          ceph_deploy_script: '~/overcloud_ceph_deploy.sh'
+        tags: deploy
+
       - name: set overcloud_deploy script
         set_fact:
            overcloud_deploy_script: '~/overcloud_deploy.sh'
