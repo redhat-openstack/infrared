@@ -1,0 +1,28 @@
+#!/bin/bash
+
+openstack overcloud ceph deploy -o /home/stack/templates/overcloud-ceph-deployed.yaml \
+--container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
+--stack "{{ install.overcloud.stack }}" \
+{% if install.registry.ceph.namespace is defined%}
+--container-namespace "{{ install.registry.ceph.namespace }}" \
+{% endif %}
+{% if install.registry.ceph.image is defined %}
+--container-image "{{ install.registry.ceph.image }}" \
+{% endif %}
+{% if install.registry.ceph.tag is defined %}
+--container-tag "{{ install.registry.ceph.tag }}" \
+{% endif %}
+{% if install.registry.ceph.url is defined %}
+--registry-url "{{ install.registry.ceph.url }}"
+{% endif %}
+{% if install.registry.ceph.username is defined %}
+--registry-username "{{ install.registry.ceph.username }}"
+{% endif %}
+{% if install.registry.ceph.password is defined %}
+--registry-password "{{ install.registry.ceph.password }}"
+{% endif %}
+--network-data "{{ template_base }}/network/network_data_v2.yaml" \
+{% if install.role is defined %}
+--roles-data "{{ template_base }}/roles/roles_data.yaml" \
+{% endif %}
+/home/stack/templates/overcloud-baremetal-deployed.yaml
