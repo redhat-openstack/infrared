@@ -95,8 +95,22 @@
   vars:
       - containers_home_dir: "/home/stack"
       - template_base: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}"
+      - ceph_node_cnt: ((install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1)
   any_errors_fatal: true
   tasks:
+      - name: create small ceph cfg in case of low node count
+        copy:
+          dest: "{{ ansible_user_dir }}/initial-ceph.conf"
+          content: |
+              [global]
+              osd pool default size = 1
+              osd pool default pg num = 8
+              osd pool default pgp num = 8
+              [mon]
+              mon_warn_on_pool_no_redundancy = false
+        when:
+            - ceph_node_cnt < 3
+
       - name: Deploy Ceph separately from OC(Deployed Ceph topology)
         shell: |
             source ~/stackrc
@@ -105,6 +119,7 @@
             --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
             --container-namespace 192.168.24.1:8787/rh-osbs \
             --stack "{{ install.overcloud.stack }}" \
+            {% if ceph_node_cnt < 3 %} --config {{ ansible_user_dir }}/initial-ceph.conf}}{% endif %} \
             --network-data "{{ template_base }}/network/network_data_v2.yaml" \
             /home/stack/templates/overcloud-baremetal-deployed.yaml \
             --roles-data "{{ template_base }}/roles/roles_data.yaml" \
