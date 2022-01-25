@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3d97ba5e_0a59790f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-01-25T16:39:27Z",
+      "side": 1,
+      "message": "jparoly,\n\nISTR you needed the ability to do what\u0027s below for your predictable IP job. This patch, if updated per most recent review, could support that.\n\nQuoting our conversation from 2 weeks ago:\n\n\"\"\"\n$ cat \u003c\u003cEOF \u003e initial-ceph.conf\n[global]\npublic_network \u003d \u0027172.120.3.0/24,172.117.3.0/24,172.118.3.0/24,172.119.3.0/24\u0027\ncluster_network \u003d \u0027172.120.4.0/24,172.117.4.0/24,172.118.4.0/24,172.119.4.0/24\u0027\nms_bind_ipv4 \u003d true\nms_bind_ipv6 \u003d false\nEOF\n$ openstack overcloud ceph deploy \\\n  --config initial-ceph.conf \\\n  ...\n\nSo... I think we need a subsequent IR patch so that we can pass any\narbitrary initial-ceph.conf .\n\nSo IR could have conditional jinja where if an initial-ceph.conf was\npassed as input to IR, then it includes it with the --config option to\nrun a command like the above. You\u0027d then keep your own copy of\ninitial-ceph.conf for your job and pass it to IR.\n\"\"\"\n",
+      "revId": "318c8935999c5b46a6eea52b893cc0e82dbbe670",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
