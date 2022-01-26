@@ -1,0 +1,42 @@
+- name: Configure the unique NFSv4 identifier
+  hosts: overcloud_nodes:!unused
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+      nfs4_module_conf_file: /etc/modprobe.d/nfsv4.conf
+      nfs4id_file_name: /sys/module/nfs/parameters/nfs4_unique_id
+  tasks:
+      - name: Check if the NFS module is already configured
+        stat:
+            path: "{{ nfs4_module_conf_file }}"
+        register: nfs4_conffile
+
+      - when: not nfs4_conffile.stat.exists
+        block:
+          - name: Combine machine-id and the current date
+            shell: |
+                echo "$(cat /etc/machine-id)-$(date +%s)"
+            register: machineid_date
+
+          - name: Compute a NFSv4 UUID
+            set_fact:
+                nfs_unique_id: "{{ machineid_date.stdout|to_uuid }}"
+
+          - name: Set the NFSv4 unique ID as kernel module parameter
+            become: yes
+            lineinfile:
+                dest: "{{ nfs4_module_conf_file }}"
+                line: "options nfs nfs4_unique_id={{ nfs_unique_id }}"
+                state: present
+                create: yes
+
+          - name: Check if the NFS module is already loaded
+            stat:
+                path: "{{ nfs4id_file_name }}"
+            register: nfs4id_file
+
+          - name: Apply the configuration to the loaded module
+            become: yes
+            shell:
+                echo -n {{ nfs_unique_id }} >{{ nfs4id_file_name }}
+            when: nfs4id_file.stat.exists

@@ -114,6 +114,13 @@
             - install.storage.backend|default('') == 'ceph'
             - not install.storage.external
 
+# Not all nodes needs to access a NFSv4 server, but this is setting
+# prevents issues in case multiple hosts access the same server
+# (for example, multiple controller-0 against the same NFS server)
+# and it is otherwise harmless, so set it unconditionally.
+- name: Configure the NFS unique identifier
+  import_playbook: configure_nfs_id.yml
+
 - name: Deploy the Overcloud
   hosts: undercloud
   gather_facts: yes
