@@ -74,23 +74,26 @@
      - install.version|default(undercloud_version) | openstack_release >= 14
 
 - name: Upload network file for custom network topology
+  vars:
+      network_data_file: "network_data{{ ((install.version|default(undercloud_version)|openstack_release >= 17)) | \
+          ternary('_v2', '') }}.yaml"
   block:
     - name: Override the default network_data.yaml
       copy:
           src: "{{ install.network.data.file }}"
-          dest: "{{ template_base }}/network/network_data.yaml"
+          dest: "{{ template_base }}/network/{{ network_data_file }}"
 
     - name: Append the network_data.yaml -n template line to the base overcloud deploy script
       lineinfile:
           state: present
           dest: "~/overcloud_deploy.sh"
-          line: '-n {{ template_base }}/network/network_data.yaml \'
+          line: '--networks-file {{ template_base }}/network/{{ network_data_file }} \'
 
     - name: Remove the network_data.yaml -e template line to the base overcloud deploy script
       lineinfile:
           state: absent
           dest: "~/overcloud_deploy.sh"
-          line: '-e {{ template_base }}/network/network_data.yaml \'
+          line: '-e {{ template_base }}/network/{{ network_data_file }} \'
   when:
      - install.get('network', {}).get('data', {}).file is defined
      - install.version|default(undercloud_version) | openstack_release >= 13
