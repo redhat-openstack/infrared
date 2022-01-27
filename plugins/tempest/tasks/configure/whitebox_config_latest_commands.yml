@@ -1,0 +1,32 @@
+- name: Run Whitebox plugin configuration commands
+  block:
+    - name: Get Compute node IP inventory
+      shell: "source ~/stackrc && metalsmith -c Hostname -f value -c \"IP Addresses\" -f value list | grep -i compute | sort -h"
+      register: ip_inventory
+    - name: Get hypervisor inventory
+      shell: "source ~/keystonerc && nova service-list | cut -d\"|\" -f4 | grep compute | sort -h"
+      register: hostname_inventory
+    - name: Map host with corresponding IP
+      vars:
+        final_compute: ''
+      set_fact:
+        final_compute: "{{ item.0.split() | first }}:{{ item.1.split('ctlplane=')[1] }},{{ final_compute | default('') }}"
+      loop: "{{ hostname_inventory.stdout_lines | zip(ip_inventory.stdout_lines) | list }}"
+      when: 'item.1.split() | first in item.0.split() | first'
+  when: test.configure.whitebox.plugin
+
+- name: Configure Whitebox db parameters for OSP 17+
+  block:
+    - name: Get controller hostname
+      shell: grep -E '\s+controller_node_names' ~/overcloud-deploy/overcloud/overcloud-export.yaml | cut -d ':' -f 2 | cut -d "," -f 1 | xargs
+      register: controller_host
+    - name: Get internal IP
+      shell: grep -E {{ controller_host.stdout }}.*internalapi /etc/hosts | cut -d " " -f 1
+      register: internal_ip
+    - name: Get control plane IP
+      shell: grep -E {{ controller_host.stdout }}.*ctlplane /etc/hosts | cut -d " " -f 1
+      register: host_ip
+    - name: Get Nova password
+      shell: grep NovaPassword ~/overcloud-deploy/overcloud/overcloud-export.yaml | awk '/NovaPassword/ {print $2}'
+      register: nova_password
+  when: test.configure.whitebox.db
