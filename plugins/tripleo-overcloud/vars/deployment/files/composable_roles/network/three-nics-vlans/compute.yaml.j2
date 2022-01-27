@@ -2,7 +2,7 @@ heat_template_version: ocata
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the controller role.
+  for the compute role.
 
 parameters:
   ControlPlaneIp:
@@ -33,10 +33,6 @@ parameters:
     default: ''
     description: IP address/subnet on the management network
     type: string
-  ExternalNetworkVlanID:
-    default: 10
-    description: Vlan ID for the external network traffic.
-    type: number
   InternalApiNetworkVlanID:
     default: 20
     description: Vlan ID for the internal_api network traffic.
@@ -45,18 +41,10 @@ parameters:
     default: 30
     description: Vlan ID for the storage network traffic.
     type: number
-  StorageMgmtNetworkVlanID:
-    default: 40
-    description: Vlan ID for the storage mgmt network traffic.
-    type: number
   TenantNetworkVlanID:
     default: 50
     description: Vlan ID for the tenant network traffic.
     type: number
-  ExternalInterfaceDefaultRoute:
-    default: '10.0.0.1'
-    description: default route for the external network
-    type: string
   ControlPlaneSubnetCidr: # Override this via parameter_defaults
     default: '24'
     description: The subnet CIDR of the control plane network.
@@ -68,6 +56,12 @@ parameters:
     default: []
     description: A list of DNS servers (2 max for some implementations) that will be added to resolv.conf.
     type: json
+{% if install.version|openstack_release >= 13 %}
+  DnsSearchDomains: # Override this via parameter_defaults
+    default: []
+    description: A list of DNS search domains to be added (in order) to resolv.conf.
+    type: comma_delimited_list
+{% endif %}
   EC2MetadataIp: # Override this via parameter_defaults
     description: The IP address of the EC2 metadata server.
     type: string
@@ -178,7 +172,6 @@ resources:
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
     properties:
-
       group: script
       config:
           str_replace:
@@ -187,13 +180,25 @@ resources:
               params:
                    $network_config:
                        network_config:
-
                         -
+{% if install.ironic and install.version|default(undercloud_version)|openstack_release > 14 %}
+                          type: ovs_bridge
+                          name: br-baremetal
+                          members:
+                          - type: interface
+                            name: nic1
+                            primary: true
+{% else %}
                           type: interface
                           name: nic1
+{% endif %}
                           use_dhcp: false
                           dns_servers:
                               get_param: DnsServers
+{% if install.version|openstack_release >= 13 %}
+                          domain:
+                              get_param: DnsSearchDomains
+{% endif %}
                           addresses:
                             -
                               ip_netmask:
@@ -201,13 +206,13 @@ resources:
                                   - '/'
                                   - - get_param: ControlPlaneIp
                                     - get_param: ControlPlaneSubnetCidr
-
                           routes:
                             -
-                              # Optionally have this interface as default route
+                              ip_netmask: 0.0.0.0/0
                               next_hop:
                                   get_param: ControlPlaneDefaultRoute
 
+                              # Optionally have this interface as default route
                               default: true
                             -
                               ip_netmask: 169.254.169.254/32
@@ -221,6 +226,7 @@ resources:
                             -
                               type: interface
                               name: nic2
+                              # force the MAC address of the bridge to this interface
                               primary: true
                             -
                               type: vlan
@@ -230,6 +236,41 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: InternalApiIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: TenantNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: TenantIpSubnet
+{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+                        -
+                          type: ovs_bridge
+                          # This will default to br-ex, anything else requires specific
+                          # brige mapping entries for it to be used.
+                          name: bridge_name
+                          use_dhcp: false
+                          members:
+                            -
+                              type: interface
+                              name: nic3
+                              # force the MAC address of the bridge to this interface
+                              primary: true
+{% else %}
+                        -
+                          type: interface
+                          name: nic3
+                          use_dhcp: false
+{% endif %}
 
 outputs:
   OS::stack_id:

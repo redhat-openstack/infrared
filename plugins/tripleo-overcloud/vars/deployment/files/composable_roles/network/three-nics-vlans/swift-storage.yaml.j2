@@ -2,7 +2,7 @@ heat_template_version: ocata
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the ceph storage role.
+  for the swift storage role.
 
 parameters:
   ControlPlaneIp:
@@ -18,10 +18,6 @@ parameters:
     description: IP address/subnet on the internal API network
     type: string
   StorageIpSubnet:
-    default: ''
-    description: IP address/subnet on the storage network
-    type: string
-  StorageNFSIpSubnet:
     default: ''
     description: IP address/subnet on the storage network
     type: string
@@ -56,10 +52,6 @@ parameters:
   TenantNetworkVlanID:
     default: 50
     description: Vlan ID for the tenant network traffic.
-    type: number
-  StorageNFSNetworkVlanID:
-    default: 70
-    description: Vlan ID for the storage network traffic.
     type: number
   ExternalInterfaceDefaultRoute:
     default: '10.0.0.1'
@@ -118,12 +110,6 @@ parameters:
       guaranteed to pass through the data path of the segments in the
       Tenant network.
     type: number
-  StorageNFSMtu:
-    default: 1500
-    description: The maximum transmission unit (MTU) size(in bytes) that is
-      guaranteed to pass through the data path of the segments in the
-      Storage NFS network.
-    type: number
   ExternalMtu:
     default: 1500
     description: The maximum transmission unit (MTU) size(in bytes) that is
@@ -150,14 +136,6 @@ parameters:
     default: []
     description: >
       Routes for the storage_mgmt network traffic.
-      JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
-      Unless the default is changed, the parameter is automatically resolved
-      from the subnet host_routes attribute.
-    type: json
-  StorageNFSInterfaceRoutes:
-    default: []
-    description: >
-      Routes for the storageNFS network traffic.
       JSON route e.g. [{'destination':'10.0.0.0/16', 'nexthop':'10.0.0.1'}]
       Unless the default is changed, the parameter is automatically resolved
       from the subnet host_routes attribute.
@@ -243,6 +221,14 @@ resources:
                               name: nic2
                               # force the MAC address of the bridge to this interface
                               primary: true
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: InternalApiNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: InternalApiIpSubnet
                             -
                               type: vlan
                               vlan_id:

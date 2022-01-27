@@ -2,7 +2,7 @@ heat_template_version: ocata
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the compute role.
+  for the controller role.
 
 parameters:
   ControlPlaneIp:
@@ -33,6 +33,10 @@ parameters:
     default: ''
     description: IP address/subnet on the management network
     type: string
+  ExternalNetworkVlanID:
+    default: 10
+    description: Vlan ID for the external network traffic.
+    type: number
   InternalApiNetworkVlanID:
     default: 20
     description: Vlan ID for the internal_api network traffic.
@@ -49,6 +53,10 @@ parameters:
     default: 50
     description: Vlan ID for the tenant network traffic.
     type: number
+  ExternalInterfaceDefaultRoute:
+    default: '10.0.0.1'
+    description: default route for the external network
+    type: string
   ControlPlaneSubnetCidr: # Override this via parameter_defaults
     default: '24'
     description: The subnet CIDR of the control plane network.
@@ -60,6 +68,12 @@ parameters:
     default: []
     description: A list of DNS servers (2 max for some implementations) that will be added to resolv.conf.
     type: json
+{% if install.version|openstack_release >= 13 %}
+  DnsSearchDomains: # Override this via parameter_defaults
+    default: []
+    description: A list of DNS search domains to be added (in order) to resolv.conf.
+    type: comma_delimited_list
+{% endif %}
   EC2MetadataIp: # Override this via parameter_defaults
     description: The IP address of the EC2 metadata server.
     type: string
@@ -179,7 +193,7 @@ resources:
                    $network_config:
                        network_config:
                         -
-{% if install.ironic and install.version|default(undercloud_version)|openstack_release > 14 %}
+{% if install.cleaning.network %}
                           type: ovs_bridge
                           name: br-baremetal
                           members:
@@ -193,6 +207,10 @@ resources:
                           use_dhcp: false
                           dns_servers:
                               get_param: DnsServers
+{% if install.version|openstack_release >= 13 %}
+                          domain:
+                              get_param: DnsSearchDomains
+{% endif %}
                           addresses:
                             -
                               ip_netmask:
@@ -220,7 +238,6 @@ resources:
                             -
                               type: interface
                               name: nic2
-                              # force the MAC address of the bridge to this interface
                               primary: true
                             -
                               type: vlan
@@ -254,25 +271,27 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
-{% if install.version|openstack_release >= 15 or install.network.dvr|bool or install.network.force.compute.dvr|bool %}
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
                           # brige mapping entries for it to be used.
                           name: bridge_name
                           use_dhcp: false
+                          addresses:
+                            -
+                                ip_netmask:
+                                    get_param: ExternalIpSubnet
+                          routes:
+                            -
+                              ip_netmask: 0.0.0.0/0
+                              next_hop:
+                                  get_param: ExternalInterfaceDefaultRoute
                           members:
                             -
                               type: interface
                               name: nic3
                               # force the MAC address of the bridge to this interface
                               primary: true
-{% else %}
-                        -
-                          type: interface
-                          name: nic3
-                          use_dhcp: false
-{% endif %}
 
 outputs:
   OS::stack_id:

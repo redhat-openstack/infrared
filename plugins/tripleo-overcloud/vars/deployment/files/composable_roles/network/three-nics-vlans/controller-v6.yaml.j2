@@ -2,7 +2,9 @@ heat_template_version: ocata
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the controller role.
+  for the controller role with IPv6 on the External network. The IPv6
+  default route is on the External network, and the IPv4 default route
+  is on the Control Plane.
 
 parameters:
   ControlPlaneIp:
@@ -53,6 +55,10 @@ parameters:
     default: 50
     description: Vlan ID for the tenant network traffic.
     type: number
+  ManagementNetworkVlanID:
+    default: 60
+    description: Vlan ID for the management network traffic.
+    type: number
   ExternalInterfaceDefaultRoute:
     default: '10.0.0.1'
     description: default route for the external network
@@ -62,12 +68,18 @@ parameters:
     description: The subnet CIDR of the control plane network.
     type: string
   ControlPlaneDefaultRoute: # Override this via parameter_defaults
-    description: The subnet CIDR of the control plane network.
+    description: The default route of the control plane network.
     type: string
   DnsServers: # Override this via parameter_defaults
     default: []
     description: A list of DNS servers (2 max for some implementations) that will be added to resolv.conf.
-    type: json
+    type: comma_delimited_list
+{% if install.version|openstack_release >= 13 %}
+  DnsSearchDomains: # Override this via parameter_defaults
+    default: []
+    description: A list of DNS search domains to be added (in order) to resolv.conf.
+    type: comma_delimited_list
+{% endif %}
   EC2MetadataIp: # Override this via parameter_defaults
     description: The IP address of the EC2 metadata server.
     type: string
@@ -178,7 +190,6 @@ resources:
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
     properties:
-
       group: script
       config:
           str_replace:
@@ -187,13 +198,11 @@ resources:
               params:
                    $network_config:
                        network_config:
-
                         -
                           type: interface
                           name: nic1
                           use_dhcp: false
-                          dns_servers:
-                              get_param: DnsServers
+            #              defroute: false
                           addresses:
                             -
                               ip_netmask:
@@ -201,18 +210,15 @@ resources:
                                   - '/'
                                   - - get_param: ControlPlaneIp
                                     - get_param: ControlPlaneSubnetCidr
-
                           routes:
-                            -
-                              # Optionally have this interface as default route
-                              next_hop:
-                                  get_param: ControlPlaneDefaultRoute
-
-                              default: true
                             -
                               ip_netmask: 169.254.169.254/32
                               next_hop:
                                   get_param: EC2MetadataIp
+                            -
+                              default: true
+                              next_hop:
+                                  get_param: ControlPlaneDefaultRoute
                         -
                           type: ovs_bridge
                           name: br-isolated
@@ -230,6 +236,58 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: InternalApiIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageMgmtNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageMgmtIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: TenantNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: TenantIpSubnet
+                        -
+                          type: ovs_bridge
+                          # This will default to br-ex, anything else requires specific
+                          # brige mapping entries for it to be used.
+                          name: bridge_name
+                          dns_servers:
+                              get_param: DnsServers
+{% if install.version|openstack_release >= 13 %}
+                          domain:
+                              get_param: DnsSearchDomains
+{% endif %}
+                          use_dhcp: false
+            #              defroute: true
+                          addresses:
+                            -
+                              ip_netmask:
+                                  get_param: ExternalIpSubnet
+                          routes:
+                            -
+                              default: true
+                              next_hop:
+                                  get_param: ExternalInterfaceDefaultRoute
+                          members:
+                            -
+                              type: interface
+                              name: nic3
+                              # force the MAC address of the bridge to this interface
+                              primary: true
 
 outputs:
   OS::stack_id:

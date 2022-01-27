@@ -2,7 +2,7 @@ heat_template_version: ocata
 
 description: >
   Software Config to drive os-net-config to configure multiple interfaces
-  for the swift storage role.
+  for the ceph storage role.
 
 parameters:
   ControlPlaneIp:
@@ -178,7 +178,6 @@ resources:
   OsNetConfigImpl:
     type: OS::Heat::SoftwareConfig
     properties:
-
       group: script
       config:
           str_replace:
@@ -187,7 +186,6 @@ resources:
               params:
                    $network_config:
                        network_config:
-
                         -
                           type: interface
                           name: nic1
@@ -201,13 +199,11 @@ resources:
                                   - '/'
                                   - - get_param: ControlPlaneIp
                                     - get_param: ControlPlaneSubnetCidr
-
                           routes:
                             -
                               ip_netmask: 0.0.0.0/0
                               next_hop:
                                   get_param: ControlPlaneDefaultRoute
-
                               # Optionally have this interface as default route
                               default: true
                             -
@@ -227,14 +223,6 @@ resources:
                             -
                               type: vlan
                               vlan_id:
-                                  get_param: InternalApiNetworkVlanID
-                              addresses:
-                              -
-                                ip_netmask:
-                                    get_param: InternalApiIpSubnet
-                            -
-                              type: vlan
-                              vlan_id:
                                   get_param: StorageNetworkVlanID
                               addresses:
                               -
@@ -249,6 +237,11 @@ resources:
                                 ip_netmask:
                                     get_param: StorageMgmtIpSubnet
 
+                        -
+                          type: interface
+                          name: nic3
+                          use_dhcp: false
+                          defroute: false
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.

@@ -1,0 +1,71 @@
+- name: ControllerOpenstack
+  count: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
+  hostname_format: controller-%index%
+  defaults:
+    profile: control
+    network_config:
+      default_route_network:
+      - External
+      template: /home/stack/composable_roles/network/three-nics-vlans/controller{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+    - network: storage_mgmt
+    - network: internal_api
+    - network: tenant
+    - network: external
+- name: Database
+  count: {{ (install.database|default({})).nodes|default(0) or groups.database|default([])|length or '1' }}
+  hostname_format: database-%index%
+  defaults:
+    profile: database
+    network_config:
+      default_route_network:
+      - External
+      template: /home/stack/composable_roles/network/three-nics-vlans/database{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: internal_api
+- name: Messaging
+  count: {{ (install.messaging|default({})).nodes|default(0) or groups.messaging|default([])|length or '1' }}
+  hostname_format: messaging-%index%
+  defaults:
+    profile: messaging
+    network_config:
+      default_route_network:
+      - ControlPlane
+      template: /home/stack/composable_roles/network/three-nics-vlans/messaging{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: internal_api
+- name: Networker
+  count: {{ (install.network|default({})).nodes|default(0) or groups.network|reject('contains', "controller")|list|count or '1' }}
+  hostname_format: networker-%index%
+  defaults:
+    profile: networker
+    network_config:
+      default_route_network:
+      - External
+      template: /home/stack/composable_roles/network/three-nics-vlans/networker{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: internal_api
+    - network: tenant
+    - network: external
+- name: ComputeInstanceHA
+  count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
+  hostname_format: compute-%index%
+  defaults:
+    profile: compute
+    network_config:
+      template: /home/stack/composable_roles/network/three-nics-vlans/compute.j2
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: storage
+    - network: internal_api
+    - network: tenant
