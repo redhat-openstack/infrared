@@ -575,4 +575,11 @@ subparsers:
                       help: |
                           Designate an insecure registry using the DockerInsecureRegistryAddress flag
                           inside the containers-prepare-parameter file
+            - title: Others
+              options:
+                  selinux:
+                      type: Value
+                      help: Change the selinux state.
+                      choices: ["enforcing", "permissive", "disabled"]
+                      default: "enforcing"
 
