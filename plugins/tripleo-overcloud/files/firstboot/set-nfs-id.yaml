@@ -1,0 +1,26 @@
+heat_template_version: 2014-10-16
+
+description: >
+  Set NFS unique ID
+
+resources:
+  userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: nfs_unique_id_config}
+
+  nfs_unique_id_config:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: |
+        #!/bin/bash
+        unique_id="$(hostname)-$(uuidgen)"
+        echo "options nfs nfs4_unique_id=${unique_id}" >/etc/modprobe.d/nfsv4.conf
+        if [ -n /sys/module/nfs/parameters/nfs4_unique_id ]; then
+            echo -n ${unique_id} >/sys/module/nfs/parameters/nfs4_unique_id
+        fi
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: userdata}
