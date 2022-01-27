@@ -6,7 +6,7 @@ subparsers:
         description: Install TripleO on a designated undercloud node
         include_groups: ["Ansible options", "Inventory", "Common options", "Answers file"]
         groups:
-            - title: Failure handling options
+            - title: Failure handling options Gate test do not merge
               options:
                   retry-http-codes:
                       type: ListValue
