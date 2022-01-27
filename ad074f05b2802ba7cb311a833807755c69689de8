@@ -39,6 +39,30 @@
       },
       "revId": "ad074f05b2802ba7cb311a833807755c69689de8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3400460b_ed511bfa",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt/network/three-nics-vlans/controller.j2.j2",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-01-27T18:45:43Z",
+      "side": 1,
+      "message": "If I move it to the line below it leaves an empty line before. \u0027use_dhcp: false\u0027.\n\nAs it is now it renders:\n\n  ---\n  network_config:\n  - type: ovs_bridge\n    name: br-baremetal\n    members:\n    - type: interface\n      name: nic1\n      primary: true\n    use_dhcp: false\n    dns_servers: {{ ctlplane_dns_nameservers }}\n    domain: {{ dns_search_domains }}\n\nIf you do a line-break after {% raw %} on L16 it renders:\n\n  ---\n  network_config:\n  - type: ovs_bridge\n    name: br-baremetal\n    members:\n    - type: interface\n      name: nic1\n      primary: true\n    \n    use_dhcp: false\n    dns_servers: {{ ctlplane_dns_nameservers }}\n\nI use this to test it https://ansible.sivel.net/test/ - put this in variables:\n\ninstall:\n  cleaning:\n    network: true\n    \nI guess if we use \u0027-\u0027 i.e {% raw -%} we can have the linebreak.",
+      "parentUuid": "5b015a66_665e98a4",
+      "range": {
+        "startLine": 16,
+        "startChar": 11,
+        "endLine": 16,
+        "endChar": 26
+      },
+      "revId": "ad074f05b2802ba7cb311a833807755c69689de8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
