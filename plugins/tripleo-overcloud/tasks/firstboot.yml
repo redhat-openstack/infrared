@@ -1,0 +1,21 @@
+- name: Copy the firstboot templates directory
+  copy:
+      src: firstboot
+      dest: "{{ template_base }}"
+
+- name: Get the list of firstboot templates
+  find:
+      paths: "{{ template_base }}/firstboot"
+      patterns: "*.yaml"
+  register: firstboot_templates_list
+
+- name: Create the firstboot environment file
+  template:
+      src: "firstboot.yaml.j2"
+      dest: "{{ template_base }}/firstboot.yaml"
+
+# - name: Append the firstboot environment file to the base overcloud deploy script
+#  lineinfile:
+#      state: present
+#      dest: "~/overcloud_deploy.sh"
+#      line: '-n {{ template_base }}/firstboot.yaml \'
