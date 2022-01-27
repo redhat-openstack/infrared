@@ -184,6 +184,7 @@
       - install.role is defined and install.role.files != 'default'
       - (install.version|default(undercloud_version) | openstack_release > 12) or install.tht.roles | bool
       - not install.splitstack
+      - (install.version|default(undercloud_version) | openstack_release < 17)
   template:
       src: templates/nodes_software_config.yaml.j2
       dest: "{{ template_base }}/nodes_software_config.yaml"
@@ -197,6 +198,7 @@
       - install.role is defined and install.role.files != 'default'
       - (install.version|default(undercloud_version) | openstack_release > 12) or install.tht.roles | bool
       - not install.splitstack
+      - (install.version|default(undercloud_version) | openstack_release < 17)
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/nodes_software_config.yaml \'
