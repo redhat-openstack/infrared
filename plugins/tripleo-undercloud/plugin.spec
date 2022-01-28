@@ -581,5 +581,5 @@ subparsers:
                       type: Value
                       help: Change the selinux state.
                       choices: ["enforcing", "permissive", "disabled"]
-                      default: "enforcing"
+                      default: "permissive"
 
