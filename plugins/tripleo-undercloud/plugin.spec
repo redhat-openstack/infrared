@@ -66,6 +66,12 @@ subparsers:
                           When used with `snapshot-backup`, it will create this file
                           When used with `snapshot-restore`, it will use this file as the disk name for the domain
                       default: "undercloud-snapshot.qcow2"
+                  snapshot-filename:
+                      type: Value
+                      help: |
+                          When used with `snapshot-backup`, it will create this file
+                          When used with `snapshot-restore`, it will use this file as the disk name for the domain
+                      default: "undercloud-snapshot.qcow2"
 
             - title: Undercloud Configuration
               options:
@@ -575,4 +581,3 @@ subparsers:
                       help: |
                           Designate an insecure registry using the DockerInsecureRegistryAddress flag
                           inside the containers-prepare-parameter file
-
