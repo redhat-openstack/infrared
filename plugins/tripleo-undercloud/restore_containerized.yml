@@ -122,10 +122,10 @@
             command: define
             xml: "{{ virt_xml.stdout }}"
 
-      - name: get correct MAC of external interface for undercloud (in case we have multiple dhcp leases in libvirt's db)
+      - name: get correct MAC of access interface for undercloud (in case we have multiple dhcp leases in libvirt's db)
         shell: |
-            virsh dumpxml undercloud-0 | grep external -B 1 | grep mac | cut -d\' -f2
-        register: mac_ext
+            virsh dumpxml undercloud-0 | grep {{ install.snapshot.access.network }} -B 1 | grep mac | cut -d\' -f2
+        register: mac_access
 
       - name: start the undercloud VM
         virt:
@@ -134,7 +134,7 @@
 
       - name: wait for the undercloud IP to become available
         shell: |
-            virsh net-dhcp-leases external | grep {{ mac_ext.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
+            virsh net-dhcp-leases {{ install.snapshot.access.network }} | grep {{ mac_access.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
         retries: 15
