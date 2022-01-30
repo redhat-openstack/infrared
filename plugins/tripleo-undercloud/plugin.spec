@@ -66,7 +66,11 @@ subparsers:
                           When used with `snapshot-backup`, it will create this file
                           When used with `snapshot-restore`, it will use this file as the disk name for the domain
                       default: "undercloud-snapshot.qcow2"
-
+                  snapshot-access-network:
+                      type: Value
+                      help: |
+                           Will determin the access network to reach the undercloud after snapshot restore
+                      default: "external"
             - title: Undercloud Configuration
               options:
                   config-file:
@@ -582,4 +586,3 @@ subparsers:
                       help: Change the selinux state.
                       choices: ["enforcing", "permissive", "disabled"]
                       default: "enforcing"
-
