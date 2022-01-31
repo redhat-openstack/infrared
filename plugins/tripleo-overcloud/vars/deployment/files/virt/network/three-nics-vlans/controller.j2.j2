@@ -1,9 +1,19 @@
 {% raw -%}
 ---
 network_config:
+{% endraw %}
+{% if install.cleaning.network %}
+- type: ovs_bridge
+  name: br-baremetal
+  members:
+  - type: interface
+    name: nic1
+    primary: true
+{% else %}
 - type: interface
   name: nic1
-  use_dhcp: false
+{% endif %}
+  {% raw %}use_dhcp: false
   dns_servers: {{ ctlplane_dns_nameservers }}
   domain: {{ dns_search_domains }}
   addresses:
