@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "84875d0c_9b75bb3e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2022-02-01T11:10:42Z",
+      "side": 1,
+      "message": "nearly there Adrian, a typo there to fix and potential race-condition problem which may cause headaches in the future\nshout if you have other suggestions to the ones I proposed",
+      "revId": "2f90d64d0746e26b44bea67794af6fc71266009a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cca80fb3_329cf365",
+        "filename": "plugins/pytest-runner/pytest_run.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2022-02-01T11:10:42Z",
+      "side": 1,
+      "message": "I think you may need double quotes here (around the {{ }} or the whole line)",
+      "range": {
+        "startLine": 75,
+        "startChar": 46,
+        "endLine": 75,
+        "endChar": 47
+      },
+      "revId": "2f90d64d0746e26b44bea67794af6fc71266009a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e2f8b9ea_c0d31e1a",
+        "filename": "plugins/rally/tasks/post/report.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2022-02-01T11:10:42Z",
+      "side": 1,
+      "message": "quoting needs fixing",
+      "range": {
+        "startLine": 69,
+        "startChar": 47,
+        "endLine": 69,
+        "endChar": 48
+      },
+      "revId": "2f90d64d0746e26b44bea67794af6fc71266009a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "dba67943_131aa998",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2022-02-01T11:10:42Z",
+      "side": 1,
+      "message": "quoting",
+      "range": {
+        "startLine": 25,
+        "startChar": 33,
+        "endLine": 25,
+        "endChar": 34
+      },
+      "revId": "2f90d64d0746e26b44bea67794af6fc71266009a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "354f4fba_e79cd36a",
+        "filename": "plugins/tempest/tasks/run_suite.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2022-02-01T11:10:42Z",
+      "side": 1,
+      "message": "I feel like there could be a race condition here... that is if the test_output_filename at line #21 will be discovered and set to i.e.: tempest-results-full.2 (in tempest_results directory) but \u0027test_results\u0027 directory will have no tempest tests xml files (hence the line #31 will set fact tempest-results-full.1) then it may be confusing as ppl may think that .1 (in tempest_results) and .1 in test_results are for the same tempest run... which they wouldn\u0027t...\n\nhow about this:\n1. line #20 will set max_seq_number1 (without setting test_output_filename at line #21)\n2. line #30 will set max_seq_number2 (without setting test_output_filename at line #31)\n3. new task need to be created with comaring which of the above two is greater and set  test_output_filename to tempest-results-{{ test_suite}}.{{ THE_GREATER_max_seq_number | int + 1 }}\n\n?",
+      "range": {
+        "startLine": 31,
+        "startChar": 10,
+        "endLine": 31,
+        "endChar": 30
+      },
+      "revId": "2f90d64d0746e26b44bea67794af6fc71266009a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
