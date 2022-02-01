@@ -142,11 +142,42 @@
       - set_fact:
             overcloud_deploy_script: "{{ install.overcloud.script|default('') or deploy_script.stat.path|default('') | basename }}"
 
-      - name: create the base overcloud deploy script
-        template:
-            src: "{{ deploy_script_template | default('templates/overcloud_deploy.sh.j2') }}"
-            dest: "~/overcloud_deploy.sh"
-            mode: 0755
+      - block:
+          - name: create the base overcloud deploy script
+            template:
+                src: "{{ deploy_script_template | default('templates/overcloud_deploy.sh.j2') }}"
+                dest: "~/overcloud_deploy.sh"
+                mode: 0755
+
+          - name: add the OSP17 specific conditions to the overcloud deploy script
+            blockinfile:
+                path: "~/overcloud_deploy.sh"
+                insertafter: EOF
+                marker: '# {mark} OSP17 SETTINGS'
+                block: |
+                    --deployed-server \
+                    -e /home/stack/templates/overcloud-vip-deployed.yaml \
+                    -e /home/stack/templates/overcloud-networks-deployed.yaml \
+                    -e /home/stack/templates/overcloud-baremetal-deployed.yaml \
+                    # rhbz#2013352
+                    --disable-protected-resource-types \
+                    # rhbz#2020590 - network_data_v2.yaml has to be part of both, the "network provision" step also the OC deployment from now on
+                    --networks-file {{ template_base }}/network/network_data_v2.yaml \
+            when:
+                - (install.version|default(undercloud_version) | openstack_release >= 17)
+
+          - name: add the OSP17 specific conditions to the overcloud deploy script
+            blockinfile:
+                path: "~/overcloud_deploy.sh"
+                insertafter: EOF
+                marker: '# {mark} OSP17 CEPH SETTINGS'
+                block: |
+                    -e /home/stack/templates/overcloud-ceph-deployed.yaml \
+            when:
+                - (install.version|default(undercloud_version) | openstack_release >= 17)
+                - install.storage.backend|default('') == 'ceph'
+                - not install.storage.external
+
         when: not overcloud_deploy_script|default('')
 
       - name: Enable external network access through newly created vlan interface on undercloud
