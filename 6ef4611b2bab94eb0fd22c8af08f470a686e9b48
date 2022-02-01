@@ -55,6 +55,52 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "85af070f_a80aafd5",
+        "filename": "plugins/tripleo-overcloud/plugin.spec",
+        "patchSetId": 12
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-01T21:33:45Z",
+      "side": 1,
+      "message": "Attila objected to these since, as per an IRC conversation with him Alex and I these parameters can (and for simplicity\u0027s sake, should) be specified in the container image prepare. We can continue that discussion if you like but I think we should not combine it with the move towards having a script script, i.e. lets address that in another patch if you still think it\u0027s important.\n\nI\u0027m going to remove this so it\u0027s more likely for us to land your patch since it will be smaller and we\u0027ll focus on converting the original command into a shell script.",
+      "range": {
+        "startLine": 158,
+        "startChar": 18,
+        "endLine": 158,
+        "endChar": 35
+      },
+      "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ec891f4c_84f0580a",
+        "filename": "plugins/tripleo-overcloud/plugin.spec",
+        "patchSetId": 12
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-01T21:33:45Z",
+      "side": 1,
+      "message": "Yogev, thanks for this example of how we might pass an initial-ceph.conf in a future patch set. I don\u0027t think we need to give the user the ability to specify their own deployment script though. I\u0027m going to remove this so it\u0027s more likely for us to land your patch since it will be smaller and we\u0027ll focus on converting the original command into a shell script.",
+      "range": {
+        "startLine": 670,
+        "startChar": 18,
+        "endLine": 670,
+        "endChar": 30
+      },
+      "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "1ce7b141_f749371c",
         "filename": "plugins/tripleo-overcloud/tasks/network.yml",
         "patchSetId": 12
@@ -100,6 +146,30 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "cc9130e1_3f25b893",
+        "filename": "plugins/tripleo-overcloud/tasks/network.yml",
+        "patchSetId": 12
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-01T21:33:45Z",
+      "side": 1,
+      "message": "We can\u0027t merge this as is since it needs a rebase.\n\nI\u0027m rebasing it and I\u0027m going to remove these lines since we know we know this will only work for networkv2.",
+      "parentUuid": "fa3153d8_0ba84c63",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 55
+      },
+      "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "af2626d9_e7cf8f9e",
@@ -113,6 +183,24 @@
       "writtenOn": "2022-01-26T08:51:50Z",
       "side": 1,
       "message": "All ceph container location relevant data supposed to come from containers-prepare-parameter.yaml .\n\nIn case the local registry upload happens the \u0027overcloud ceph deploy\u0027 is is expected to handle to url translation to the undercloud registry.",
+      "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ffa4d492_2bc24ac6",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_ceph_deploy.sh.j2",
+        "patchSetId": 12
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-01T21:33:45Z",
+      "side": 1,
+      "message": "OK, let\u0027s do that via containers-prepare-parameter.yaml\n\nAlso, in translating to a shell script we need to keep the --contianer-namespace 192... workaround until BZ 2042973 is resolved.",
+      "parentUuid": "af2626d9_e7cf8f9e",
       "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
@@ -255,6 +343,24 @@
       "side": 1,
       "message": "Actually it might work, new gate job might tell if not.\ninstall.role.files is the actual config option where where the role dict is not defined when files is not given. (--role-files)\n\nProbably would be better to also check if \u0027files\u0027 (install.role.files) defined would be also checked,\nin case the dict eventually get another possible config option.\n\nMany condition handles install.role.files\u003d\u003d\u0027default\u0027 specially, I am not sure is it needed to handled specially here.\n\nAlso the previously merged change used stat for roles_data.yaml.",
       "parentUuid": "721bdd83_35775a57",
+      "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "86c468c9_6af3e9b4",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_ceph_deploy.sh.j2",
+        "patchSetId": 12
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-01T21:33:45Z",
+      "side": 1,
+      "message": "Let\u0027s focus on moving the command into a shell script and less on changing the command then. I\u0027ll keep it as is from the previously merged change which used stat for roles_data.yaml.",
+      "parentUuid": "ce368545_d36ccf15",
       "revId": "6ef4611b2bab94eb0fd22c8af08f470a686e9b48",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
