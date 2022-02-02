@@ -23,13 +23,7 @@
         state: absent
 
     - name: Create a Python3 virtualenv ('rally') using the venv module
-      command: python3 -m venv rally --without-pip
-
-    - name: Install pip in the newly created virtualenv
-      tags: skip_ansible_lint
-      shell: |
-        source rally/bin/activate
-        curl https://bootstrap.pypa.io/get-pip.py | python
+      command: python3 -m venv rally
 
 - name: Download cirros image
   get_url:
