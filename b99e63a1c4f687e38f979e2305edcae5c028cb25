@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4e9f06c6_6111c4d4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 17
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-02T14:34:16Z",
+      "side": 1,
+      "message": "Example of how it works...\n\n  [stack@undercloud-0 ~]$ ls *.sh *.log | grep ceph\n  overcloud_ceph_deployment.log\n  overcloud_ceph_deploy.sh\n  [stack@undercloud-0 ~]$\n  \n  [stack@undercloud-0 ~]$ cat overcloud_ceph_deploy.sh\n  #!/bin/bash\n  \n  # TODO(fultonj):\n  # - remove --container-namespace line after BZ 2042973 resolved\n  # - replace --config w/ --singe-node after BZ 2036868 resolved\n  \n  openstack overcloud ceph deploy \\\n  -o /home/stack/templates/overcloud-ceph-deployed.yaml \\\n  --container-image-prepare \"/home/stack/containers-prepare-parameter.yaml\" \\\n  --container-namespace 192.168.24.1:8787/rh-osbs \\\n   \\\n  --stack \"overcloud\" \\\n  --network-data \"/home/stack/virt/network/network_data_v2.yaml\" \\\n   \\\n  /home/stack/templates/overcloud-baremetal-deployed.yaml\n  [stack@undercloud-0 ~]$\n",
+      "revId": "b99e63a1c4f687e38f979e2305edcae5c028cb25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
