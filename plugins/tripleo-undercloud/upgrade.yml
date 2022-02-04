@@ -60,6 +60,8 @@
             - "openstack-tripleo-common"
             - "openstack-tripleo-heat-templates"
             - "openstack-tripleo-validations"
+            - "{{ (undercloud_upgrade_version|openstack_release < 15) | ternary('python-validations-libs', 'python3-validations-libs') }}"
+            - "validations-common"
             - "rhosp-release"
           state: latest
         when: undercloud_version|openstack_release >= 13
