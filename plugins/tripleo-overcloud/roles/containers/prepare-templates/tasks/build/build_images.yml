@@ -111,33 +111,6 @@
           - from_source.repo
       tags: container-images-packages
 
-    ## Workaround BZ#1627946
-    - name:  Run *tripleo* container image prepare (OSP >= 14)
-      shell: |
-          {% if install.version|default(undercloud_version)|openstack_release > 14 %}
-          sudo \
-          {% endif %}
-          openstack tripleo container image prepare \
-            -e ~/containers-prepare-parameter.yaml \
-            {% if install.version|default(undercloud_version)|openstack_release < 17 %}{{ environment_yamls | default('') }} {% endif -%}
-            {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
-            --output-env-file {{ template_base }}/docker-images.yaml
-      when: install.version|default(undercloud_version)|openstack_release >= 14 and
-            ( install.network.ovn|default(False) or
-              install.ocupdate|default(False) or
-              install_container_images_packages is defined or
-              install_container_extra_repos is defined or
-              install_container_images_urls is defined or
-              install_container_images_patch is defined or patched_rpms.results | selectattr('stat.exists', 'equalto', True) | list | length > 0
-            ) or
-            (
-              install.version|default(undercloud_version)|openstack_release >= 17 and
-              install.storage.backend|default('') == 'ceph'
-            )
-      tags:
-          - skip_ansible_lint
-          - container-image-prepare
-
     - name: install packages in container images
       include_tasks: container_images_packages.yml
       when: install_container_images_packages is defined
