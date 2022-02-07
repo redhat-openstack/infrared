@@ -46,7 +46,7 @@
         --set ceph_tag={{ container_env['container-image-prepare']['ceph-tag'] }} \
         {% endif %}
   when:
-      - install.version|default(undercloud_version)|openstack_release < 14
+      - install.version|default(undercloud_version)|openstack_release == 13
       - not install.overcloud.templates | default(False) | select('search', 'rhsm|overloud_cdn') | list | length > 0
       - install.cdn is not defined or (cdn_status is defined and cdn_status.rc != 0)
 
