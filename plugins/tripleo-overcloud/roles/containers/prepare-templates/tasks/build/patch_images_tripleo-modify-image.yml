@@ -81,5 +81,7 @@
       openstack tripleo container image prepare \
         -e {{ containers_home_dir }}/containers-prepare-parameter-copy.yaml \
         {{ roles_data_parameter | default('') }} \
-        --output-env-file {{ template_base }}/docker-images.yaml \
+        {% if install.version|default(undercloud_version)|openstack_release < 14 %}
+        --output-env-file {{ template_base }}/docker-images.yaml
+        {% endif -%}
         --cleanup none
