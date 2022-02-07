@@ -103,21 +103,36 @@
           path: "{{ template_base }}/roles/roles_data.yaml"
         register: roles_data_file
 
-      - name: create small ceph cfg in case of low node count
-        copy:
-          dest: "{{ ansible_user_dir }}/initial-ceph.conf"
-          content: |
-              [global]
-              osd pool default size = 1
-              osd pool default pg num = {{ install.ceph.pgnum }}
-              osd pool default pgp num = {{ install.ceph.pgnum }}
-              [mon]
-              mon_warn_on_pool_no_redundancy = false
+      - block:
+          - debug:
+              msg: |
+                WARNING overwriting file passed by --ceph-initial-conf-file
+                because <3 Ceph nodes. Until BZ 2036868 is resolved it is
+                not possible to use --ceph-initial-conf-file with small Ceph
+                deployments.
+            when:
+              - install.ceph.initial.conf.file|default('')
+
+          - name: create small ceph cfg in case of low node count
+            copy:
+              dest: "{{ ansible_user_dir }}/initial-ceph.conf"
+              content: |
+                  [global]
+                  osd pool default size = 1
+                  osd pool default pg num = {{ install.ceph.pgnum }}
+                  osd pool default pgp num = {{ install.ceph.pgnum }}
+                  [mon]
+                  mon_warn_on_pool_no_redundancy = false
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17.0)
             - install.storage.backend|default('') == 'ceph'
             - not install.storage.external
             - ceph_node_cnt|int < 3
+
+      - name: Detect presence of initial-ceph.conf
+        stat:
+          path: "{{ ansible_user_dir }}/initial-ceph.conf"
+        register: initial_ceph_file
 
       - block:
           - name: create ceph deploy script
