@@ -16,6 +16,24 @@
       "message": "looks good, I\u0027m a fan of per \u0027testing framework\u0027 subdirectory under test_results/ due to fact that we can\u0027t control DFG-owned testing (shell scripts, ansible etc.) and where they put their testing results and how they\u0027re going to call the filenames of that...\n\nNOTE: doing that (test_results with the subdirectories) it does _not_ defeat the purpose as with this change we set a standard that \u0027test_results\u0027 is the one-and-only location for test results, ideally DFGs should be putting the results location under subdirs but even if not then at least ones controlled by ourselves will be isolated...\n\nlet see what opinions other folks have about it",
       "revId": "19ae138be685110aa4f88dd9062f8c800b71e5f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e769e02c_36f6799d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-02-07T16:52:38Z",
+      "side": 1,
+      "message": "I disagree: the test results should be per-phase, now identified by a number but it could potentially be a label.\n\nThe test runner doesn\u0027t matter, you have a bunch of JUnitXML files where the tests can be distinguished by their IDs, and in fact from the polarion point of view there is no difference among them.\n\nIf you group by phase you can easily see which tests were executed when: in a normal deployment, all tests together post-deployment; if you add an update or upgrade step, you will have all tests after the update or upgrade; if you add a reboot, you will have all tests after the reboot, and so on.\n\nPlease rethink this. If this is a temporary step, I\u0027m fine. If this is the final destination, it doesn\u0027t serve its intended purpose.",
+      "parentUuid": "2f31a7f4_ffa99ed5",
+      "revId": "19ae138be685110aa4f88dd9062f8c800b71e5f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
