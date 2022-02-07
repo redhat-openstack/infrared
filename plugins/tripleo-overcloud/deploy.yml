@@ -103,6 +103,9 @@
           path: "{{ template_base }}/roles/roles_data.yaml"
         register: roles_data_file
 
+        # Until BZ 2036868 is resolved using --ceph-initial-conf-file
+        # with small Ceph deploys will result in the initial conf file
+        # being ignored. Review 532922 will resolve this.
       - name: create small ceph cfg in case of low node count
         copy:
           dest: "{{ ansible_user_dir }}/initial-ceph.conf"
