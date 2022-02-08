@@ -46,3 +46,8 @@ subparsers:
                   Whether to run resurrect_host role, which will try to bring dead/paused hosts up before
                   trying to collect logs from them.
               default: False
+          containers:
+              type: Bool
+              help: Whether to collect docker/podman containers info and logs
+              default: True
+
