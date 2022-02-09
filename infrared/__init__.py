@@ -246,5 +246,10 @@ PLUGINS_REGISTRY = {
         'src': 'plugins/virsh',
         'desc': 'Provision virtual machines on a single Hypervisor using libvirt',
         'type': 'provision'
+    },
+    'terraform': {
+        'src': 'https://github.com/rhos-infra/terraform',
+        'desc': 'Infrastracture as code provisioning.',
+        'type': 'provision'
     }
 }
