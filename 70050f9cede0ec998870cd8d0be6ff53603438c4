@@ -72,6 +72,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "6b0d4e95_e7865315",
+        "filename": "plugins/tripleo-overcloud/build_templates.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-09T13:56:48Z",
+      "side": 1,
+      "message": "It is a design goal of this patch to not use a template.\n\nThis option is for people who have the knowledge of their environment to override the defaults of the ceph.conf. That\u0027s all.",
+      "parentUuid": "dc3efe73_05330765",
+      "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "6a2a950f_b4f20cfe",
         "filename": "plugins/tripleo-overcloud/deploy.yml",
         "patchSetId": 1
@@ -107,6 +125,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "df14e01c_ab6aa712",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-09T13:56:48Z",
+      "side": 1,
+      "message": "\"possible\" vs what the system should be designed to support. I\u0027m stating that if you want to pass your own initial ceph conf then you don\u0027t get to use the \"small node config\" for now.\n\nI intended to delete lines 106-131 with a follow up stacked patch so that you can have both which can be merged as soon as the following is in the puddle:\n\n https://review.opendev.org/q/topic:bug%252F1958884-stable%252Fwallaby\n\nThat will replace the following workaround:\n\n https://review.gerrithub.io/c/redhat-openstack/infrared/+/532023\n \nI\u0027ll send that stacked patch in shortly to make it more clear.\n\nI suppose I\u0027ll delete this extra debug and just convert this to a comment.",
+      "parentUuid": "b0556b5e_4f4f93d5",
+      "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "fa05cce4_2e1abef3",
         "filename": "plugins/tripleo-overcloud/deploy.yml",
         "patchSetId": 1
@@ -136,6 +172,24 @@
       "side": 1,
       "message": "if the stat unavoidable, it might be called from the shell script.\nstat itself relative cheap, the ansible play around it makes expensive.",
       "parentUuid": "fa05cce4_2e1abef3",
+      "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "54656aa8_69b0d74c",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-02-09T13:56:48Z",
+      "side": 1,
+      "message": "It\u0027s not an extra play. It\u0027s an extra task.\n\nThere are two ways the initial conf file could get there. \n\n1. they deploy w/ \u003c 3 ceph nodes\n2. they used --ceph-initial-conf-file\n\nThe stat manages both cases and follows the same pattern as in this merged patch:\n\n https://review.gerrithub.io/c/redhat-openstack/infrared/+/531998\n \nIf you really think it\u0027s worth discussing, then please provide an example of how to detect in both cases. Don\u0027t just say \"you can know without the extra play\". Show me. If you\u0027re thinking a \"when: install.ceph.initial.conf.file\" then that won\u0027t cover both cases.",
+      "parentUuid": "6fe8db53_f743960e",
       "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
