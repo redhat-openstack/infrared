@@ -59,6 +59,7 @@ container_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
 {% endif %}
 {% endif %}{# endif install.cdn is undefined #}
 {% endif %}{# endIf release > 13 #}
+{% if install.selinux|default('enforcing') != 'enforcing' %}undercloud_enable_selinux=false{% endif %}
 
 [ctlplane-subnet]
 local_subnet = ctlplane-subnet
