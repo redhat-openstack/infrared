@@ -90,6 +90,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "b07a5e1c_c14953d0",
+        "filename": "plugins/tripleo-overcloud/build_templates.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1003043
+      },
+      "writtenOn": "2022-02-10T11:28:24Z",
+      "side": 1,
+      "message": "As we discussed on IRC basic ceph.conf does not have anything interfere with template engine, anyway if nobody see what is it good for.. \n\nThe change is something like replacing the \u0027copy\u0027  with \u0027template\u0027 , unless ansible has some wired behavior here.\n\nLet\u0027s hope the copy module few usec faster than the template at least,\nunless you see other benefit of using copy.\n\nProbably know better how it will be used a year later .",
+      "parentUuid": "6b0d4e95_e7865315",
+      "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "6a2a950f_b4f20cfe",
         "filename": "plugins/tripleo-overcloud/deploy.yml",
         "patchSetId": 1
@@ -208,6 +226,24 @@
       "side": 1,
       "message": "It\u0027s not an extra play. It\u0027s an extra task.\n\nThere are two ways the initial conf file could get there. \n\n1. they deploy w/ \u003c 3 ceph nodes\n2. they used --ceph-initial-conf-file\n\nThe stat manages both cases and follows the same pattern as in this merged patch:\n\n https://review.gerrithub.io/c/redhat-openstack/infrared/+/531998\n \nIf you really think it\u0027s worth discussing, then please provide an example of how to detect in both cases. Don\u0027t just say \"you can know without the extra play\". Show me. If you\u0027re thinking a \"when: install.ceph.initial.conf.file\" then that won\u0027t cover both cases.",
       "parentUuid": "6fe8db53_f743960e",
+      "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "79004869_fc5af173",
+        "filename": "plugins/tripleo-overcloud/deploy.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1003043
+      },
+      "writtenOn": "2022-02-10T11:28:24Z",
+      "side": 1,
+      "message": "You know it is task, so you are not now to ansible .\n\n\u0027initial_ceph_file.stat.exists\u0027 can be replaced with an expression.\nYou just said it is based on two terms, what you either rewired or wrote before.\n\nKind of the same operators like in python can be used.\n\nYou may use \u0027var\u0027 -s for helper expression, but ansible handles them as AnsibleString in most cases, so in template those might need a |bool filter.\n\nThe lists in when are AND -ed together.\n\nIf you are looking for less repeated ways , the set_facts can be used, but it is not cheap. The other way would be implementing custom extension in python (maybe lookup)   .\n\n\"If you really think it\u0027s worth discussing\"\nI still did not deiced plus or minus vote.",
+      "parentUuid": "54656aa8_69b0d74c",
       "revId": "70050f9cede0ec998870cd8d0be6ff53603438c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
