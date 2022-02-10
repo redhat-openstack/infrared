@@ -26,6 +26,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "248b8c30_00fba56c",
+        "filename": "plugins/tripleo-overcloud/tasks/network.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1006843
+      },
+      "writtenOn": "2022-02-10T20:39:50Z",
+      "side": 1,
+      "message": "It\u0027s probably not needed for OSP17 since It\u0027s added in the template you linked but The file network_data.yaml is not added for OSP \u003c 17 in that template. It seems to be added in this code in the case OSP \u003c 17 and customized network data file is defined with --network-data-file Infrared option. My intention was to do minimal changes without breaking anything for previous releases. It should not hurt much if the same line is added by lineinfile task once It\u0027s present It shouldn\u0027t be added one more time.",
+      "parentUuid": "ea96a4ea_502bc89e",
+      "range": {
+        "startLine": 86,
+        "startChar": 4,
+        "endLine": 90,
+        "endChar": 87
+      },
+      "revId": "f704dc07341d4af5383cc155b593052f0ef695fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "dd0162f2_f31cf3cc",
         "filename": "plugins/tripleo-overcloud/tasks/network.yml",
         "patchSetId": 1
@@ -37,6 +61,30 @@
       "writtenOn": "2022-02-10T15:35:32Z",
       "side": 1,
       "message": "What adds it in the first place?\nThe network_data_file is not a Heat environment file, so it should never be included as one.",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 74
+      },
+      "revId": "f704dc07341d4af5383cc155b593052f0ef695fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c80e799c_b9dd201c",
+        "filename": "plugins/tripleo-overcloud/tasks/network.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1006843
+      },
+      "writtenOn": "2022-02-10T20:39:50Z",
+      "side": 1,
+      "message": "tbh I am not really sure how It gets in the overcloud deploy cli, but I did see it there. The only way I can see it getting there is in the case customized templates directory is specified (which includes network_data.yaml) and in such case all templates inside the directory are added to overcloud deploy command line.\nNo idea why It is handled this way. I just tried to do minimum changes to make it work for OSP17 + customized network_data.yaml file. Probably some wider refactoring would be nice but that would require some testing.",
+      "parentUuid": "dd0162f2_f31cf3cc",
       "range": {
         "startLine": 92,
         "startChar": 0,
