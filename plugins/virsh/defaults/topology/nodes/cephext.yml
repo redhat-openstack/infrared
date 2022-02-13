@@ -1,0 +1,61 @@
+name: ceph
+prefix: null
+cpu: "4"
+cpumodel: "host-passthrough"
+memory: "16384"
+swap: "0"
+deploy_os: true
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    # NOTE: disk size has to be smaller for system disk than for the ceph osd disks
+    # as ironic selects smaller disk unless hinted explicitely otherwise
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "11G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk2:
+        import_url: null
+        path: null
+        dev: /dev/vdb
+        size: "12G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk3:
+        import_url: null
+        path: null
+        dev: /dev/vdc
+        size: "12G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk4:
+        import_url: null
+        path: null
+        dev: /dev/vdd
+        size: "12G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk5:
+        import_url: null
+        path: null
+        dev: /dev/vde
+        size: "12G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk6:
+        import_url: null
+        path: null
+        dev: /dev/vdf
+        size: "12G"
+        cache: "unsafe"
+        preallocation: "metadata"
+
+# infraces and external_network dicts were moved to network file.
+interfaces: null
+
+groups:
+    - ceph_storage
