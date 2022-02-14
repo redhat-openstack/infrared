@@ -149,6 +149,17 @@
             mode: 0755
         when: not overcloud_deploy_script|default('')
 
+      - name: copy initial ceph conf to undercloud
+        template:
+          src: "{{ install.ceph.initial.conf.file }}"
+          dest: "{{ ansible_user_dir }}/initial-ceph.conf"
+          mode: 0644
+          force: yes
+        when:
+          - install.ceph.initial.conf.file|default('')
+          - install.version|default(undercloud_version) | openstack_release >= 17
+          - install.storage.backend|default('') == 'ceph'
+
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
         tags:

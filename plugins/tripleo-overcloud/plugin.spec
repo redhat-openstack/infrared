@@ -662,6 +662,17 @@ subparsers:
                       default: 32
                       help: set the default amount of placement groups for the pools in the internal Ceph cluster
 
+                  ceph-initial-conf-file:
+                      type: Value
+                      default: ''
+                      help: |
+                          The absolute path of an initial Ceph configuration file. It
+                          will be copied to undercloud:/home/stack/initial-ceph.conf
+                          and passed to 'openstack overcloud ceph deploy --config'.
+                          The inital-ceph.conf supports jinja2 templating and could
+                          include {{ ansible_vars }} which are set during infrared
+                          run. Only supported for OSP 17 and newer.
+
                   glance-backend:
                       type: Value
                       choices:
