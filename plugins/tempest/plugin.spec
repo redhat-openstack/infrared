@@ -241,7 +241,7 @@ subparsers:
                       help: |
                           Output format of tempest results report to generate. Currently supported: junitxml, html.
                           Format: --results-formats junitxml,html
-                      default: junitxml
+                      default: junitxml,html
                   test-suite-prefix:
                       type: Value
                       help: Prefix for test suite name to be specified in junitxml report file.
