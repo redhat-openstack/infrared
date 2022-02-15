@@ -66,6 +66,14 @@ subparsers:
                           When used with `snapshot-backup`, it will create this file
                           When used with `snapshot-restore`, it will use this file as the disk name for the domain
                       default: "undercloud-snapshot.qcow2"
+                  snapshot-shade-host:
+                      type: Value
+                      help: |
+                          The name of the host which will be used as a shade node to handle all the os_* ansible
+                          modules requests. If this value is not provided, Infrared will use hypervisor host if present,
+                          otherwise undercloud is used.
+                          Example:
+                                --shade-host undercloud-0
 
             - title: Undercloud Configuration
               options:
