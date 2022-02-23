@@ -54,6 +54,19 @@
   with_items:
     - { src: "{{ overcloud_vmlinuz['path'] }}", dest: "~/overcloud-full.vmlinuz" }
     - { src: "{{ overcloud_initramfs['path'] }}", dest: "~/overcloud-full.initrd" }
+  when: not overcloud-hardened-uefi
+
+- name: Replace kernel files (overcloud_hardened_uefi)
+  copy:
+    src: "{{ item['src'] }}"
+    dest: "{{ item['dest'] }}"
+    remote_src: True
+  with_items:
+    - { src: "{{ overcloud_vmlinuz['path'] }}", dest: "~/overcloud-hardened-uefi-full.vmlinuz" }
+    - { src: "{{ overcloud_initramfs['path'] }}", dest: "~/overcloud-hardened-uefi-full.initrd" }
+  when:
+    - install.version|default(undercloud_version) | openstack_release >= 17
+    - overcloud-hardened-uefi 
 
 - name: Ensure /tmp/boot is absent after updating
   file:
