@@ -13,10 +13,10 @@
           7:
               - "discovery-ramdisk.tar"
               - "deploy-ramdisk-ironic.tar"
-              - "overcloud-full.tar"
+              - "{% if overcloud_hardened_uefi %}overcloud-hardened-uefi-full.qcow2{% else %}overcloud-full.tar{% endif %}"
           8:
               - "ironic-python-agent.tar"
-              - "overcloud-full.tar"
+              - "{% if overcloud_hardened_uefi %}overcloud-hardened-uefi-full.qcow2{% else %}overcloud-full.tar{% endif %}"
           ppc64le:
               - "ironic-python-agent-latest-{{ undercloud_version }}-x86_64.tar"
               - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
@@ -31,7 +31,7 @@
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
       tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
-      overcloud_image_file: overcloud-full.qcow2
+      overcloud_image_file: "{% if overcloud_hardened_uefi %}overcloud-hardened-uefi-full.qcow2{% else %}overcloud-full.qcow2{% endif %}"
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
@@ -105,7 +105,7 @@
             url: "{{ item }}"
             dest: "{{ tmp_oc_repos_dir }}"
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
-        when: (item|splitext)[-1] == ".repo"        
+        when: (item|splitext)[-1] == ".repo"
         register: extra_repos_get_url
         until: extra_repos_get_url is not failed or extra_repos_get_url.status_code | quote not in retry_http_codes
         retries: 2
