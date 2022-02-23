@@ -95,6 +95,11 @@ subparsers:
 
                       ansible_variable: 'install_container_images_urls'
 
+                  overcloud-hardened-uefi:
+                      type: Bool
+                      help: |
+                          Enable overcloud_hardened_uefi image
+        
                   cdn:
                       type: FileValue
                       help: |

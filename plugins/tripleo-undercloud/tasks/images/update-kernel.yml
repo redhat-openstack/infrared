@@ -54,6 +54,7 @@
   with_items:
     - { src: "{{ overcloud_vmlinuz['path'] }}", dest: "~/overcloud-full.vmlinuz" }
     - { src: "{{ overcloud_initramfs['path'] }}", dest: "~/overcloud-full.initrd" }
+  when: not overcloud-hardened-uefi
 
 - name: Ensure /tmp/boot is absent after updating
   file:

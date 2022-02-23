@@ -478,6 +478,11 @@ subparsers:
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
 
+                  overcloud-hardened-uefi:
+                      type: Bool
+                      help: |
+                          Enable overcloud_hardened_uefi image 
+
                   download-ppc64le-images:
                       type: Bool
                       help: |
