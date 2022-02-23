@@ -11,6 +11,19 @@
   # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
   delay: "{{ install.download.ppc64le.images | ternary(300, 150) }}"
 
+- name: Install the RPM with hardened uefi pre-build overcloud images
+  become: yes
+  package:
+      name: rhosp-director-images-uefi-x86_64
+      state: latest
+  register: yum_hardened_install
+  until: "yum_hardened_install is not failed or not yum_hardened_install.msg | regex_search('Operation too slow')"
+  retries: 2
+  # on a regular day this package install takes 120-150sec
+  # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
+  delay: 100
+  when: overcloud_image_name == "hardened-uefi-full"
+
 # create Directory structure for multiarch images
 - name: create multiarch image directory structure
   become_user: "{{ install.user.name }}"
