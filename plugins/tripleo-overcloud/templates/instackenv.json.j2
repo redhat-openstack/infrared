@@ -8,7 +8,11 @@
   {% endif %}
   "nodes": [
 {% for bm_host in (bm_nodes|default({}))['nodes']|default([]) %}
+  {% if install.boot.mode == 'uefi' %}
+      {{ bm_host | regex_replace('^{', '"capabilities": {"boot_mode":"uefi", "profile":"compute","boot_option":"local"}') | to_nice_json }}{% if not loop.last %},{% endif %}
+  {% else %}
     {{ bm_host | to_nice_json }}{% if not loop.last %},{% endif %}
+  {% endif %}
 {% endfor %}
 {% for host_string in nodes_info.results|map(attribute='stdout')|list %}
     {% if loop.first and (bm_nodes|default({}))['nodes']|default([]) %},{% endif %}
