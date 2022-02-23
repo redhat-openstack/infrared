@@ -95,6 +95,16 @@ subparsers:
 
                       ansible_variable: 'install_container_images_urls'
 
+                  overcloud-image-name:
+                      type: Value
+                      choices:
+                        - full
+                        - hardened-uefi-full
+                      help: |
+                          Specifies the overcloud image name:
+                          * full - overcloud-full.qcow2
+                          * hardened-uefi-full - overcloud-hardened-uefi-full.qcow2
+
                   cdn:
                       type: FileValue
                       help: |
@@ -1035,7 +1045,7 @@ subparsers:
                       type: Bool
                       help: |
                           When set to true, ironic will not use the br-baremetal network for introspection but only
-                          br-ex. This is useful in environments with less than 3 nics (where vlans are used for 
+                          br-ex. This is useful in environments with less than 3 nics (where vlans are used for
                           network separation).
                       default: False
 

@@ -478,6 +478,17 @@ subparsers:
                           Updating default overcloud kernel with kernel files retrieved from customized overcloud image
                       default: no
 
+                  overcloud-image-name:
+                      type: Value
+                      choices:
+                        - full
+                        - hardened-uefi-full
+                      help: |
+                          Specifies the overcloud image name:
+                          * full - overcloud-full.qcow2
+                          * hardened-uefi-full - overcloud-hardened-uefi-full.qcow2
+                          If not set, 'full' will be used for OSP 16 and below, and 'hardened-uefi-full' for 17 and above.
+                          
                   download-ppc64le-images:
                       type: Bool
                       help: |
