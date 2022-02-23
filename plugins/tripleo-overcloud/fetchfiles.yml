@@ -64,12 +64,38 @@
                 - absent
                 - directory
 
-          - name: Save overcloud images from glance to files in /tmp/fetchfiles_overcloud_image/
+          - name: Set overcloud_image_name if specified by user
+            set_fact:
+              overcloud_image_name: "{{ install.overcloud.image.name }}"
+            when: install.overcloud.hardened.uefi is defined
+
+          - name: Set overcloud_image_name OSP<=16
+            set_fact:
+              overcloud_image_name: "full"
+            when:
+              - install.version|default(undercloud_version) | openstack_release <= 16
+              - overcloud_image_name is not defined
+
+          - name: Set overcloud_image_name OSP>=17
+            set_fact:
+              overcloud_image_name: "hardened"
+            when:
+              - install.version|default(undercloud_version) | openstack_release >= 17
+              - overcloud_image_name is not defined
+
+          - name: Save overcloud-full images from glance to files in /tmp/fetchfiles_overcloud_image/
             shell: |
                 source ~/stackrc
                 openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-full.qcow2 overcloud-full
                 openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-full.initrd overcloud-full-initrd
                 openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-full.vmlinuz overcloud-full-vmlinuz
+            when: overcloud_image_name == "full"
+
+          - name: Save overcloud-hardened-uefi-full images from glance to files in /tmp/fetchfiles_overcloud_image/
+            shell: |
+                source ~/stackrc
+                openstack image save --file /tmp/fetchfiles_overcloud_image/overcloud-hardened-uefi-full.qcow2 overcloud-hardened-uefi-full
+            when: overcloud_image_name == "hardened"
 
           - name: Save Ironic Python Agent images from glance to files (we don't actually modify these but they're required to re-upload the overcloud-full image to glance)
             shell: |
@@ -94,4 +120,11 @@
             shell: |
                 source ~/stackrc
                 openstack overcloud image upload --update-existing --image-path /tmp/fetchfiles_overcloud_image/
+            when: overcloud_image_name == "full"
+
+          - name: upload updated overcloud-hardened-uefi-full image to glance
+            shell: |
+                source ~/stackrc
+                openstack overcloud image upload --update-existing --whole-disk --image-path /tmp/fetchfiles_overcloud_image/
+            when: overcloud_image_name == "hardened"
         when: install.get('fetchfiles', {}).get('overcloud', {})
