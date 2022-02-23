@@ -941,7 +941,7 @@ subparsers:
                           the option on both runs.
                   vbmc-host:
                       type: Value
-                      default: undercloud
+                      default: hypervisor
                       choices:
                           - "hypervisor"
                           - "undercloud"
