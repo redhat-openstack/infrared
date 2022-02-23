@@ -219,6 +219,26 @@
               option: custom_env_files
               value: "{{ env_files | difference(['']) | join(',') }}"
 
+          - name: Set predefined overcloud_hardened_uefi
+            set_fact:
+              overcloud_hardened_uefi: {{ install.overcloud.hardened.uefi }}
+            when: install.overcloud.hardened.uefi is defined
+              
+          - name: Set overcloud_hardened_uefi OSP<=16
+            set_fact:
+              overcloud_hardened_uefi: False
+            when:
+              - install.version|openstack_release <= 16
+              - overcloud_hardened_uefi is not defined
+
+          - name: Set overcloud_hardened_uefi OSP>=17
+            set_fact:
+              overcloud_hardened_uefi: True
+            when:
+              - install.version|openstack_release >= 17
+              - overcloud_hardened_uefi is not defined
+
+
         vars:
           - ironic_custom_env_file: "{{ working_dir }}/ironic_deploy_interface_direct.yaml"
           - ntp_custom_env_file: "{{ working_dir }}/ntp_pool.yaml"
