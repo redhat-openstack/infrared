@@ -142,6 +142,8 @@
         vars:
           dstat_output_dir: '/var/log/extra'
         tags: dstat
+        when:
+            - install.version|openstack_release != 17  # issue with pcp selinux RHBZ#2041503
 
       - name: install packages on Undercloud
         package:
