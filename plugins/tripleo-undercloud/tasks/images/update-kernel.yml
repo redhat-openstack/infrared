@@ -54,6 +54,7 @@
   with_items:
     - { src: "{{ overcloud_vmlinuz['path'] }}", dest: "~/overcloud-full.vmlinuz" }
     - { src: "{{ overcloud_initramfs['path'] }}", dest: "~/overcloud-full.initrd" }
+  when: overcloud_image_name == "full"
 
 - name: Ensure /tmp/boot is absent after updating
   file:
