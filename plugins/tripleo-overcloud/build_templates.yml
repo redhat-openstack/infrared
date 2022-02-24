@@ -84,8 +84,12 @@
       - name: Create the network_data.yaml
         template:
             src: 'templates/network_data{{ (install.network.protocol == "ipv6") | ternary("-v6","") }}.yaml.j2'
-            dest: '{{ template_base }}/network/network_data.yaml'
-        when: use_network_data|bool
+            dest: '{{ template_base }}/network/network_data_v2.yaml'
+
+      - name: Create the vip_data.yaml
+        template:
+            src: 'templates/vip_data.yaml'
+            dest: '{{ template_base }}/network/vip_data.yaml.j2'
 
       - name: inject debug.yaml so it will be auto discovered with user templates
         template:
