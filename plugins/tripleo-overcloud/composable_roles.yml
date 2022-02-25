@@ -48,6 +48,24 @@
             src: composable_roles/roles_data.yaml.j2
             dest: "{{ template_base }}/roles/roles_data.yaml"
             force: yes
+        # TODO: the roles_data.yaml file should be dynamically generated
+        # since OSP12, so this and the following condition could be changed
+        when: install.version|default(undercloud_version)|openstack_release < 17
+
+      - block:
+          - name: template for generating roles_data.yml
+            template:
+                src: tripleo_roles/tripleo_roles.sh.j2
+                dest: "{{ template_base }}/roles/tripleo_roles.sh"
+                force: yes
+
+          - name: generate roles_data.yaml
+            shell: |
+                source ~/stackrc
+                bash "{{ template_base }}/roles/tripleo_roles.sh" &> roles_data.log
+            register: roles_data
+
+        when: install.version|default(undercloud_version)|openstack_release >= 17
 
       - name: create the nodes file
         template:
