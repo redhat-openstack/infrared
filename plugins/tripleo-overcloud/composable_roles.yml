@@ -91,6 +91,7 @@
             src: composable_roles/network-config.yaml.j2
             dest: "{{ template_base }}/roles/network-config.yaml"
             force: yes
+        when: install.version|default(undercloud_version)|openstack_release < 17
 
       - name: assigning specific node ids
         import_tasks: tasks/control_node_placement/specific_node_ids.yml
