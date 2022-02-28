@@ -205,7 +205,7 @@ Overcloud Options
 
 Tripleo Heat Templates configuration options
 --------------------------------------------
-* ``--config-heat``: Inject additional Tripleo Heat Templates configuration options under "paramater_defaults"
+* ``--config-heat``: Inject additional Tripleo Heat Templates configuration options under "parameter_defaults"
     entry point. Example:
 
     .. code-block:: shell

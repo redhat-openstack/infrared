@@ -58,7 +58,7 @@ Setup an Undercloud
 
     .. note::
          - This feature is supported by OSP 13 or RDO queens versions.
-         - This feature is expiremental and should be used only for development.
+         - This feature is experimental and should be used only for development.
 
 * ``--custom-sources-script-url`` setup custom repos (package sources) by a custom user provided script.
     This way allows to not have any internal infrastructure related logic included,
@@ -192,7 +192,7 @@ Add custom repositories to the undercloud, after `installing the TripleO reposit
                 gpgcheck: 0
               ...
 
-      .. note:: This expicitly supports some of the options found in
+      .. note:: This explicitly supports some of the options found in
         yum_repository module (name, file, description, baseurl, enabled and gpgcheck).
         For more information about this module, visit `Ansible yum_repository documentation <https://docs.ansible.com/ansible/yum_repository_module.html>`_.
 
@@ -208,7 +208,7 @@ Both options can be used together::
 TripleO Undercloud User
 -----------------------
 ``--user-name`` and ``--user-password`` define a user, with password,
-for the undercloud. Acorrding to TripleO guidelines, the default username is ``stack``.
+for the undercloud. According to TripleO guidelines, the default username is ``stack``.
 User will be created if necessary.
 .. note:: Stack user password needs to be changed in case of public deployments
 

@@ -19,7 +19,7 @@ sosreport.
 
 .. note:: All nodes must have yum repositories configured in order for the tasks to work on them.
 
-.. note:: To enable logging using all available faclilties, i.e. host and sosreport use parameter --logger=all
+.. note:: To enable logging using all available facilities, i.e. host and sosreport use parameter --logger=all
 
 
 Usage example::

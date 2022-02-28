@@ -7,7 +7,7 @@ More details can be found here: https://access.redhat.com/documentation/en-us/re
 
 The ``cloud-config`` plugin automates that procedure. Suppose you already have a deployment with more than one controller.
 
-First step is to extend existing deployment with a new controller node. For virtaul deployment the ``virsh`` plugin can be used::
+First step is to extend existing deployment with a new controller node. For virtual deployment the ``virsh`` plugin can be used::
 
     infrared virsh  --topology-nodes controller:1 \
                     --topology-extend True \
@@ -22,7 +22,7 @@ Next step is to perform controller replacement procedure using ``cloud-config`` 
                           --controller-to-add=controller-3 \
 
 
-This will repalce controller-0 with the newly added controller-3 node. Nodes index start from 0.
+This will replace controller-0 with the newly added controller-3 node. Nodes index start from 0.
 
 Currently controller replacement is supported only for OSP13 and above.
 

@@ -126,7 +126,7 @@ Environments prepared such in way are usually used as basic virtual infrastructu
 
 .. note:: Virsh provisioner has idempotency issues, so ``infrared virsh ... --kill`` must be run before reprovisioning every time
           to remove libvirt resources related to active hosts form workspace inventory or ``infrared virsh ... --cleanup`` to remove ALL domains
-          and nettworks (except  'default') from hypervisor.
+          and networks (except  'default') from hypervisor.
 
 
 
@@ -172,7 +172,7 @@ networks, routers etc.
      infrared virsh [...] --topology-nodes compute:1,controller1,[...] --prefix foo [...]
 
 Will create resource with ``foo`` prefix.
-Resources from different environments could be differebtiaited using prefix, and virsh plugin will take care so they will not
+Resources from different environments could be differentiated using prefix, and virsh plugin will take care so they will not
 interfere with each other in terms of networking, virtual instances etc.
 
 Cleanup procedure also supports ``--prefix`` parameter allowing to cleanup only needed environment, if ``--prefix`` is not given 

@@ -1,7 +1,7 @@
 Standalone deployment
 =====================
 
-Infrared allows to deploy tripleo openstack in stancalone mode. This means that
+Infrared allows to deploy tripleo openstack in standalone mode. This means that
 all the openstack services will be hosted on one node.
 See https://blueprints.launchpad.net/tripleo/+spec/all-in-one for details.
 

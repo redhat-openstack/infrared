@@ -9,7 +9,7 @@ It is recommended to read `Plugins`_ section prior following steps from that gui
 Create new Git repo for a plugin
 ================================
 
-Recommended way to store Infarerd plugin is to put it into a separate Git repo.
+Recommended way to store Infrared plugin is to put it into a separate Git repo.
 So create and init new repo::
 
     $ mkdir simple-plugin && cd simple-plugin
@@ -18,7 +18,7 @@ So create and init new repo::
 
 Now you need to add two main files of every Infrared plugin:
     * ``plugin.spec``: describes the user interface of the plugin (CLI)
-    * ``main.yml``: the default entry point anbile playbook which will be run by the Infrared
+    * ``main.yml``: the default entry point Ansible playbook which will be run by the Infrared
 
 
 Create plugin.spec

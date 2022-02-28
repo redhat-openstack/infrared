@@ -20,9 +20,9 @@ for **iPXE provisioning**.
 And also extra user has to exist, which can ssh in the hypervisor and control (restart...) libvirt VMs.
 
 .. note:: `infrared` is attempting to configure or validate all (most) of this but it's may be
-          scattered across all provisiner/installer steps. Current infrared approach is stepped
-          toeard direction to be more idempotent, and failures on previous runs shouldn't prevent
-          succesfull executinon of following runs.
+          scattered across all provisioner/installer steps. Current infrared approach is stepped
+          toward direction to be more idempotent, and failures on previous runs shouldn't prevent
+          successful execution of following runs.
 
 What **user has to provide**:
 
