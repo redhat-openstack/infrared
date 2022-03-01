@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "05fe6794_545c3845",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-03-01T13:46:55Z",
+      "side": 1,
+      "message": "Seems this does not work, even when explicitly passing the param (search for --overcloud-hardened-uefi):\n\nhttps://rhos-ci-staging-jenkins.lab.eng.tlv2.redhat.com/job/psedlak-poc-phase1-17.0_compact-director-rhel-9.0-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/8/artifact/.sh/04-ospd_undercloud_all.log\nsee there \u0027[untar the images]\u0027 task (or \u0027overcloud-full.tar\u0027)\n",
+      "revId": "58face4aa7103b911baac2bbdffcf9456a41a410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "898b74c6_bc3a8d43",
+        "filename": "plugins/tripleo-overcloud/fetchfiles.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-03-01T13:46:55Z",
+      "side": 1,
+      "message": "this should be install.overcloud.hardened.uefi (see the name of option does not make that much sense when thinking about the \u0027scoping\u0027 path, likely should be something of overcloud-image \u003d \u0027hardened|full|....\u0027 i guess?)\nor same based-on-version decision as in uc should be done here too",
+      "revId": "58face4aa7103b911baac2bbdffcf9456a41a410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "43984317_62d5e994",
+        "filename": "plugins/tripleo-undercloud/configure.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-03-01T13:46:55Z",
+      "side": 1,
+      "message": "this should be install.overcloud.hardened.uefi\n\nor more likely both of these blocks should be preceded by something like\n\n  - set_fact: overcloud_hardened_uefi\u003d{{ install.overcloud.hardened.uefi }}\n    when: install.overcloud.hardened.uefi is defined\n  \n  # e.g. to have (simplified) flow like:\n  - (userParam set)    o_h_u \u003d userParam\n  - (o_h_u not set)    o_h_u \u003d (version \u003e\u003d 17)\n\nto let user value take precedence over auto-default values\n\n(see other comment, likely the param name should be different to make sense for key path like this, it\u0027s not uefi value under hardened section, uefi is different param)",
+      "revId": "58face4aa7103b911baac2bbdffcf9456a41a410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
