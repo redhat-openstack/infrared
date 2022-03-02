@@ -71,7 +71,7 @@
       - not install.role|default('') or (install.role is defined and install.role.files == 'default')
       - not install.splitstack
 
-- name: Deploy the Overcloud with composable roles
+- name: Deploy the Overcloud with composable roles - deprecated
   vars:
       deploy_script_template: templates/composable_roles/overcloud_deploy.sh.j2
       templates:
@@ -98,9 +98,6 @@
       - install.splitstack|default(False)
   tags:
       - splitstack
-
-#  todo(obaranov) temporary disable tripleo roles cause they do not respect
-#  netwrok settings and templates
 
 - name: Deploy the Overcloud with tripleo composable roles
   vars:
