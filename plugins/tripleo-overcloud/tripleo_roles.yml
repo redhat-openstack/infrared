@@ -12,16 +12,21 @@
       flavor_name_mapping:
           Controller: Controller
           ObjectStorage: SwiftStorage
+          ControllerNovaStandalone: Controller
       role_names_mapping:
           ceph: CephStorage
           swift: ObjectStorage
           compute_dvr: ComputeDVR
           aio: Standalone
           computehci: ComputeHCI
+          controllernovastandalone: ControllerNovaStandalone
       tht_mapping:
           - regexp: ^(Controller).*
             net_config_file: "controller{{ ipv6_postfix }}.yaml"
             node_name: controller
+          - regexp: ^(ControllerNovaStandalone).*
+            net_config_file: "controller{{ ipv6_postfix }}.yaml"
+            node_name: controllernovastandalone
           - regexp: ^(Novacontrol).*
             net_config_file: "novacontrol.yaml"
             node_name: novacontrol
