@@ -1,0 +1,28 @@
+{% raw -%}
+---
+network_config:
+- type: interface
+  name: nic1
+  use_dhcp: false
+  dns_servers: {{ ctlplane_dns_nameservers }}
+  addresses:
+  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+  routes:
+  - default: true
+    next_hop: {{ ctlplane_gateway_ip }}
+- type: ovs_bridge
+  name: br-isolated
+  use_dhcp: false
+  members:
+  - type: interface
+    name: nic2
+    primary: false
+  - type: vlan
+    vlan_id: {{ internal_api_vlan_id }}
+    addresses:
+    - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+  - type: vlan
+    vlan_id: {{ storage_vlan_id }}
+    addresses:
+    - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+{% endraw %}

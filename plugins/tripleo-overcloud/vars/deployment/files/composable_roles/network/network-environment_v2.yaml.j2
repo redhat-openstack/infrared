@@ -1,0 +1,23 @@
+# three-nics-vlans
+# v2 config
+
+parameter_defaults:
+    ControllerNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/controller.j2'
+    ComputeNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/compute.j2'
+    BlockStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/cinder-storage.j2'
+    ObjectStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/swift-storage.j2'
+    CephStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/ceph-storage.j2'
+{% if install.network.dvr %}
+    NeutronExternalNetworkBridge: "br-ex"
+{% else %}
+    NeutronExternalNetworkBridge: ""
+{% endif %}
+{% if install.version|openstack_release > 14 and not install.network.dvr and not install.network.ovs %}
+    ControllerParameters:
+      NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+    ComputeParameters:
+      NeutronBridgeMappings: ""
+{% else %}
+    NeutronBridgeMappings: "datacentre:br-ex,tenant:br-isolated"
+{% endif %}
+    NeutronNetworkVLANRanges: "tenant:1000:2000"
