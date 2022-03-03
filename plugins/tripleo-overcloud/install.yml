@@ -105,7 +105,7 @@
       templates:
           generate_host_name_template: yes
           storage_add_scale: no
-      use_network_data: "{{ install.network.render.templates|default(False) or ( install.storage.protocol.backend != 'nfs-ganesha' and install.network.protocol == 'ipv6' and
+      use_network_data: "{{ install.network.render.templates|default(False) or ( install.manila.storage.protocol != 'nfs-ganesha' and install.network.protocol == 'ipv6' and
       install.version|default(undercloud_version) | openstack_release >= 13 ) }}"
   import_playbook: "{{ composable_roles | default('tripleo_roles.yml') }}"
   when:

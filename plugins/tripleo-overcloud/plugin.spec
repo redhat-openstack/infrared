@@ -691,9 +691,23 @@ subparsers:
                           - iscsi
                           - NA
                       help: |
+                        Deprecated option: please use manila-storage-protocol.
                         The storage protocol that we would like to use.
                         nfs-ganesha works only if the storage backand is ceph
                         NOTE: nfs and iscsi are not implemented but added to be decoupled from storage backend parameter
+                  manila-storage-protocol:
+                      deprecates: storage-protocol-backend
+                      type: Value
+                      default: NA
+                      choices:
+                          - nfs-ganesha
+                          - nfs
+                          - iscsi
+                          - NA
+                      help: |
+                        The manila storage protocol that we would like to use.
+                        nfs-ganesha works only if manila is configured to use ceph.
+                        nfs and iscsi have been added for compatibility with storage-protocol-backend but they will removed.
                   nova-nfs-backend:
                       type: Bool
                       help: |
