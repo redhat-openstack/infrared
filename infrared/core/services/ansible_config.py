@@ -7,26 +7,6 @@ from infrared.core.utils.validators import AnsibleConfigValidator
 
 LOG = logger.LOG
 
-INFRARED_COMMON_PATH = os.path.realpath(__file__ + '/../../../common')
-
-DEFAULT_ANSIBLE_SETTINGS = dict(
-    defaults=OrderedDict([
-        ('host_key_checking', 'False'),
-        ('forks', 500),
-        ('timeout', 30),
-        ('force_color', 1),
-        ('show_custom_stats', 'True'),
-        ('callback_plugins', INFRARED_COMMON_PATH + '/callback_plugins'),
-        ('filter_plugins', INFRARED_COMMON_PATH + '/filter_plugins'),
-        ('library', INFRARED_COMMON_PATH + '/modules'),
-        ('roles', INFRARED_COMMON_PATH + '/roles'),
-    ]),
-    ssh_connection=OrderedDict([
-        ('pipelining', 'True'),
-        ('retries', 2),
-    ]),
-)
-
 
 class AnsibleConfigManager(object):
 
@@ -39,7 +19,7 @@ class AnsibleConfigManager(object):
         config_validator = AnsibleConfigValidator()
 
         if not os.path.isfile(self.ansible_config_path):
-            self._create_ansible_config()
+            self._create_ansible_config(infrared_home)
         else:
             config_validator.validate_from_file(self.ansible_config_path)
 
@@ -70,8 +50,32 @@ class AnsibleConfigManager(object):
 
         return os.path.join(infrared_home, 'ansible.cfg')
 
-    def _create_ansible_config(self):
+    def _create_ansible_config(self, infrared_home):
         """Create ansible config file """
+        infrared_common_path = os.path.realpath(__file__ + '/../../../common')
+        default_ansible_settings = dict(
+            defaults=OrderedDict([
+                ('host_key_checking', 'False'),
+                ('forks', 500),
+                ('timeout', 30),
+                ('force_color', 1),
+                ('show_custom_stats', 'True'),
+                ('callback_plugins', infrared_common_path + '/callback_plugins'),
+                ('filter_plugins', infrared_common_path + '/filter_plugins'),
+                ('library', infrared_common_path + '/modules'),
+                ('roles', infrared_common_path + '/roles'),
+                ('collections_paths', infrared_home + '/.ansible/collections'),
+                ('local_tmp', infrared_home + '/.ansible/tmp'),
+            ]),
+            ssh_connection=OrderedDict([
+                ('pipelining', 'True'),
+                ('retries', 2),
+            ]),
+            galaxy=OrderedDict([
+                ('cache_dir', infrared_home + '/.ansible/galaxy_cache'),
+                ('token_path', infrared_home + '/.ansible/galaxy_token'),
+            ]),
+        )
 
         LOG.warning("Ansible conf ('{}') not found, creating it with "
                     "default data".format(self.ansible_config_path))
@@ -79,7 +83,7 @@ class AnsibleConfigManager(object):
         with open(self.ansible_config_path, 'w') as fp:
             config = configparser.ConfigParser()
 
-            for section, section_data in DEFAULT_ANSIBLE_SETTINGS.items():
+            for section, section_data in default_ansible_settings.items():
                 if not config.has_section(section):
                     config.add_section(section)
                 for option, value in section_data.items():
