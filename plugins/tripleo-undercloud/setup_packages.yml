@@ -128,6 +128,23 @@
           yum-config-manager --add-repo {{ item }}
         with_items: "{{ custom_repos.urls|default([]) }}"
 
+      - name: Enable extra repo for vbmc dependencies (RHEL9)
+        become: yes
+        shell: |
+            set -ex
+            dnf config-manager --save --setopt rhosp-rhel-{{ version_escaped }}-crb.includepkgs=libvirt-devel
+            dnf config-manager --set-enabled rhosp-rhel-{{ version_escaped }}-crb
+        vars:
+            version_escaped: "{{ ansible_distribution_major_version }}\\.{{ ansible_distribution_minor_version }}"
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_major_version | int >= 9
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - cdn_status.rc != 0
+            - not skip_release
+        tags: rhos-release
+
       - name: Disable gpgcheck for custom repos
         become: yes
         shell: |
