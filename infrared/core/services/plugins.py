@@ -23,6 +23,7 @@ from infrared.core.utils.exceptions import IRFailedToImportPlugins
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRPluginExistsException
+from infrared.core.utils.exceptions import IRGalaxyRoleInstallFailedException
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
 from infrared.core.utils import logger
 from infrared.core.utils.validators import RegistryValidator
@@ -587,9 +588,10 @@ class InfraredPluginManager(object):
             galaxy_reqs_file = os.path.join(plugin_path, req_file)
             if not os.path.isfile(galaxy_reqs_file):
                 continue
-            LOG.debug("Installing Galaxy "
-                      "requirements... ({})".format(galaxy_reqs_file))
+            LOG.debug("Installing Ansible Galaxy "
+                      "requirements from file... ({})".format(galaxy_reqs_file))
             from ansible.cli.galaxy import GalaxyCLI
+            from ansible.errors import AnsibleError
 
             glxy_cli_params = ['ansible-galaxy',
                                'role',
@@ -598,12 +600,28 @@ class InfraredPluginManager(object):
                                galaxy_reqs_file]
             if InfraredPluginManager._is_collection_requirements(galaxy_reqs_file):
                 glxy_cli_params[1] = 'collection'
-            LOG.debug("Galaxy command: {}".format(glxy_cli_params))
+            LOG.debug("Ansible Galaxy command: {}".format(glxy_cli_params))
             glxy_cli = GalaxyCLI(glxy_cli_params)
             glxy_cli.parse()
-            glxy_cli.run()
+
+            # Trying to install Ansible Galaxy required collection 5 times to circumvent potential network issues
+            LOG.debug("Trying to install Ansible Galaxy required "
+                      "collection 5 times to circumvent potential network issues")
+            glxy_cli_success = False
+            for r in range(0, 5):
+                try:
+                    glxy_cli.run()
+                    glxy_cli_success = True
+                    break
+                except AnsibleError as e:
+                    print('Failed to install Ansible Galaxy requirements, error: ', e)
+                    print('Retrying in 5 seconds')
+                    time.sleep(5)
+            if not glxy_cli_success:
+                raise IRGalaxyRoleInstallFailedException(
+                    "Failed to install Ansible Galaxy requirements, aborting!")
         else:
-            LOG.debug("Galaxy requirements files weren't found.")
+            LOG.debug("Ansible Galaxy requirements files weren't found.")
 
     @staticmethod
     def _is_collection_requirements(requirements_path):
