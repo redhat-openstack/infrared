@@ -56,10 +56,19 @@
       - install.storage.protocol.backend == "nfs-ganesha"
       - install.version|default(undercloud_version)|openstack_release == 13
 
-- name: append network_data_ganesha
+- name: append network_data_ganesha - network-data v1
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-n /usr/share/openstack-tripleo-heat-templates/network_data_ganesha.yaml   \'
   when:
       - install.storage.protocol.backend == "nfs-ganesha"
       - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release < 17
+
+- name: append network_data_ganesha - network-data v2
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-n /usr/share/openstack-tripleo-heat-templates/network-data-samples/ganesha{{ (install.network.protocol == "ipv4") | ternary("", "-v6") }}.yaml  \'
+  when:
+      - install.storage.protocol.backend == "nfs-ganesha"
+      - install.version|default(undercloud_version)|openstack_release >=17
