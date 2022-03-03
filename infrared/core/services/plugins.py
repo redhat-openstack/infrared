@@ -23,6 +23,7 @@ from infrared.core.utils.exceptions import IRFailedToImportPlugins
 from infrared.core.utils.exceptions import IRFailedToRemovePlugin
 from infrared.core.utils.exceptions import IRFailedToUpdatePlugin
 from infrared.core.utils.exceptions import IRPluginExistsException
+from infrared.core.utils.exceptions import IRRoleInstallFailedException
 from infrared.core.utils.exceptions import IRUnsupportedPluginType
 from infrared.core.utils import logger
 from infrared.core.utils.validators import RegistryValidator
@@ -590,6 +591,7 @@ class InfraredPluginManager(object):
             LOG.debug("Installing Galaxy "
                       "requirements... ({})".format(galaxy_reqs_file))
             from ansible.cli.galaxy import GalaxyCLI
+            from ansible.errors import AnsibleError
 
             glxy_cli_params = ['ansible-galaxy',
                                'role',
@@ -601,7 +603,21 @@ class InfraredPluginManager(object):
             LOG.debug("Galaxy command: {}".format(glxy_cli_params))
             glxy_cli = GalaxyCLI(glxy_cli_params)
             glxy_cli.parse()
-            glxy_cli.run()
+
+            # Trying to install Ansible Galaxy required collection 5 times because network issues
+            glxy_cli_success = False
+            for r in range(0, 5):
+                try:
+                    glxy_cli.run()
+                    glxy_cli_success = True
+                    break
+                except AnsibleError as e:
+                    print('Failed to install Ansible Galaxy requirements, retrying in 5 seconds.')
+                    print('Ansible Error: ', e)
+                    time.sleep(5)
+            if not glxy_cli_success:
+                raise IRRoleInstallFailedException(
+                    "Failed to install Ansible Galaxy requirements, aborting!")
         else:
             LOG.debug("Galaxy requirements files weren't found.")
 
