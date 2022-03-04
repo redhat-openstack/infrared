@@ -16,6 +16,24 @@
       "message": "I see what it does, I don\u0027t understand the use case.\n\nIf you want to run different directories, you should run call tempest plugin separately.\n\nPlease let\u0027s discuss about this.",
       "revId": "20b772aeac5d934ab313e7c861617ebb8fbffc9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b39c0027_3b793d80",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2022-03-04T16:28:03Z",
+      "side": 1,
+      "message": "Hi Luigi,\n\nIn some d/s CI jobs, the tempest stage runs more than one test suite. Example: \n--tests neutron,neutron_single_threaded used by default in the job \"DFG-network-networking-ovn-16.1_director-rhel-virthost-3cont_2comp-ipv4-geneve-gate-ovn\"\n\nYou are familiar with this because most of the unified jobs run several suites.\n\n\nIn our case, we want to run the neutron and neutron_single_threaded suites with different compute-feature-enabled.console_output values (True for neutron, False for neutron_single_threaded).\nWe have a simple solution for this available: run two tempest stages in these jobs.\nEach tempest stage repeats the same tasks (download tempest image, create tempest config, check everything is installed, etc), consuming too much time.\n\nWe think this is a better solution to resolve our problem.\n\nLet me know if it is not clear yet.\n\nPS: you mentioned directories, but this patch is not about different directories, it just replaces a config option from ~/tempest-dir/etc/tempest.conf",
+      "parentUuid": "1b1ca282_370a06bf",
+      "revId": "20b772aeac5d934ab313e7c861617ebb8fbffc9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
