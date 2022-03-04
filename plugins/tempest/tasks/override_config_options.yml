@@ -1,0 +1,7 @@
+- name: modify tempest config file
+  ini_file:
+    path: "~/{{ test.dir }}/etc/tempest.conf"
+    section: "{{ config_options.key }}"
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_dict: "{{ config_options.value }}"
