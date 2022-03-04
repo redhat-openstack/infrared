@@ -35,6 +35,21 @@
 - name: Include test suite vars
   include_vars: "{{ test_suite_file }}"
 
+- block:
+    - name: backup existing tempest config
+      copy:
+          src: "~/{{ test.dir }}/etc/tempest.conf"
+          dest: "~/{{ test.dir }}/etc/tempest.conf.{{ test_suite }}.bak"
+          remote_src: yes
+          force: yes
+
+    - name: apply config changes
+      include_tasks: "override_config_options.yml"
+      loop_control:
+        loop_var: config_options
+      with_dict: "{{ test_dict.override_tempest_config_options }}"
+  when: test_dict.override_tempest_config_options is defined and test_dict.override_tempest_config_options
+
 - name: remove old test list for "{{ test_suite }}"
   file:
       state: absent
@@ -231,3 +246,11 @@
             chdir: "{{ test.dir }}"
         when: test.cleanup and test.openstack.version|default(overcloud_version)|openstack_release > 7
   when: test_dict.test_regex is defined or whitelistfile is defined or blacklistfile is defined
+
+- name: restore backuped tempest config
+  copy:
+      src: "~/{{ test.dir }}/etc/tempest.conf.{{ test_suite }}.bak"
+      dest: "~/{{ test.dir }}/etc/tempest.conf"
+      force: yes
+      remote_src: yes
+  when: test_dict.override_tempest_config_options is defined and test_dict.override_tempest_config_options
