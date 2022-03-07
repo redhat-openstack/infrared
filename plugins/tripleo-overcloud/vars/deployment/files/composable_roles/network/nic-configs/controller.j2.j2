@@ -31,6 +31,16 @@ network_config:
     vlan_id: {{ storage_mgmt_vlan_id }}
     addresses:
     - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
+{%- endraw %}
+{%- if install.manila.storage.protocol == 'nfs-ganesha' %}
+{% raw -%}
+  - type: vlan
+    vlan_id: {{ storage_nfs_vlan_id }}
+    addresses:
+    - ip_netmask: {{ storage_nfs_ip }}/{{ storage_nfs_cidr }}
+{%- endraw %}
+{% endif -%}
+{% raw -%}
   - type: vlan
     vlan_id: {{ tenant_vlan_id }}
     addresses:
