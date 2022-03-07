@@ -667,7 +667,7 @@ subparsers:
                   ceph-pgnum:
                       type: Value
                       default: 32
-                      help: set the default amount of placement groups for the pools in the internal Ceph cluster
+                      help: Set the default amount of placement groups for the pools in the internal Ceph cluster. In OSP 17 and newer it is ignored for initial Ceph deployment unless --ceph-initial-conf-file is used to set it. Ceph's pg_autoscale_mode is on by default in RHCSv5 and newer.
 
                   ceph-initial-conf-file:
                       type: Value
