@@ -73,23 +73,6 @@
   when:
       - (install.version|default(undercloud_version) | openstack_release >= 17)
 
-- name: Copy registries.conf overrides from UC to controller and ceph nodes
-  hosts: controller, ceph
-  any_errors_fatal: true
-  gather_facts: no
-  tasks:
-      - name: Insecure UC registry needs to be trusted on these nodes
-        ini_file:
-          path: /etc/containers/registries.conf
-          create: no
-          backup: yes
-          section: registries.insecure
-          option: registries
-          value: "['192.168.24.1:8787']"
-        become: true
-        when:
-            - (install.version|default(undercloud_version) | openstack_release >= 17)
-
 - name: Deploy Deployed Ceph using cephadm and local UC registry
   hosts: undercloud
   vars:
@@ -102,25 +85,6 @@
         stat:
           path: "{{ template_base }}/roles/roles_data.yaml"
         register: roles_data_file
-
-        # Until BZ 2036868 is resolved using --ceph-initial-conf-file
-        # with small Ceph deploys will result in the initial conf file
-        # being ignored. Review 532922 will resolve this.
-      - name: create small ceph cfg in case of low node count
-        copy:
-          dest: "{{ ansible_user_dir }}/initial-ceph.conf"
-          content: |
-              [global]
-              osd pool default size = 1
-              osd pool default pg num = {{ install.ceph.pgnum }}
-              osd pool default pgp num = {{ install.ceph.pgnum }}
-              [mon]
-              mon_warn_on_pool_no_redundancy = false
-        when:
-            - (install.version|default(undercloud_version) | openstack_release >= 17.0)
-            - install.storage.backend|default('') == 'ceph'
-            - not install.storage.external
-            - ceph_node_cnt|int < 3
 
       - block:
           - name: create ceph deploy script
