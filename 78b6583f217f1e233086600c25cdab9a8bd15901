@@ -16,6 +16,23 @@
       "message": "LGTM, gate should pass as only the param description changed here so given Luigi (and optionally Pavel - pto but still around) are ok then we can push the button",
       "revId": "78b6583f217f1e233086600c25cdab9a8bd15901",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d1a58a6a_2638c470",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-03-07T23:54:14Z",
+      "side": 1,
+      "message": "I suspected it couldn\u0027t work, and in fact the template in a default value doesn\u0027t seem to work:\n\n2022-03-07 22:23:15.161 | ERROR   \u003cclass \u0027ansible.errors.AnsibleParserError\u0027\u003e: The field \u0027hosts\u0027 has an invalid value, which includes an undefined variable. The error was: {\u0027cleanup\u0027: False, \u0027collect\u0027: {\u0027ansible\u0027: {\u0027facts\u0027: False}}, \u0027configure\u0027: {\u0027whitebox\u0027: {\u0027db\u0027: False, \u0027plugin\u0027: False}}, \u0027customized\u0027: {\u0027image\u0027: {\u0027flavor\u0027: False}}, \u0027debug\u0027: {\u0027command\u0027: \u0027sosreport --batch --build --tmp-dir /var/log/extra --log-size\u003d1 -p openstack\u0027}, \u0027dir\u0027: \u0027tempest-dir\u0027, \u0027image\u0027: \u0027http://rhos-qe-mirror-tlv.usersys.redhat.com/images/cirros-0.4.0-x86_64-disk.img\u0027, \u0027install\u0027: {\u0027crudini\u0027: False}, \u0027legacy\u0027: {\u0027config\u0027: False}, \u0027list\u0027: False, \u0027mode\u0027: \u0027normal\u0027, \u0027openstack\u0027: {\u0027installer\u0027: \u0027tripleo\u0027, \u0027version\u0027: \u002716.1\u0027}, \u0027results\u0027: {\u0027dir\u0027: \u0027{{ inventory_dir }}/test_results\u0027, \u0027formats\u0027: \u0027junitxml,html\u0027}, \u0027revision\u0027: \u0027HEAD\u0027, \u0027rpm\u0027: {\u0027package\u0027: \u0027\u0027}, \u0027setup\u0027: \u0027rpm\u0027, \u0027tempest\u0027: {\u0027config\u0027: True}, \u0027test\u0027: {\u0027step\u0027: {\u0027id\u0027: \u00271\u0027}, \u0027suite\u0027: {\u0027prefix\u0027: \u0027\u0027}}, \u0027tests\u0027: [\u0027/home/rhos-ci/jenkins/workspace/gate-infrared-tripleo-overcloud-osp16.1-ipv4/infrared/plugins/tempest/vars/tests/minimal.yml\u0027], \u0027threads\u0027: 8}: \u0027inventory_dir\u0027 is undefined\n\nUnless I\u0027ve missed something simple, just go for the easy solution: remove the default value at all, and add a line in the main of each plugin which checks if the variables was defined. If it is defined, save its value in fact, and if is not defined, set the value of that fact to {{ inventory_dir }}/test_results, and then use that fact.",
+      "revId": "78b6583f217f1e233086600c25cdab9a8bd15901",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
