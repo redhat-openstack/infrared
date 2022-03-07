@@ -52,6 +52,24 @@
       "parentUuid": "b39c0027_3b793d80",
       "revId": "20b772aeac5d934ab313e7c861617ebb8fbffc9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "85841591_6ee7a434",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2022-03-07T15:22:21Z",
+      "side": 1,
+      "message": "\u003e I see, but I think it introduces a fragile special condition which works just for one of the many test suites.\nI don\u0027t see why the change is fragile. The new parameter is optional and nothing changes for those suites not using it; and the original tempest.conf is restored after the suite is executed.\n\n\u003e How would you do this? Calling tempest run twice in the same block of code? That would be another special case.\nI don\u0027t understand these questions. For example, this is how it would work with \"--test neutron,neutron_single_threaded\"\n1) The tempest.conf is created before the suites are run.\n2) The neutron suite is run with \u0027tempest run\u0027. It doesn\u0027t include the new parameter, so it uses the original tempest.conf\n3) The neutron_single_threaded includes the new param, so tempest.conf is modified; then, the suite is executed with tempest run; finally, the original tempest.conf is restored\n\n\u003e \n\u003e I believe the time spent for the tempest initialization is usually negligible compared to the time spent running the tests, and we may simplify it a bit in case to cut down some time (for example checking if the images are already downloaded).\nI checked the time spent by the tempest stage before the tests are executed and it is about 6 min. It\u0027s much lower than the tempest run time. I agree with you on this.\n\n\u003e \n\u003e So I don\u0027t think the change is needed.\nThe alternative to this change is modifying many networking CI jobs with: 1) adding the second tempest stage; 2) duplicating the ir_tempest_run_override_options to maintain a set of tempest config values per suite.\nI really think this patch is better solution than the alternative.",
+      "parentUuid": "fb3f9127_c27bcbaa",
+      "revId": "20b772aeac5d934ab313e7c861617ebb8fbffc9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
