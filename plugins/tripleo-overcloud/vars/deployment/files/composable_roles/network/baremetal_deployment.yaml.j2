@@ -12,6 +12,9 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+{%- if install.manila.storage.protocol == 'nfs-ganesha' %}
+    - network: storage_nfs
+{% endif -%}
     - network: internal_api
     - network: tenant
     - network: external
