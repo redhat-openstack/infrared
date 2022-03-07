@@ -321,6 +321,13 @@ subparsers:
                       help: Specifies whether fencing should be configured and enabled on the overcloud
                             (Supported from OSP13 and newer)
 
+                  overcloud-ironic-custom-file:
+                      type: Bool
+                      default: yes
+                      help: |
+                            Specifies whether to create ironic-custom.yaml file.
+                            Note: This option is used with --ironic flag and built with predefined variables.
+
                   overcloud-fencing_delay:
                       type: Value
                       default: 0
