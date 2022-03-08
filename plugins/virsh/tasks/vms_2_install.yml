@@ -67,6 +67,9 @@
            --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
            --ram {{ topology_node.memory }} \
            --vcpus {{ topology_node.cpu }} \
+           {% if topology_node.machine_type is defined and topology_node.machine_type %}
+           --machine {{ topology_node.machine_type }} \
+           {% endif %}
            --os-variant {{ topology_node.os.variant }} \
            --import \
            --graphics vnc,listen={{ provision.vnc.external | ternary('0.0.0.0','127.0.0.1') }},password={{ provision.vnc.password if provision.vnc.password is defined else '' }} \
