@@ -40,6 +40,63 @@
       vif: true
     - network: storage
     - network: internal_api
+- name: Database
+  count: {{ (install.database|default({})).nodes|default(0) or groups.database|default([])|length }}
+  hostname_format: database-%index%
+  defaults:
+    network_config:
+      network_config_update: false
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+      template: null
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: internal_api
+      subnet: internal_api_subnet
+  profile: database
+- name: Messaging
+  count: {{ (install.messaging|default({})).nodes|default(0) or groups.messaging|default([])|length }}
+  hostname_format: messaging-%index%
+  defaults:
+    network_config:
+      network_config_update: false
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+      template: null
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: internal_api
+      subnet: internal_api_subnet
+  instances:
+  - hostname: messaging-0
+    name: messaging-1
+  - hostname: messaging-1
+    name: messaging-2
+  - hostname: messaging-2
+    name: messaging-0
+- name: Networker
+  count: 2
+  hostname_format: networker-%index%
+  defaults:
+    network_config:
+      network_config_update: false
+      physical_bridge_name: br-ex
+      public_interface_name: nic1
+      template: null
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: internal_api
+      subnet: internal_api_subnet
+    - network: tenant
+      subnet: tenant_subnet
+  instances:
+  - hostname: networker-0
+    name: networker-1
+  - hostname: networker-1
+    name: networker-0
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
 - name: CephStorage
