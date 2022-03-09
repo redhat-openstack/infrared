@@ -121,7 +121,9 @@
             -e ~/containers-prepare-parameter.yaml \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}{{ environment_yamls | default('') }} {% endif -%}
             {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+            {% if install.version|default(undercloud_version)|openstack_release < 17 %}
             --output-env-file {{ template_base }}/docker-images.yaml
+            {% endif -%}
       when: install.version|default(undercloud_version)|openstack_release >= 14 and
             ( install.network.ovn|default(False) or
               install.ocupdate|default(False) or
