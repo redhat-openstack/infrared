@@ -2,13 +2,13 @@
 
 # TODO(fultonj):
 # - remove --container-namespace line after BZ 2042973 resolved
-# - replace --config w/ --singe-node after BZ 2036868 resolved
 
 openstack overcloud ceph deploy \
 -o /home/stack/templates/overcloud-ceph-deployed.yaml \
 --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
 --container-namespace 192.168.24.1:8787/rh-osbs \
-{% if install.ceph.initial.conf.file or ceph_node_cnt|int < 3 %} --config {{ ansible_user_dir }}/initial-ceph.conf{% endif %} \
+{% if install.ceph.initial.conf.file %} --config {{ ansible_user_dir }}/initial-ceph.conf{% endif %} \
+{% if ceph_node_cnt|int < 3 %}--single-host-defaults {% endif %} \
 --stack "{{ install.overcloud.stack }}" \
 --network-data "{{ template_base }}/network/network_data_v2.yaml" \
 {% if roles_data_file.stat.exists %}--roles-data {{ roles_data_file.stat.path }}{% endif %} \
