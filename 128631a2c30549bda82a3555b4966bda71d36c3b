@@ -85,6 +85,23 @@
       "message": "This the patch needed to test this patch is in the 17 compse:\n\n https://brewweb.engineering.redhat.com/brew/buildinfo?buildID\u003d1889397",
       "revId": "128631a2c30549bda82a3555b4966bda71d36c3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6973a52c_9dc5c72b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-03-11T22:04:35Z",
+      "side": 1,
+      "message": "The build failed [1] with this:\n\nerror pinging docker registry registry-proxy.engineering.redhat.com: Get \\\"https://registry-proxy.engineering.redhat.com/v2/\\\": x509: certificate signed by unknown authority\n\nI see push_destination is true [2] and that containers were pushed to the undercloud [3]. Assuming the fixes are in the compose, then the new playbooks [4] should have updated /etc/hosts [5] and the container registry [6] but they were not updated.\n\nThe plays \"Configure overcloud container registry\" and \"Configure overcloud hosts file\" are not in the ansible log [3]. They would have been called by the new python client [7][8].\n\nWere the required changes in the compose when this ran? Checking RPMs on undercloud [9].\n\n2022-03-11T15:23:27-0500 SUBDEBUG Installed: tripleo-ansible-3.3.1-0.20220204021043.c195ba1.el8ost.noarch\n\n2022-03-11T15:23:33-0500 SUBDEBUG Installed: python3-tripleoclient-16.4.1-0.20220204020916.6c76392.el8ost.noarch\n\nNext: Need to update here if the fixes were actually tested.\n\n\n[1] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/208/undercloud-0/home/stack/overcloud_ceph_deployment.log.gz\n\n[2] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/208/undercloud-0/home/stack/containers-prepare-parameter.yaml.gz\n\n[3] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/208/undercloud-0/home/stack/ansible.log.gz\n\n[4] https://review.opendev.org/c/openstack/tripleo-ansible/+/828562\n\n[5] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/208/controller-0/etc/hosts.gz\n\n[6] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/208/controller-0/etc/containers/registries.conf.gz\n\n[7] https://review.opendev.org/c/openstack/python-tripleoclient/+/828561/3/tripleoclient/v2/overcloud_ceph.py#406\n\n[8] https://review.opendev.org/c/openstack/python-tripleoclient/+/828561/3/tripleoclient/v2/overcloud_ceph.py#447\n\n[9] http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/208/undercloud-0/var/log/dnf.rpm.log.gz",
+      "revId": "128631a2c30549bda82a3555b4966bda71d36c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
