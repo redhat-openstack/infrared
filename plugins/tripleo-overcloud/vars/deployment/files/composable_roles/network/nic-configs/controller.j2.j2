@@ -9,9 +9,20 @@ network_config:
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
   routes:
+{%- endraw %}
+{%- if install.network.protocol == 'ipv6' %}
+{% raw %}
   - ip_netmask: 0.0.0.0/0
     next_hop: {{ ctlplane_gateway_ip }}
     default: true
+{%- endraw %}
+{% endif -%}
+{% raw %}
+  - default: true
+    next_hop: {{ ctlplane_gateway_ip }}
+{%- endraw %}
+{% endif -%}
+{% raw %}
 - type: ovs_bridge
   name: br-isolated
   use_dhcp: false
