@@ -239,6 +239,10 @@
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
 
+      - include_tasks: tasks/generate_baremetal_deployment.yml
+        tags: deploy
+        when: install.version|default(undercloud_version)|openstack_release >= 17
+
       - name: set overcloud_deploy script
         set_fact:
            overcloud_deploy_script: '~/overcloud_deploy.sh'
