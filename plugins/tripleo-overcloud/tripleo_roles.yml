@@ -75,19 +75,22 @@
             node_names_mapping: "{{ node_names_mapping|default({}) | combine({ item.value: item.key}) }}"
         with_dict: "{{ role_names_mapping }}"
 
-      - name: read roles data file
-        command: "cat {{ template_base }}/roles/roles_data.yaml"
-        register: roles_data_output
+      - block:
+          - name: read roles data file
+            command: "cat {{ template_base }}/roles/roles_data.yaml"
+            register: roles_data_output
 
-      - name: load roles data to var
-        set_fact:
-            roles_data_var: "{{ roles_data_output.stdout | from_yaml }}"
+          - name: load roles data to var
+            set_fact:
+                roles_data_var: "{{ roles_data_output.stdout | from_yaml }}"
 
-      - name: create list with nodes which don't have hostname format
-        set_fact:
-            nodes_without_hostname_format: "{{ nodes_without_hostname_format|default({}) | combine({node_names_mapping.get(item.name, item.name|lower): item.name}) }}"
-        when: item.HostnameFormatDefault is not defined
-        with_items: "{{ roles_data_var }}"
+          - name: create list with nodes which don't have hostname format
+            set_fact:
+                nodes_without_hostname_format: "{{ nodes_without_hostname_format|default({}) | combine({node_names_mapping.get(item.name, item.name|lower): item.name}) }}"
+            when: item.HostnameFormatDefault is not defined
+            with_items: "{{ roles_data_var }}"
+        when:
+           - install.version|default(undercloud_version) | openstack_release < 17
 
       - name: prepare hostname template for roles without default format
         template:
