@@ -103,7 +103,8 @@
   vars:
       deploy_script_template: templates/tripleo_roles/overcloud_deploy.sh.j2
       templates:
-          generate_host_name_template: yes
+          # the host name template is not needed with baremetal provisioning before overcloud
+          generate_host_name_template: "{{ (install.version|default(undercloud_version)|openstack_release < 17) | ternary('yes', 'no') }}"
           storage_add_scale: no
       use_network_data: "{{ install.network.render.templates|default(False) or ( install.manila.storage.protocol != 'nfs-ganesha' and install.network.protocol == 'ipv6' and
       install.version|default(undercloud_version) | openstack_release >= 13 ) }}"
