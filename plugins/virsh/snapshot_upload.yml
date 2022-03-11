@@ -26,7 +26,33 @@
         venv_shebang_relocate: yes
 
     - name: Upload the image set and cleanup afterwards
+      environment:
+        AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
+        AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
+      vars:
+        _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
       block:
+        - name: Update status and timestamp to enable status tracking
+          lineinfile:
+            path: "{{ provision.virsh.snapshot.path }}/status"
+            line: "upload-start {{ ansible_facts['date_time']['iso8601'] }}"
+            create: yes
+
+        - &upload_status_file
+          name: Upload the status file to object storage
+          shell: >-
+            source {{ _object_storage_client_venv_path | basename }}/bin/activate;
+            aws {{ _cli_aws_endpoint_url }}
+            s3 cp {{ provision.virsh.snapshot.path }}/status
+            {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path }}/
+          args:
+            executable: "/bin/bash"
+            chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+          register: _virsh_snapshot_upload_aws_result
+          retries: 10
+          delay: 30
+          until: _virsh_snapshot_upload_aws_result is success
+
         # The ansible s3_sync module does not currently support the s3_url parameter
         # which would allow it to work with Ceph RGW.
         # The ansible aws_s3 module supports the s3_url, but requires the upload of
@@ -34,8 +60,6 @@
         # We use the 'aws s3 sync' option due to it being able to work on the whole
         # folder at once with a high level of efficiency.
         - name: Upload the snapshot path folder to object storage
-          vars:
-            _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
           shell: >-
             source {{ _object_storage_client_venv_path | basename }}/bin/activate;
             aws {{ _cli_aws_endpoint_url }}
@@ -45,13 +69,18 @@
           args:
             executable: "/bin/bash"
             chdir: "{{ provision.virsh.snapshot.path | dirname }}"
-          environment:
-            AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID') }}"
-            AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY') }}"
-          register: _virsh_snapshot_download_aws_result
+          register: _virsh_snapshot_upload_aws_result
           retries: 10
           delay: 30
-          until: _virsh_snapshot_download_aws_result is success
+          until: _virsh_snapshot_upload_aws_result is success
+
+        - name: Update status and timestamp to enable status tracking
+          lineinfile:
+            path: "{{ provision.virsh.snapshot.path }}/status"
+            line: "upload-complete {{ ansible_facts['date_time']['iso8601'] }}"
+            create: yes
+
+        - *upload_status_file
       always:
         - name: Clean up the snapshot path
           file:
