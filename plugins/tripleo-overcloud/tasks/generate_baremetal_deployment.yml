@@ -1,0 +1,29 @@
+---
+- name: Check if the baremetal deployment file exists
+  stat:
+      path: "{{ template_base }}/network/baremetal_deployment.yaml"
+  register: baremetal_deployment
+
+- block:
+    - name: Copy the generator script
+      copy:
+        src: "files/generate_baremetal_deployment_from_roles_data.py"
+        dest: "generate_baremetal_deployment_from_roles_data.py"
+        mode: 0755
+
+    # FIXME: need to support other topologies
+    - name: Create baremetal_deployment templates to the deploy script
+      vars:
+        controller_cnt: "{{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}"
+        compute_cnt: "{{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}"
+        storage_cnt: "{{ (install.storage.nodes|default(0)) or (groups[install.storage.backend]|default([])|length) or 1 }}"
+      shell: |
+        ./generate_baremetal_deployment_from_roles_data.py \
+        -n {{ template_base }}/network/nic-configs/ \
+        {{ template_base }}/roles/roles_data.yaml \
+        -c controller {{ controller_cnt }} \
+        -c compute {{ compute_cnt }} \
+        -c {% if install.storage.backend == 'ceph' %}ceph-{% endif %}storage {{ storage_cnt }} \
+        >{{ template_base }}/network/baremetal_deployment.yaml
+
+  when: not baremetal_deployment.stat.exists
