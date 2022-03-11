@@ -56,10 +56,12 @@
       - install.manila.storage.protocol == "nfs-ganesha"
       - install.version|default(undercloud_version)|openstack_release == 13
 
-- name: append network_data_ganesha
+# ganesha network v2 (>=wallaby) is configured elsewhere
+- name: append network_data_ganesha - network-data v1
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-n /usr/share/openstack-tripleo-heat-templates/network_data_ganesha.yaml   \'
   when:
       - install.manila.storage.protocol == "nfs-ganesha"
       - install.version|default(undercloud_version)|openstack_release > 12
+      - install.version|default(undercloud_version)|openstack_release < 17
