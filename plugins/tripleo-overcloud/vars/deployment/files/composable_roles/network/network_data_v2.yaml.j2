@@ -148,3 +148,38 @@
 {% if 'ipv6' in install.network.protocol %}
   ipv6: true
 {% endif %}
+
+{% if install.manila.storage.protocol == 'nfs-ganesha' %}
+- name: StorageNFS
+  name_lower: storage_nfs
+  vip: true
+  mtu: 1500
+  subnets:
+    storage_nfs_subnet:
+      # This network is shared by the overcloud deployment and a Neutron
+      # provider network that is set up post-deployment for consumers like Nova
+      # VMs to use to mount shares. The allocation pool specified here is used
+      # for the overcloud deployment for interfaces on the ControllerStorageNfs
+      # role nodes and for the VIP where the Ganesha service itself is exposed.
+      # With a default three-controller node deployment, only four IPs are
+      # actually needed for this allocation pool.
+      # When you adapt this file for your own deployment you can of course
+      # adjust the allocation pool -- just make sure to leave a good-sized range
+      # outside the allocation pool specified here for use in the allocation pool
+      # for the overcloud Neutron StorageNFS provider network's subnet definition.
+{% if 'ipv6' not in install.network.protocol %}
+      ip_subnet: 172.17.0.0/20
+      allocation_pools:
+        - start: 172.17.0.4
+          end: 172.17.0.250
+{% else %}
+      ipv6_subnet: 'fd00:fd00:fd00:7000::/64'
+      ipv6_allocation_pools:
+        - start: fd00:fd00:fd00:7000::4
+          end: fd00:fd00:fd00:7000::fffe
+{% endif %}
+      vlan: 70
+{% if 'ipv6' in install.network.protocol %}
+  ipv6: true
+{% endif %}
+{% endif %}
