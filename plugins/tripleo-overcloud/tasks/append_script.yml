@@ -100,6 +100,11 @@
       - install.version|default(undercloud_version)|openstack_release >= 12
       - install.version|default(undercloud_version)|openstack_distribution == "RDO"
 
+# only when the machine is provisioned during the overcloud deployment
+- name: Create firstboot templates
+  include_tasks: firstboot.yml
+  when: install.version|default(undercloud_version)|openstack_release < 17
+
 - name: "find user defined templates in {{ template_base }}"
   find:
       paths: "{{ template_base }}"
