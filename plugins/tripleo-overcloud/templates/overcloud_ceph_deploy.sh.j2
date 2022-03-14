@@ -1,8 +1,12 @@
 #!/bin/bash
 
+# TODO(fultonj):
+# - remove --container-namespace line after BZ 2042973 resolved
+
 openstack overcloud ceph deploy \
 -o /home/stack/templates/overcloud-ceph-deployed.yaml \
 --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
+--container-namespace 192.168.24.1:8787/rh-osbs \
 {% if install.ceph.initial.conf.file %} --config {{ ansible_user_dir }}/initial-ceph.conf{% endif %} \
 {% if ceph_node_cnt|int < 3 %}--single-host-defaults {% endif %} \
 --stack "{{ install.overcloud.stack }}" \
