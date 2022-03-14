@@ -1,6 +1,9 @@
 ---
 - block:
-  - name: Stop and remove existing Virtual BMCs
+  - name: show content of ~/.vbmc before cleanup
+    shell: "find ~/.vbmc/ -type f | xargs -I{} sh -c 'ls -l {} && cat {}' || true"
+
+  - name: Stop and remove existing Virtual BMCs (based on vbmc_nodes var)
     shell: |
         {{ vbmc_bin }} stop {{ hostvars[item].original_name|default(item) }}
         {{ vbmc_bin }} delete {{ hostvars[item].original_name|default(item) }}
@@ -8,6 +11,22 @@
     when:
       - item in hostvars
     with_items: "{{ vbmc_nodes }}"
+
+  - tags: remove VBMC hosts not removed already
+    block:
+      - name: get the list of currently defined VBMC nodes
+        shell: "{{ vbmc_bin }} list --column 'Domain name' -f value"
+        register: vbmc_list_output
+
+      - name: Stop and remove existing Virtual BMCs (based on vbmc list command) - removing leftovers of other jobs
+        shell: |
+          {{ vbmc_bin }} stop {{ item }}
+          {{ vbmc_bin }} delete {{ item }}
+        ignore_errors: true
+        with_items: "{{ vbmc_list_output.stdout_lines }}"
+
+  - name: show content of ~/.vbmc after cleanup
+    shell: "find ~/.vbmc/ -type f | xargs -I{} sh -c 'ls -l {} && cat {}' || true"
 
   - name: Get current count of used vbmc ports
     shell: "{{ vbmc_bin | quote }} list | grep 62 | wc -l"
