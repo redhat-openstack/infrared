@@ -153,6 +153,23 @@
       "message": "I think this might be merged too quickly, as from https://wimp.usersys.redhat.com/?change_id_input\u003dI24bea131cc949888518994a3aa08c200d579cb7d :\n\nrhos-17.0\nTrunk\n    192802e\n    Absent\n    16.4.1-0.20220215223418.0b6b716.el8osttrunk\n    Could not determine CI status\nRelease\n    192802e\n    Absent\n    16.4.1-0.20220215230641.0b6b716.el9ost\n    RHOS-17.0-RHEL-9-20220308.n.1\n    No zstream found\n\ntherefore we have strange behaviour in 17 gate jobs:\nimage registry-proxy.engineering.redhat.com/rh-osbs/rhceph:5-102...\", \"Non-zero exit code 125 from /bin/podman pull registry-proxy.engineering.redhat.com/rh-osbs/rhceph:5-102\", \"/bin/podman: stderr Trying to pull registry-proxy.engineering.redhat.com/rh-osbs/rhceph:5-102...\", \"/bin/podman: stderr   Get \\\"https://registry-proxy.engineering.redhat.com/v2/\\\": x509: certificate signed by unknown authority\", \"/bin/podman: stderr Error: Error initializing source docker://registry-proxy.engineering.redhat.com/rh-osbs/rhceph:5-102: error pinging docker registry registry-proxy.engineering.redhat.com: Get \\\"https://registry-proxy.engineering.redhat.com/v2/\\\": x509: certificate signed by unknown authority\", \"Traceback (most recent call last):\", \"  File \\\"/usr/sbin/cephadm\\\", line 8140, in \u003cmodule\u003e\", \"    main()\", \"  File \\\"/usr/sbin/cephadm\\\", line 8128, in main\", \"    r \u003d ctx.func(ctx)\", \"  File \\\"/usr/sbin/cephadm\\\", line 1730, in _default_image\", \"    return func(ctx)\", \"  File \\\"/usr/sbin/cephadm\\\", line 3997, in command_bootstrap\", \"    _pull_image(ctx, ctx.image)\", \"  File \\\"/usr/sbin/cephadm\\\", line 3333, in _pull_image\", \"    raise RuntimeError(\u0027Failed command: %s\u0027 % cmd_str)\", \"RuntimeError: Failed command: /bin/podman pull registry-proxy.engineering.redhat.com/rh-osbs/rhceph:5-102\"], \"stdout\": \"\", \"stdout_lines\": []}\n2022-03-12 01:50:43.481268 | 52540002-201d-6bc4-17ba-00000000006d |     TIMING | tripleo_cephadm : Run cephadm bootstrap | controller-0 | 0:00:45.819202 | 11.62s\n\nwhen OC seems to be skipping UC and trying to fetch the container from remote directly? Should not the tripleo content this was waiting on fix exactly such behaviour as tripleo should handle the UC fetching from now on?",
       "revId": "128631a2c30549bda82a3555b4966bda71d36c3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d4e512db_f207e548",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2022-03-14T11:16:29Z",
+      "side": 1,
+      "message": "(failure log taken from http://rhos-ci-logs.lab.eng.tlv2.redhat.com/logs/rcj/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/210/undercloud-0/home/stack/overcloud_ceph_deployment.log.gz and https://rhos-ci-jenkins.lab.eng.tlv2.redhat.com/job/compact-gate-puddle-17.0_director-rhel-8.4-virthost-3cont_2comp_3ceph-ipv4-geneve-ceph/210/)",
+      "revId": "128631a2c30549bda82a3555b4966bda71d36c3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
