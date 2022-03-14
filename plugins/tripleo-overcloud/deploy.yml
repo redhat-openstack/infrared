@@ -73,6 +73,23 @@
   when:
       - (install.version|default(undercloud_version) | openstack_release >= 17)
 
+- name: Copy registries.conf overrides from UC to controller and ceph nodes
+  hosts: controller, ceph
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+      - name: Insecure UC registry needs to be trusted on these nodes
+        ini_file:
+          path: /etc/containers/registries.conf
+          create: no
+          backup: yes
+          section: registries.insecure
+          option: registries
+          value: "['192.168.24.1:8787']"
+        become: true
+        when:
+            - (install.version|default(undercloud_version) | openstack_release >= 17)
+
 - name: Deploy Deployed Ceph using cephadm and local UC registry
   hosts: undercloud
   vars:
