@@ -11,46 +11,50 @@ os:
 disks:
     # NOTE: disk size has to be smaller for system disk than for the ceph osd disks
     # as ironic selects smaller disk unless hinted explicitely otherwise
+    # NOTE2: 'preallocation: "metadata"' which means the disks will _not_ be fully preallocated on the hypervisor
+    # hence these disks will have only a few hundred MB in size when created and grow only as the VMs will use more
+    # space on them - this allows over provisioning of disk space where total space required by the below disks
+    # may be way more than the available space on the hypervisor
     disk1:
         import_url: null
         path: null
         dev: "/dev/vda"
-        size: "11G"
+        size: "31G"
         cache: "unsafe"
         preallocation: "metadata"
     disk2:
         import_url: null
         path: null
         dev: /dev/vdb
-        size: "12G"
+        size: "32G"
         cache: "unsafe"
         preallocation: "metadata"
     disk3:
         import_url: null
         path: null
         dev: /dev/vdc
-        size: "12G"
+        size: "32G"
         cache: "unsafe"
         preallocation: "metadata"
     disk4:
         import_url: null
         path: null
         dev: /dev/vdd
-        size: "12G"
+        size: "32G"
         cache: "unsafe"
         preallocation: "metadata"
     disk5:
         import_url: null
         path: null
         dev: /dev/vde
-        size: "12G"
+        size: "32G"
         cache: "unsafe"
         preallocation: "metadata"
     disk6:
         import_url: null
         path: null
         dev: /dev/vdf
-        size: "12G"
+        size: "32G"
         cache: "unsafe"
         preallocation: "metadata"
 
