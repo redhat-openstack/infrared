@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "208cf874_b1bb8ee6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006992
+      },
+      "writtenOn": "2022-03-15T15:37:48Z",
+      "side": 1,
+      "message": "Will this patch result in /var partition being larger? \n\nIf it\u0027s based on a percentage of the available size might something like this happen?\n\n11GB --\u003e 1GB (non-working ceph nodes)\n21GB --\u003e 2GB ??? (ceph nodes after this patch)\n41GB --\u003e 15GB (working controller nodes)\n\nOur current problem is that the ceph container won\u0027t fit as there\u0027s \u003c1 500M to downlaod it:\n\n  /dev/mapper/vg-lv_var    850M  353M  498M  42% /var\n\n\n\n\n  [root@ceph-0 ~]# podman pull undercloud-0.ctlplane.redhat.local:8787/rh-osbs/rhceph:5-102\n  Trying to pull undercloud-0.ctlplane.redhat.local:8787/rh-osbs/rhceph:5-102...\n  Getting image source signatures\n  Copying blob 26f1167feaf7 skipped: already exists\n  Copying blob adffa6963146 skipped: already exists\n  Copying blob 2e7fb856142f done\n  Error: writing blob: adding layer with blob \n  \"sha256:2e7fb856142f4ba399d9120a6e3cd99c376d1cabb9e699f0b7422022ad96245e\": Error \n  processing tar file(exit status 1): open /usr/bin/systemd-cgtop: no space left on \n  device",
+      "revId": "8cb310bbf4cfc9a31e27f620f34018d157a7f059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
