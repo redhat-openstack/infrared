@@ -35,6 +35,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6fc7da3_5af5a2e6",
+        "filename": "plugins/tripleo-overcloud/fetchfiles.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1017759
+      },
+      "writtenOn": "2022-03-16T14:12:03Z",
+      "side": 1,
+      "message": "I still made it boolean. Ready to discuss it further if it should be boolean or \"hardened|full|...\"",
+      "parentUuid": "898b74c6_bc3a8d43",
+      "revId": "58face4aa7103b911baac2bbdffcf9456a41a410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "43984317_62d5e994",
@@ -48,6 +66,24 @@
       "writtenOn": "2022-03-01T13:46:55Z",
       "side": 1,
       "message": "this should be install.overcloud.hardened.uefi\n\nor more likely both of these blocks should be preceded by something like\n\n  - set_fact: overcloud_hardened_uefi\u003d{{ install.overcloud.hardened.uefi }}\n    when: install.overcloud.hardened.uefi is defined\n  \n  # e.g. to have (simplified) flow like:\n  - (userParam set)    o_h_u \u003d userParam\n  - (o_h_u not set)    o_h_u \u003d (version \u003e\u003d 17)\n\nto let user value take precedence over auto-default values\n\n(see other comment, likely the param name should be different to make sense for key path like this, it\u0027s not uefi value under hardened section, uefi is different param)",
+      "revId": "58face4aa7103b911baac2bbdffcf9456a41a410",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d2f755c5_1509ee3f",
+        "filename": "plugins/tripleo-undercloud/configure.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1017759
+      },
+      "writtenOn": "2022-03-16T14:12:03Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "43984317_62d5e994",
       "revId": "58face4aa7103b911baac2bbdffcf9456a41a410",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
