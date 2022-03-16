@@ -141,9 +141,6 @@
 
     - name: Restart any VM's that were running
       virt:
-        name: "{{ item.item }}"
+        name: "{{ item }}"
         state: running
-      when: item is changed
-      loop: "{{ _vm_stop.results }}"
-      loop_control:
-        label: "{{ item.item }}"
+      loop: "{{ (_virsh_snapshot_manifest_content['servers'] | selectattr('state', 'equalto', 'running') | map(attribute='name')) | list }}"
