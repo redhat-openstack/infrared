@@ -141,9 +141,16 @@
 
     - name: Restart any VM's that were running
       virt:
-        name: "{{ item.item }}"
+        name: "{{ item }}"
         state: running
-      when: item is changed
-      loop: "{{ _vm_stop.results }}"
-      loop_control:
-        label: "{{ item.item }}"
+      loop: "{{ (_virsh_snapshot_manifest_content['servers'] | selectattr('state', 'equalto', 'running') | map(attribute='name')) | list }}"
+
+    - name: Wait for all VM's to complete their startup
+      command: |
+        virsh domstate {{ item }}
+      changed_when: False
+      register: _vm_startup
+      until: _vm_startup.stdout.find('running') != -1
+      retries: "{{ vm_startup_timeout | default(30) }}"
+      delay: 60
+      loop: "{{ (_virsh_snapshot_manifest_content['servers'] | selectattr('state', 'equalto', 'running') | map(attribute='name')) | list }}"
