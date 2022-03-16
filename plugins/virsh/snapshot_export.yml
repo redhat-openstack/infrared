@@ -9,7 +9,9 @@
   tasks:
     - name: Install required packages
       package:
-        name: libguestfs-tools-c
+        name:
+          - libguestfs-tools-c
+          - parallel
         state: present
 
     - name: Get info about existing VM's
@@ -68,14 +70,16 @@
             dest: "{{ provision.virsh.snapshot.path }}/"
 
         - name: Sparsify and export disk images
-          shell: |
-            for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
-              virt-sparsify --in-place ${vdisk}
-              qemu-img convert -O qcow2 -c ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
+          shell: |-
+            DISK_LIST=""
+            for dom in {{ _vm_list | join(' ') }}; do
+              for vdisk in $(virsh domblklist $dom | awk "/$dom/ {print \$2}"); do
+                DISK_LIST=$DISK_LIST+"$vdisk "
+              done
             done
+            parallel --will-cite --use-cores-instead-of-threads --jobs 50% "virt-sparsify --in-place {}; qemu-img convert -O qcow2 -c {} {{ provision.virsh.snapshot.path }}/$(basename {})" ::: $DISK_LIST
           args:
             executable: /bin/bash
-          loop: "{{ _vm_list }}"
 
         - name: Save nvram image
           shell: |
