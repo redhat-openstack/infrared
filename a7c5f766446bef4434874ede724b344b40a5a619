@@ -24,6 +24,30 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d8f742e0_7a35d9a8",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-03-17T14:27:21Z",
+      "side": 1,
+      "message": "So there is no guidelines upstream for profiles? In fact, I see the tripleo-docs marks the profile option (and the advanced matching) as deprecated:\nhttps://docs.openstack.org/project-deploy-guide/tripleo-docs/latest/provisioning/baremetal_provision.html#baremetal-provision-configuration\n\nSo I\u0027d gladly remove this code, if everything still works (need to check the rest of infrared). I will remove it in the next iteration.",
+      "parentUuid": "8858f5f1_4c3e26d1",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 24
+      },
+      "revId": "a7c5f766446bef4434874ede724b344b40a5a619",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "5037cd8a_253d367a",
@@ -180,6 +204,30 @@
       "side": 1,
       "message": "I was thinking validation would fail because count is not an integer.\nhttps://opendev.org/openstack/tripleo-ansible/src/branch/master/tripleo_ansible/ansible_plugins/module_utils/baremetal_deploy.py#L173\n\nBut looking more into the code I see you only add the role if count is \u003e 0.\nWhy not just add the roles no matter if node_count is?",
       "parentUuid": "77e3e7f4_1bbce33e",
+      "range": {
+        "startLine": 112,
+        "startChar": 8,
+        "endLine": 112,
+        "endChar": 14
+      },
+      "revId": "a7c5f766446bef4434874ede724b344b40a5a619",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b2e1f4e8_345af496",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-03-17T14:27:21Z",
+      "side": 1,
+      "message": "But if I add the role with count: 0, wouldn\u0027t that break anything? Or at least, wouldn\u0027t the role with count:0 be useless?",
+      "parentUuid": "70640374_c9c239d3",
       "range": {
         "startLine": 112,
         "startChar": 8,
