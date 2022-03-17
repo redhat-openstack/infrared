@@ -97,6 +97,29 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "f96cddd5_0a9a2e76",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1018946
+      },
+      "writtenOn": "2022-03-17T15:18:55Z",
+      "side": 1,
+      "message": "For infrared purpose CephStorage role needs extra care here, as from all roles I tested(messaging,networker,database)  it is the only that don\u0027t have HostnameFormatDefault in roles_data.yaml. \n\nOtherwise default format is used %stackname%-cephstorage-%index% and it fails on matching nic config template to role during overcloud provision:\n`Render network_config from template | qe-cloud-0-cephstorage-2 | error\u003d{\"changed\": false, \"msg\": \"Could not find or access \u0027templates/single_nic_vlan.j2\u0027`\n\nhttps://rhos-ci-staging-jenkins.lab.eng.tlv2.redhat.com/job/DFG-upgrades-updates-17.0-from-passed_phase1-composable-ipv6/26/artifact/.sh/ir-tripleo-overcloud-install.log\n\nHarald, what do you think? Or maybe this is a bug \u0027overcloud role generate\u0027",
+      "range": {
+        "startLine": 65,
+        "startChar": 8,
+        "endLine": 65,
+        "endChar": 70
+      },
+      "revId": "a7c5f766446bef4434874ede724b344b40a5a619",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "625b22b1_165c6dcd",
         "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
         "patchSetId": 5
