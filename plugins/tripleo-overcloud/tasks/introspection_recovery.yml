@@ -102,6 +102,21 @@
 #  debug:
 #      msg: "Build mark: nodes_failing_introspection={{ failed_nodes_uuids }}"
 
+# WA for issue https://bugzilla.redhat.com/show_bug.cgi?id=2066380
+- name: WA introspection issue bug 2066380
+  block:
+    - name: check baremetal status
+      command: openstack baremetal node list -f yaml
+      register: baremetal_status
+
+    - set_fact:
+        managable_nodes: "{{ item['UUID'] }}"
+      with_items: "{{ baremetal_status | from_yaml }}"
+      when: item['Provisioning State'] == 'manageable'
+  when:
+    - failed_nodes_uuids == []
+    - install.version|default(undercloud_version)|openstack_release == 13
+
 - name: introspect and retry sequentially node by node the khaleesi way
   shell: >
       source ~/stackrc;
