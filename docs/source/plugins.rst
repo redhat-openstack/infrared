@@ -59,7 +59,7 @@ This file defines the CLI flags this plugin exposes, its name and its type.
 Config section:
     * Plugin type can be one of the following: ``provision``, ``install``, ``test``, ``other``.
     * Entry point is the main playbook for the plugin. by default this will refer to main.yml file
-        but can be changed to ant other file.
+        but can be changed to any other file.
     * ``roles_path``:
         This is optional and it might be used when the plugin refers to a role
         which is introduced by that plugin. The ``roles_path`` then relatively
@@ -134,7 +134,7 @@ Ansible options:
 
 Complex option types
 ~~~~~~~~~~~~~~~~~~~~
-`Infrared` extends `argparse <https://docs.python.org/2/library/argparse.html>`_ with the following option types.
+`Infrared` extends `argparse <https://docs.python.org/3/library/argparse.html>`_ with the following option types.
 These options are nested into the vars dict that is later passed to Ansible as extra-vars.
 
 * Value:
