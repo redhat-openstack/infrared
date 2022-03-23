@@ -3,9 +3,7 @@
     {% if item.value.forward is defined %}
         <forward mode="{{ item.value.forward }}" />
     {% endif %}
-    # with stp="on" on osp17/rhel9 (on 2022-03-10) the introspection fails due to libvirt port operations get stuck
-    # it's not a bug, not a feature either... more info: https://bugzilla.redhat.com/show_bug.cgi?id=2061776
-        <bridge name="{{ item.value.name }}" stp="off"/>
+        <bridge name="{{ item.value.name }}"{% if item.value.forward|default('') != 'bridge' %} stp='on' delay='0'{% endif %}/>
     {% if provision.host.network.mtu.size %}
         <mtu size="{{ provision.host.network.mtu.size }}"/>
     {% endif %}
