@@ -4,31 +4,14 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-    _object_storage_client_bin: "{{ (provision.virsh.snapshot.container is match('s3://.*')) | ternary('aws', 'swift') }}"
-    _object_storage_client_packages:
-      aws:
-        - "awscli"
-      swift:
-        - "python-keystoneclient"
-        - "python-swiftclient"
+    _object_storage_client_venv_path: "{{ provision.virsh.snapshot.path | dirname }}/.awsclientvenv"
   tasks:
-    - name: Check that the required environment variables are set (swift)
-      fail:
-        msg: >-
-          The environment variables OS_CLOUD and OS_STORAGE_URL must be set
-          on the Ansible controller.
-      when:
-        - _object_storage_client_bin == "swift"
-        - lookup('env', 'OS_CLOUD') == ""
-        - lookup('env', 'OS_STORAGE_URL') == ""
-
-    - name: Check that the required environment variables are set (aws)
+    - name: Check that the required environment variables are set
       fail:
         msg: >-
           The environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
           must be set on the Ansible controller.
       when:
-        - _object_storage_client_bin == "aws"
         - lookup('env', 'AWS_ACCESS_KEY_ID') == ""
         - lookup('env', 'AWS_SECRET_ACCESS_KEY') == ""
 
@@ -36,9 +19,10 @@
       include_role:
         name: create_venv
       vars:
-        venv_destination_path: "{{ provision.virsh.snapshot.path | dirname }}/.{{ _object_storage_client_bin }}clientvenv"
+        venv_destination_path: "{{ _object_storage_client_venv_path }}"
         venv_owner_match_to_parent: yes
-        venv_pip_packages: "{{ _object_storage_client_packages[_object_storage_client_bin] }}"
+        venv_pip_packages:
+          - "awscli"
         venv_shebang_relocate: yes
 
     - name: Make sure that the snapshot path exists
@@ -46,58 +30,19 @@
         path: "{{ provision.virsh.snapshot.path }}"
         state: directory
 
-    - name: Authenticate to the OpenStack cloud to get a token
-      os_auth:
-        cloud: "{{ lookup('env', 'OS_CLOUD') }}"
-      register: _virsh_snapshot_auth
-      until:
-        - _virsh_snapshot_auth is success
-        - auth_token is defined
-        - auth_token is not none
-        - auth_token | trim != ''
-      retries: 10
-      delay: 30
-      delegate_to: localhost
-      vars:
-        ansible_python_interpreter: "{{ ansible_playbook_python }}"
-      when: _object_storage_client_bin == "swift"
-
     - name: Download the image set, but clean up if there is a failure
       block:
-        # The ansible os_object module does not currently support
-        # threaded downloads, so we use the swift client instead.
-        - name: Download the container contents to the snapshot path folder (swift)
-          shell: |
-            source .{{ _object_storage_client_bin }}clientvenv/bin/activate
-            if [[ $(swift list {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} | wc -l) -eq 0 ]]; then
-              echo "There are no files available for an image set named: {{ provision.virsh.snapshot.path | basename }}"
-              exit 1
-            else
-              swift download {{ provision.virsh.snapshot.container }} --prefix {{ provision.virsh.snapshot.path | basename }} --object-threads 100 --skip-identical
-            fi
-          args:
-            executable: "/bin/bash"
-            chdir: "{{ provision.virsh.snapshot.path | dirname }}"
-          environment:
-            OS_AUTH_TOKEN: "{{ auth_token }}"
-            OS_STORAGE_URL: "{{ lookup('env', 'OS_STORAGE_URL') }}"
-          register: _virsh_snapshot_download_swift_result
-          retries: 10
-          delay: 30
-          until: _virsh_snapshot_download_swift_result is success
-          when: _object_storage_client_bin == "swift"
-
         # The ansible s3_sync module does not currently support the s3_url parameter
         # which would allow it to work with Ceph RGW.
         # The ansible aws_s3 module supports the s3_url, but requires the upload of
         # each object to be done in a loop which is highly inefficient.
         # We use the 'aws s3 sync' option due to it being able to work on the whole
         # folder at once with a high level of efficiency.
-        - name: Download the container contents to the snapshot path folder (aws)
+        - name: Download the container contents to the snapshot path folder
           vars:
             _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
           shell: |
-            source .{{ _object_storage_client_bin }}clientvenv/bin/activate
+            source {{ _object_storage_client_venv_path | basename }}/bin/activate
             if ! aws {{ _cli_aws_endpoint_url }} s3 ls {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}; then
               echo "There are no files available for an image set named: {{ provision.virsh.snapshot.path | basename }}"
               exit 1
@@ -114,7 +59,6 @@
           retries: 10
           delay: 30
           until: _virsh_snapshot_download_aws_result is success
-          when: _object_storage_client_bin == "aws"
       rescue:
         - name: Clean up the snapshot path
           file:
