@@ -41,7 +41,7 @@
           - name: Register instances running on compute node
             shell: |
                 source {{ overcloud_rc }}
-                openstack server list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE") or contains("PAUSED")) | .Name'
+                openstack server list --all --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE") or contains("PAUSED")) | .Name'
             register: compute_instances
 
           - name: Quiesce compute node
@@ -53,7 +53,7 @@
           - name: Wait for compute node to get quiesced
             shell: |
                 source {{ overcloud_rc }}
-                openstack server list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '[.[] | select(.Status | contains("ACTIVE") or contains("PAUSED") or contains("MIGRATING"))] | length'
+                openstack server list --all --host {{ compute_fqdn.stdout }} -f json | jq -r -c '[.[] | select(.Status | contains("ACTIVE") or contains("PAUSED") or contains("MIGRATING"))] | length'
             register: compute_node_instances
             until: compute_node_instances.stdout.find("0") > -1
             retries: 30
