@@ -1,6 +1,30 @@
 - name: Get the undercloud version
   import_playbook: version.yml
 
+- name: Define undercloud_hardened_uefi
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+      - name: Set overcloud_image_name if specified by user
+        set_fact:
+          overcloud_image_name: "{{ install.overcloud.hardened.uefi }}"
+        when: install.overcloud.hardened.uefi is defined
+
+      - name: Set overcloud_image_name OSP<=16
+        set_fact:
+          overcloud_image_name: "full"
+        when: >
+          install.download.ppc64le.images|default('false') or
+          (install.version|default(undercloud_version) | openstack_release <= 16 and overcloud_image_name is not defined)
+
+      - name: Set overcloud_image_name OSP>=17
+        set_fact:
+          overcloud_image_name: "hardened-uefi-full"
+        when:
+          - install.version|default(undercloud_version) | openstack_release >= 17
+          - overcloud_image_name is not defined
+
 - name: Preparing the images
   hosts: undercloud
   gather_facts: yes
@@ -13,10 +37,10 @@
           7:
               - "discovery-ramdisk.tar"
               - "deploy-ramdisk-ironic.tar"
-              - "overcloud-full.tar"
+              - "overcloud-{{overcloud_image_name}}.tar"
           8:
               - "ironic-python-agent.tar"
-              - "overcloud-full.tar"
+              - "overcloud-{{overcloud_image_name}}.tar"
           ppc64le:
               - "ironic-python-agent-latest-{{ undercloud_version }}-x86_64.tar"
               - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
@@ -31,7 +55,7 @@
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
       tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
-      overcloud_image_file: overcloud-full.qcow2
+      overcloud_image_file: "overcloud-{{overcloud_image_name}}.qcow2"
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
@@ -100,12 +124,13 @@
           cp -a /etc/yum.repos.d/* {{ tmp_oc_repos_dir }}
         when:
             - install.registry.skip.puddle
+
       - name: Downloading extra YUM/DNF repositories
         get_url:
             url: "{{ item }}"
             dest: "{{ tmp_oc_repos_dir }}"
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
-        when: (item|splitext)[-1] == ".repo"        
+        when: (item|splitext)[-1] == ".repo"
         register: extra_repos_get_url
         until: extra_repos_get_url is not failed or extra_repos_get_url.status_code | quote not in retry_http_codes
         retries: 2
@@ -139,7 +164,7 @@
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --update-existing
+            openstack overcloud image upload --update-existing {% if overcloud_image_name == "hardened-uefi-full" %}--whole-disk{% endif %}
         tags: skip_ansible_lint
         when: not multiarch_images
 
@@ -154,7 +179,7 @@
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --image-path ~{{ install.user.name }}/images/x86_64 --http-boot /var/lib/ironic/tftpboot/
+            openstack overcloud image upload --image-path ~{{ install.user.name }}/images/x86_64 {% if overcloud_image_name == "hardened-uefi-full" %}--whole-disk{% endif %} --http-boot /var/lib/ironic/tftpboot/
         when: multiarch_images
 
       - name: check for existing nodes ( OS <= 10 )
