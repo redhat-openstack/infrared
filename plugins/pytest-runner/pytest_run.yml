@@ -71,14 +71,6 @@
       - name: Fetch JUnit XML results file
         fetch:
           src: "{{ output_prefix }}"
-          dest: "{{ inventory_dir }}/pytest_results/{{ output_prefix }}"
-          flat: yes
-          fail_on_missing: yes
-        loop: "{{ test.file }}"
-
-      - name: Fetch JUnit XML results file in {{ test_results_dir }}
-        fetch:
-          src: "{{ output_prefix }}"
           dest: "{{ test_results_dir }}/{{ output_prefix }}"
           flat: yes
           fail_on_missing: yes

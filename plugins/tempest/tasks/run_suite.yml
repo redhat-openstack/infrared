@@ -219,34 +219,25 @@
       - name: Fetch subunit results file
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.subunit"
-            dest: "{{ item }}"
+            dest: "{{ test_results_dir }}/{{ test_output_filename }}.subunit"
             flat: yes
             fail_on_missing: yes
-        with_items:
-          - "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.subunit"
-          - "{{ test_results_dir }}/{{ test_output_filename }}.subunit"
 
       - name: Fetch JUnit XML results file
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.xml"
-            dest: "{{ item }}"
+            dest: "{{ test_results_dir }}/{{ test_output_filename }}.xml"
             flat: yes
             fail_on_missing: yes
-        with_items:
-          - "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.xml"
-          - "{{ test_results_dir }}/{{ test_output_filename }}.xml"
         when:
             results_formats.junitxml is defined
 
       - name: Fetch HTML results file
         fetch:
             src: "{{ test.dir }}/{{ test_output_filename }}.html"
-            dest: "{{ item }}"
+            dest: "{{ test_results_dir }}/{{ test_output_filename }}.html"
             flat: yes
             fail_on_missing: no
-        with_items:
-          - "{{ inventory_dir }}/tempest_results/{{ test_output_filename }}.html"
-          - "{{ test_results_dir }}/{{ test_output_filename }}.html"
         when:
             results_formats.html is defined
 
