@@ -3,6 +3,11 @@
   gather_facts: false
   any_errors_fatal: true
   tasks:
+    - name: Wait until connectivity is available
+      wait_for_connection:
+        delay: 60
+        timeout: "{{ vm_startup_timeout | default(30) }}"
+
     - name: Populate service facts
       service_facts:
       no_log: true
