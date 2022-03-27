@@ -87,6 +87,16 @@
           command: "list_nets"
       register: network_list
 
+    - name: Gather facts from hypervisor servers
+      setup:
+      delegate_to: "hypervisor"
+      delegate_facts: true
+
+    - template:
+        src: network.xml.j2
+        dest: "/tmp/network.xml.{{ item.value.name }}"
+      with_dict: "{{ networks }}"
+
     - name: create the networks for the topology
       virt_net:
           command: "define"
