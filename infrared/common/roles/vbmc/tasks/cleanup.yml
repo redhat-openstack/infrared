@@ -1,6 +1,6 @@
 - block:
   - name: check for any vbmc processes
-    command: pgrep vbmc
+    shell: ps aux | grep -i vbmc | grep -v grep
     register: vbmc_proc
     failed_when: false
     changed_when: false
@@ -42,7 +42,7 @@
         ignore_errors: true
 
       - name: kill vbmc processes if not managed by systemd
-        command: killall vbmc
+        shell: ps -a -x -o pid,cmd,args | grep -i [vV]bmc | cut -f 2 -d ' ' | xargs kill
         when: vbmc_proc.rc == 0
         ignore_errors: true
     when: vbmc_list.stdout|int == 0
@@ -66,6 +66,7 @@
       changed_when: false
       failed_when: false
     become: yes
+    when: vbmc_uninstall | bool
 
   - name: Remove vbmc virtualenv
     file:

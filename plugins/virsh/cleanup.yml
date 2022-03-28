@@ -74,12 +74,13 @@
           paths:
             - 'vars'
 
-    - name: include vbmc's remove task
+    - name: include vbmc's cleanup task
       include_role:
           name: vbmc
       vars:
-          action: "remove"
+          action: "cleanup"
           prefix: "{{ provision.prefix|default('') }}"
+          vbmc_uninstall: "{{ provision.vbmc.uninstall }}"
 
     - block:
         - name: Get all deployments

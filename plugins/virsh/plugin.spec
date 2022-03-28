@@ -190,6 +190,11 @@ subparsers:
                           Use it to remove nodes from existing topology.
                           Example: compute-3,compute-4,compute-5
 
+                  vbmc-uninstall:
+                      type: Bool
+                      help: Tries to uninstall VBMC daemon using rpm and pip package mangers. Valid only if running 'cleanup=yes'.
+                      default: False
+
             - title: Boot Mode
               options:
                   bootmode:
