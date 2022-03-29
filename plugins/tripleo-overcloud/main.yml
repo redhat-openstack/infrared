@@ -6,8 +6,11 @@
 - name: Auto discover undercloud version
   import_playbook: "{{ auto_discover_undercloud_version | default('version.yml') }}"
   when: install.version is not defined
-  tags:
-      - always
+  tags: always
+
+- name: Apply overrides
+  import_playbook: "overrides.yml"
+  tags: always
 
 - name: Install a local NFS server
   import_playbook: local-nfs-server.yml

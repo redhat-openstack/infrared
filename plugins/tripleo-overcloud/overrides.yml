@@ -1,0 +1,10 @@
+---
+- name: Apply plugin-wide overrides (related to undercloud)
+  hosts: undercloud
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - name: "Override the vbmc-host parameter (OSP>=17), can be removed when RHOSINFRA-4456 is fixed"
+      set_fact:
+        install_vbmc_host: "{{ 'hypervisor' if install.version | default(undercloud_version) | openstack_release >= 17 else install.vbmc.host }}"
+        cacheable: true
