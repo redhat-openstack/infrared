@@ -66,6 +66,7 @@
             name: vbmc
         vars:
             vbmc_nodes: "{{ oc_nodes + oc_ironic | difference(bm_nodes_names) }}"
+            vbmc_host: "{{ install_vbmc_host }}"
         when:
             - install.version|default(undercloud_version) | openstack_release >= 11 or install.vbmc.force
             - vbmc_nodes

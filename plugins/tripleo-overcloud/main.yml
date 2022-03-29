@@ -3,11 +3,13 @@
   tags:
       - validation
 
-- name: Auto discover undercloud version
-  import_playbook: "{{ auto_discover_undercloud_version | default('version.yml') }}"
-  when: install.version is not defined
-  tags:
-      - always
+- tags: always
+  block:
+    name: auto discover undercloud version
+    import_playbook: "{{ auto_discover_undercloud_version | default('version.yml') }}"
+    when: install.version is not defined
+
+  - import_playbook: "overrides.yml"
 
 - name: Install a local NFS server
   import_playbook: local-nfs-server.yml
