@@ -9,11 +9,18 @@
       name: libvirt-daemon
       state: present
 
-- name: install libguestfs-tools to get virt-customize
+- name: install libguestfs-tools to get virt-customize and virt-copy-in
   become: yes
   package:
       name: libguestfs-tools
       state: present
+
+- name: install guestfs-tools to get virt-customize for RHEL9+
+  become: yes
+  package:
+      name: guestfs-tools
+      state: present
+  when: ansible_distribution_major_version | int >= 9
 
 - name: Get custom repository file stat
   vars:
