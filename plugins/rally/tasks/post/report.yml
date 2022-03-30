@@ -56,24 +56,16 @@
       creates: "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
   ignore_errors: true
 
-- name: Set the directory to fetch results to the active profile
-  set_fact:
-      test_results_files:
-          - "{{ rally.outputdir }}/results-{{ timestamp }}.html"
-          - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
-          - "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
-          - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
-          - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
-          - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
-      test_results_destination:
-          - "{{ inventory_dir }}/rally_results/"
-          - "{{ test_results_dir }}"
-
 - name: Fetch Results to the active profile
   fetch:
-      src: "{{ item[0] }}"
-      dest: "{{ item[1] }}/"
+      src: "{{ item }}"
+      dest: "{{ test_results_dir }}/"
       flat: yes
-  with_nested:
-      - "{{ test_results_files }}"
-      - "{{ test_results_destination }}"
+  with_items:
+#     - "{{ rally.outputdir }}/index.html"
+      - "{{ rally.outputdir }}/results-{{ timestamp }}.html"
+      - "{{ rally.outputdir }}/nosetests-{{ timestamp }}.xml"
+      - "{{ rally.outputdir }}/detailed-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/detailed_with_iterations-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.txt"
+      - "{{ rally.outputdir }}/sla-{{ timestamp }}.json"
