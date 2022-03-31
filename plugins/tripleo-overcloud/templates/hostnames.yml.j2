@@ -29,9 +29,16 @@ parameter_defaults:
 {% endfor %}
 {% endif %}
 
+{#
+# override_hostname_format should be False with baremetal provisioning,
+# where the workflow is a bit different and the code should rely
+# on the default HostnameFormat
+#}
+{% if override_hostname_format|default(True) %}
 {% for node_type, details in node_types.items() %}
     {{ details.heat_name }}HostnameFormat: '{{ node_type }}-%index%'
 {% endfor %}
+{% endif %}
 
 {% if install.get("overcloud", {}).get("hostname", {}).get("HostnameMap", false) %}
     HostnameMap:
