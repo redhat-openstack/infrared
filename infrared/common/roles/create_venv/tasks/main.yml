@@ -57,7 +57,7 @@
       when:
         - _virtualenv_path.stdout | trim == 'none'
         - venv_python_version | int == 3
-
+        - ansible_distribution_major_version | int < 9
 
     - name: Create the venv_destination_path parent directory
       file:
