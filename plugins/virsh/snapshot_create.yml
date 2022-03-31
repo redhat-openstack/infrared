@@ -13,7 +13,7 @@
 
     - name: Create snapshots of each VM
       shell: |
-        set -e
+        set -eo pipefail
         RETURN_CODE=0
         if ! virsh snapshot-list --domain {{ item }} --name | grep -qw {{ provision.virsh.snapshot.name }}; then
           virsh snapshot-create-as \

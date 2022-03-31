@@ -25,7 +25,7 @@
 
     - name: Shut down any running VM's
       shell: |
-        set -e
+        set -eo pipefail
         RETURN_CODE=0
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh shutdown {{ item }}
@@ -58,6 +58,7 @@
       block:
         - name: Export the infrared workspace
           shell: |-
+            set -o pipefail
             IR_CMD="{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/infrared', 'infrared') }}"
             ${IR_CMD} workspace export --copy-keys --filename {{ src_workspace }}/infrared-workspace
           delegate_to: localhost

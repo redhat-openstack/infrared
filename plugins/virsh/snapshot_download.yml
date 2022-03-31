@@ -42,6 +42,7 @@
           vars:
             _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
           shell: |
+            set -o pipefail
             source {{ _object_storage_client_venv_path | basename }}/bin/activate
             if ! aws {{ _cli_aws_endpoint_url }} s3 ls {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}; then
               echo "There are no files available for an image set named: {{ provision.virsh.snapshot.path | basename }}"

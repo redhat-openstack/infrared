@@ -32,7 +32,7 @@
 
     - name: Stop any running VM's
       shell: |
-        set -e
+        set -eo pipefail
         RETURN_CODE=0
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh destroy {{ item }}
@@ -58,6 +58,7 @@
 
     - name: Delete any disk images related to running VM's
       shell: |
+        set -o pipefail
         for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
           rm -f ${vdisk}
         done
