@@ -45,20 +45,6 @@
         - _virtualenv_path.stdout | trim == 'none'
         - venv_python_version | int == 2
 
-    - name: Install python-virtualenv on hosts > RHEL7
-      package:
-        name: python3-virtualenv
-        state: present
-      become: true
-      register: _install_packages
-      until: _install_packages is success
-      retries: 5
-      delay: 10
-      when:
-        - _virtualenv_path.stdout | trim == 'none'
-        - venv_python_version | int == 3
-
-
     - name: Create the venv_destination_path parent directory
       file:
         path: "{{ venv_destination_path | dirname }}"
