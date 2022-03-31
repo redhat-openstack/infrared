@@ -173,50 +173,76 @@
       register: _overcloud_stack_name
       changed_when: false
 
-    - name: Force some services to reinitiate RabbitMQ connectivity
-      become: true
-      shell: |-
-        {%- raw -%}
-        return_code=0
-        runtime=$(command -v podman || command -v docker)
-        if [[ "${runtime}" != "" ]]; then
-          for cnt in $(${runtime} ps --format "{{.Names}}" | grep -E "neutron_.*|nova_metadata" | grep -v ".*_api"); do
-            echo "Restarting ${cnt}"
-            ${runtime} restart ${cnt}
-            return_code=2
-          done
-        else
-          for svc in $(systemctl --no-legend list-units neutron\*agent.service | awk '{print $1}'); do
-            echo "Restarting ${svc}"
-            systemctl restart ${svc}
-            return_code=2
-          done
-        fi
-        exit ${return_code}
-        {%- endraw %}
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['overcloud_nodes'] }}"
-      register: _restart_services
-      changed_when: _restart_services.rc == 2
-      failed_when: _restart_services.rc not in [0,2]
+    - name: Reinitiate connections
+      block:
+        - name: Force some services to reinitiate RabbitMQ connectivity
+          become: true
+          shell: &restart_neutron_services |-
+            {%- raw -%}
+            set -o pipefail
+            return_code=0
+            runtime=$(command -v podman || command -v docker)
+            if [[ "${runtime}" != "" ]]; then
+              for cnt in $(${runtime} ps --format "{{.Names}}" | grep -E "neutron_.*|nova_metadata" | grep -v ".*_api"); do
+                echo "Restarting ${cnt}"
+                ${runtime} restart ${cnt}
+                return_code=2
+              done
+            else
+              for svc in $(systemctl --no-legend list-units neutron\*agent.service | awk '{print $1}'); do
+                echo "Restarting ${svc}"
+                systemctl restart ${svc}
+                return_code=2
+              done
+            fi
+            exit ${return_code}
+            {%- endraw %}
+          delegate_to: "{{ item }}"
+          loop: "{{ groups['overcloud_nodes'] }}"
+          register: _restart_services
+          changed_when: _restart_services.rc == 2
+          failed_when: _restart_services.rc not in [0,2]
 
-    # OSP10 returns: { "State": "UP", "Alive": false }
-    # OSP13 returns: { "State": "UP", "Alive": "XXX" }
-    # OSP16+ returns: { "State": true, "Alive": false }
-    - name: Wait until all network agents are up
-      shell: |
-        source {{ overcloud_rc }}
-        openstack network agent list -f json | jq '.[] | select((.State=="UP" or .State==true) and (.Alive==false or .Alive=="XXX"))'
-      changed_when: false
-      register: _network_agents_state
-      retries: 15
-      delay: 60
-      until:
-        - _network_agents_state.rc == 0
-        - _network_agents_state.stdout == ''
+        # OSP10 returns: { "State": "UP", "Alive": false }
+        # OSP13 returns: { "State": "UP", "Alive": "XXX" }
+        # OSP16+ returns: { "State": true, "Alive": false }
+        - name: Wait until all network agents are up
+          shell: &check_network_agents |
+            set -o pipefail
+            source {{ overcloud_rc }}
+            openstack network agent list -f json | jq '.[] | select((.State=="UP" or .State==true) and (.Alive==false or .Alive=="XXX"))'
+          changed_when: false
+          register: _network_agents_state
+          retries: 15
+          delay: 60
+          until:
+            - _network_agents_state.rc == 0
+            - _network_agents_state.stdout == ''
+
+      rescue:
+        - name: Force some services to reinitiate RabbitMQ connectivity
+          become: true
+          shell: *restart_neutron_services
+          delegate_to: "{{ item }}"
+          loop: "{{ groups['overcloud_nodes'] }}"
+          register: _restart_services
+          changed_when: _restart_services.rc == 2
+          failed_when: _restart_services.rc not in [0,2]
+
+        - name: Wait until all network agents are up
+          shell: *check_network_agents
+          changed_when: false
+          register: _network_agents_state
+          retries: 2
+          delay: 30
+          until:
+            - _network_agents_state.rc == 0
+            - _network_agents_state.stdout == ''
+
 
     - name: Wait until all compute services are up
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         openstack compute service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down")'
       changed_when: false
@@ -227,6 +253,7 @@
 
     - name: Wait until all volume services are up
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         openstack volume service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down" and .Binary!="cinder-backup")'
       changed_when: false
@@ -240,6 +267,7 @@
     #   https://bugzilla.redhat.com/show_bug.cgi?id=1666804
     - name: Verify that at least one cinder-backup service is active (if it was deployed)
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         RETURN_CODE=0
         if [[ $(openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled")') != '' ]]; then
