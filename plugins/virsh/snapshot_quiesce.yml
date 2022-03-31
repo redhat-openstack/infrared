@@ -177,6 +177,7 @@
       become: true
       shell: |-
         {%- raw -%}
+        set -o pipefail
         return_code=0
         runtime=$(command -v podman || command -v docker)
         if [[ "${runtime}" != "" ]]; then
@@ -205,6 +206,7 @@
     # OSP16+ returns: { "State": true, "Alive": false }
     - name: Wait until all network agents are up
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         openstack network agent list -f json | jq '.[] | select((.State=="UP" or .State==true) and (.Alive==false or .Alive=="XXX"))'
       changed_when: false
@@ -217,6 +219,7 @@
 
     - name: Wait until all compute services are up
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         openstack compute service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down")'
       changed_when: false
@@ -227,6 +230,7 @@
 
     - name: Wait until all volume services are up
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         openstack volume service list -f json | jq '.[] | select(.Status=="enabled" and .State=="down" and .Binary!="cinder-backup")'
       changed_when: false
@@ -240,6 +244,7 @@
     #   https://bugzilla.redhat.com/show_bug.cgi?id=1666804
     - name: Verify that at least one cinder-backup service is active (if it was deployed)
       shell: |
+        set -o pipefail
         source {{ overcloud_rc }}
         RETURN_CODE=0
         if [[ $(openstack volume service list -f json | jq '.[] | select(.Binary=="cinder-backup" and .Status=="enabled")') != '' ]]; then

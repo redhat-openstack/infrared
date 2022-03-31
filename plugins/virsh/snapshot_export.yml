@@ -25,7 +25,7 @@
 
     - name: Shut down any running VM's
       shell: |
-        set -e
+        set -eo pipefail
         RETURN_CODE=0
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh shutdown {{ item }}

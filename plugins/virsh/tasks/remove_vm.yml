@@ -10,6 +10,7 @@
 
 - name: delete external snapshots storage
   shell: |
+    set -o pipefail
     xml=$(virsh snapshot-dumpxml {{ vm_name }} {{ item }})
     rm -f $(echo "$xml" |  xmllint --xpath '/domainsnapshot/disks/disk/source/@file' - | sed -n 's/[^\"]*\"\([^\"]*\)\"[^\"]*/\1\n/gp')
     rm -f $(echo "$xml" |  xmllint --xpath '/domainsnapshot/memory/@file' - | sed -n 's/[^\"]*\"\([^\"]*\)\"[^\"]*/\1\n/gp')

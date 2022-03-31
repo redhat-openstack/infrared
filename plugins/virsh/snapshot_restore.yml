@@ -13,7 +13,7 @@
 
     - name: Restore snapshots of each VM
       shell: |
-        set -e
+        set -eo pipefail
         VIRSH_EXTRA_ARGS=""
         if virsh snapshot-list --domain {{ item }} --active --name | grep -qw {{ provision.virsh.snapshot.name }}; then
           VIRSH_EXTRA_ARGS="--running"
