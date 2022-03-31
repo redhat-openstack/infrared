@@ -128,6 +128,20 @@
           yum-config-manager --add-repo {{ item }}
         with_items: "{{ custom_repos.urls|default([]) }}"
 
+      - name: Enable RHEL9 beta custom crb repo to get vbmc dependencies (#workaround, #techdebt)
+        become: yes
+        copy:
+            src: "rhos-release-rhel-9.0-beta-custom-crb.repo"
+            dest: "/etc/yum.repos.d/"
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_major_version | int >= 9
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - cdn_status.rc != 0
+            - not skip_release
+        tags: rhos-release
+
       - name: Disable gpgcheck for custom repos
         become: yes
         shell: |
