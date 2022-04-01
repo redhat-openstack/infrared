@@ -15,6 +15,20 @@
     - network: internal_api
     - network: tenant
     - network: external
+{# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
+{% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend == 'lvm' %}
+  ansible_playbooks:
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
+      extra_vars:
+        growvols_args: >
+          /=8GB
+          /tmp=1GB
+          /var/log=10GB
+          /var/log/audit=2GB
+          /home=1GB
+          /srv=10GB
+          /var=100%
+{% endif %}
 - name: Compute
   count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
   hostname_format: compute-%index%
