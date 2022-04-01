@@ -63,5 +63,20 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+{# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
+{# TODO: maybe also add scoping to RHEL9 here? #}
+{% if install.version|default(undercloud_version)|openstack_release >= 17 %}
+  ansible_playbooks:
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
+      extra_vars:
+        growvols_args: >
+          /=25GB
+          /tmp=1GB
+          /var/log=10GB
+          /var/log/audit=2GB
+          /home=1GB
+          /srv=10GB
+          /var=100%
+{% endif %}
 {% endif %}
 {% endif %}
