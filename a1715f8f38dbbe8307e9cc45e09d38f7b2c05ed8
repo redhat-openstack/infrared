@@ -121,6 +121,23 @@
       "parentUuid": "e2125271_53d42c23",
       "revId": "a1715f8f38dbbe8307e9cc45e09d38f7b2c05ed8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2bd263d5_a5a7ba3b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 9
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1019635
+      },
+      "writtenOn": "2022-04-01T04:10:59Z",
+      "side": 1,
+      "message": "Why not checking only if the host is a VM and if yes set STP to off.\nFor example:\n\n\u003cbridge name\u003d\"{{ item.value.name }}\"\n{% if item.value.forward|default(\u0027\u0027) !\u003d \u0027bridge\u0027 %}\n  stp\u003d\"{{ \u0027off\u0027 if ansible_facts[\u0027virtualization_role\u0027] \u003d\u003d \u0027guest\u0027 else \u0027on\u0027}}\"\n{% endif %}/\u003e\n",
+      "revId": "a1715f8f38dbbe8307e9cc45e09d38f7b2c05ed8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
