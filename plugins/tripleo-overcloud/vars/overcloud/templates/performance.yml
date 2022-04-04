@@ -15,8 +15,12 @@ custom_templates:
             #        Cache the keystone auth tokens for nova, heat, neutron, cinder and glance
             nova::rpc_response_timeout: '600'
             ironic::rpc_response_timeout: '600'
-            heat::rpc_response_timeout: '600'
-            neutron::rpc_response_timeout: '600'
+            # Due to neutron not using heartbeat in rpc messages we
+            # end up hitting issues when Networker node agents start before
+            # the controllers. This causes them to get stuck for 10min while
+            # waiting for the timeout before retrying. This results with
+            # failures of workload tests post deployment.heat::rpc_response_timeout: '600'
+            neutron::rpc_response_timeout: '150'
             nova::cache::enabled: true
             nova::cache::backend: 'oslo_cache.memcache_pool'
             nova::cache::memcache_servers: '"%{::fqdn}:11211"'
@@ -39,10 +43,4 @@ custom_templates:
                 - 'client 200s'
                 - 'server 200s'
                 - 'check 15s'
-        NetworkerExtraConfig:
-            # Due to neutron not using heartbeat in rpc messages we
-            # end up hitting issues when Networker node agents start before
-            # the controllers. This causes them to get stuck for 10min while
-            # waiting for the timeout before retrying. This results with
-            # failures of workload tests post deployment.
-            neutron::rpc_response_timeout: '150'
+
