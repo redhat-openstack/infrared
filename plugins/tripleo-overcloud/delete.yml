@@ -6,7 +6,28 @@
   vars:
     undercloud_version: "{{ install.version | openstack_release }}"
     stack_name: "{{ install.overcloud.stack }}"
+    source_dir: "{{ install.deployment.files }}"
+    template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
   tasks:
+      - name: Ensure automated cleaning in ironic is enabled
+        become: yes
+        ini_file:
+          path: /var/lib/config-data/puppet-generated/ironic/etc/ironic/ironic.conf
+          section: conductor
+          option: automated_clean
+          value: true
+        register: _automated_cleaning
+        when: install.version|default(undercloud_version)|openstack_release >= 17
+
+      - name: Restart ironic conductor if required
+        become: yes
+        systemd:
+          name: tripleo_ironic_conductor
+          state: restarted
+        when: 
+          - _automated_cleaning.changed
+          - install.version|default(undercloud_version)|openstack_release >= 17
+
       - name: Show details about existing stack "{{ stack_name }}"
         shell: |
             source ~/stackrc
@@ -16,11 +37,22 @@
         args:
           executable: /bin/bash
         changed_when: False
+        when: install.version|default(undercloud_version)|openstack_release < 17
 
       - name: Delete existing "{{ stack_name }}" stack if it exists
         shell: |
             source ~/stackrc
+            {% if undercloud_version is version('17', '<') %}
             openstack overcloud delete -y {{ stack_name }}
+            {% else %}
+            BAREMEATL_FILE={{ ansible_user_dir }}/templates/overcloud-baremetal-deployed.yaml
+            if [ -f "$BAREMEATL_FILE" ]; then
+              openstack overcloud delete -y {{ stack_name }} \
+              -b {{ template_base }}/network/baremetal_deployment.yaml \
+              --networks-file {{ template_base }}/network/network_data_v2.yaml \
+              --network-ports
+            fi
+            {% endif %}
         args:
             executable: /bin/bash
 
@@ -48,3 +80,9 @@
         loop: "{{ _baremetal_node_list.stdout_lines | default([]) }}"
         args:
           executable: /bin/bash
+
+      - name: Remove all resulting deployed environment files
+        file:
+          path: "{{ ansible_user_dir }}/templates"
+          state: absent
+        when: install.version|default(undercloud_version)|openstack_release >= 17
