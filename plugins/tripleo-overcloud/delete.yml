@@ -6,7 +6,28 @@
   vars:
     undercloud_version: "{{ install.version | openstack_release }}"
     stack_name: "{{ install.overcloud.stack }}"
+    source_dir: "{{ install.deployment.files }}"
+    template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
   tasks:
+      - name: Ensure automated cleaning in ironic is enabled
+        become: yes
+        ini_file:
+          path: /var/lib/config-data/puppet-generated/ironic/etc/ironic/ironic.conf
+          section: conductor
+          option: automated_clean
+          value: true
+        register: _automated_cleaning
+        when: install.version|default(undercloud_version)|openstack_release >= 17
+
+      - name: Restart ironic conductor if required
+        become: yes
+        systemd:
+          name: tripleo_ironic_conductor
+          state: restarted
+        when:
+          - _automated_cleaning.changed
+          - install.version|default(undercloud_version)|openstack_release >= 17
+
       - name: Show details about existing stack "{{ stack_name }}"
         shell: |
             source ~/stackrc
@@ -16,11 +37,22 @@
         args:
           executable: /bin/bash
         changed_when: False
+        when: install.version|default(undercloud_version)|openstack_release < 17
 
       - name: Delete existing "{{ stack_name }}" stack if it exists
         shell: |
             source ~/stackrc
+            {% if undercloud_version is version('17', '<') %}
             openstack overcloud delete -y {{ stack_name }}
+            {% else %}
+            BAREMETAL_FILE={{ ansible_user_dir }}/templates/overcloud-baremetal-deployed.yaml
+            if [ -f "$BAREMETAL_FILE" ]; then
+              openstack overcloud delete -y {{ stack_name }} \
+              -b {{ template_base }}/network/baremetal_deployment.yaml \
+              --networks-file {{ template_base }}/network/network_data_v2.yaml \
+              --network-ports
+            fi
+            {% endif %}
         args:
             executable: /bin/bash
 
@@ -37,6 +69,23 @@
         changed_when: False
         register: _baremetal_node_list
 
+      - name: Wait until all nodes are in available state before deleting nodes
+        shell: |
+          source ~/stackrc
+          {% if undercloud_version is version('10', '<') %}
+          ironic node-list --provision-state available --fields name | tail -n +4 | head -n -1 | awk '{print $2}'
+          {% else %}
+          openstack baremetal node list -c Name -f value --provision-state available
+          {% endif %}
+        changed_when: false
+        register: _available_baremetal_node_list
+        retries: 10
+        delay: 60
+        until:
+          - _available_baremetal_node_list.stdout == _baremetal_node_list.stdout
+        args:
+          executable: /bin/bash
+
       - name: Delete existing baremetal nodes
         shell: |
             source ~/stackrc
@@ -48,3 +97,16 @@
         loop: "{{ _baremetal_node_list.stdout_lines | default([]) }}"
         args:
           executable: /bin/bash
+
+      - name: Copy files from templates to templates_deleted_*
+        copy:
+          src: "{{ ansible_user_dir }}/templates/"
+          dest: "{{ ansible_user_dir }}/templates_deleted_{{ ansible_date_time.iso8601 }}/"
+          remote_src: True
+        when: install.version|default(undercloud_version)|openstack_release >= 17
+
+      - name: Remove previous deployed templates files
+        file:
+          path: "{{ ansible_user_dir }}/templates"
+          state: absent
+        when: install.version|default(undercloud_version)|openstack_release >= 17
