@@ -5,6 +5,7 @@
 
 - name: wait for VMs IPs
   shell: |
+      set -o pipefail
       virsh net-dhcp-leases {{ item.value.net }} | awk '($4 == "ipv4")  && ($3 == "{{ item.value.mac }}") {print $5}'
   when: item.value.deploy_os
   register: ip_list
@@ -26,6 +27,7 @@
 
 - name: make IPs persistent
   shell: |-
+    set -o pipefail
     RETURN_CODE=0
     if [[ $(virsh net-dhcp-leases management --mac={{ item.value.mac }} | wc -l) -gt 3 ]]; then
       virsh net-update {{ item.value.net }} add ip-dhcp-host "<host mac='{{ item.value.mac }}' name='{{ item.key }}' ip='{{ item.value.ip }}' />" --live --config

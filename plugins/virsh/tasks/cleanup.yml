@@ -113,6 +113,7 @@
 - name: Cleanup nmcli openvswitch resources
   tags: networks
   shell: |
+    set -o pipefail
     for con_uuid in $(nmcli connection | grep IR_OVS | awk '{ print $2 }');
     do
       nmcli connection delete $con_uuid;
