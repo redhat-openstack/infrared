@@ -5,7 +5,38 @@
   any_errors_fatal: true
   vars:
     undercloud_version: "{{ install.version | openstack_release }}"
+    source_dir: "{{ install.deployment.files }}"
+    template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
   tasks:
+      - name: Check if the baremetal deployed file exists
+        stat:
+            path: "{{ ansible_user_dir }}/templates/overcloud-baremetal-deployed.yaml"
+        register: baremetal_deployment
+        when: install.version|default(undercloud_version)|openstack_release >= 17
+      
+      - block:
+        - name: Run node delete 
+          shell: |
+              source ~/stackrc
+              set -o pipefail
+              openstack overcloud node delete --stack {{ install.overcloud.stack }} -y --baremetal-deployment {{ template_base }}/network/baremetal_deployment.yaml | \
+              tee -a /home/stack/overcloud_node_delete.log
+        
+        - name: Unprovision all nodes
+          shell: |
+              source ~/stackrc
+              set -o pipefail
+              openstack overcloud node unprovision --all -y --stack {{ install.overcloud.stack }} --network-ports {{ template_base }}/network/baremetal_deployment.yaml | \
+              tee -a /home/stack/overcloud_nodes_unprovisioning_.log
+
+        - name: Remove overcloud-baremetal-deployed.yaml file
+          file:
+            path: "{{ ansible_user_dir }}/templates/overcloud-baremetal-deployed.yaml"
+            state: absent
+        when: 
+          - (install.version|default(undercloud_version) | openstack_release >= 17)
+          - baremetal_deployment.stat.exists
+
       - name: Show details about existing Overcloud
         shell: |
             source ~/stackrc
@@ -15,6 +46,7 @@
         args:
           executable: /bin/bash
         changed_when: False
+        when: install.version|default(undercloud_version)|openstack_release < 17
 
       - name: Delete existing overcloud Heat stack if it exists
         shell: |
@@ -30,6 +62,7 @@
         register: _delete_stack
         changed_when: _delete_stack.rc == 2
         failed_when: _delete_stack.rc not in [0, 2]
+        when: install.version|default(undercloud_version)|openstack_release < 17
 
       - name: Get list of existing baremetal nodes
         shell: |
@@ -43,6 +76,7 @@
           executable: /bin/bash
         changed_when: False
         register: _baremetal_node_list
+        when: install.version|default(undercloud_version)|openstack_release < 17
 
       - name: Delete existing baremetal nodes
         shell: |
@@ -55,3 +89,4 @@
         loop: "{{ _baremetal_node_list.stdout_lines | default([]) }}"
         args:
           executable: /bin/bash
+        when: install.version|default(undercloud_version)|openstack_release < 17
