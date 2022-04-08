@@ -2,18 +2,17 @@
   hosts: l3appliance-0
   any_errors_fatal: true
   gather_facts: yes
+  roles:
+    - role: rhos-release
+      rhos_release_rpm: https://url.corp.redhat.com/rhos-release-latest-rpm
+      release: "{{ install.version }}"
+      build: "{{ install.build }}"
+      mirror: "{{ install.mirror | default(omit) }}"
   tasks:
-    - name: L3 Appliance - install rhos-release package
-      become: true
-      # TODO: Switch to use ansible dnf module
-      yum:
-        name: http://download.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm
-        disable_gpg_check: yes
-
-    - name: L3 Appliance - Use rhos-release latest-released
+    - name: L3 Appliance - Use rhos-release rhel
       become: true
       command:
-        cmd: "rhos-release latest-released"
+        cmd: "rhos-release rhel"
 
     - name: L3 Appliance - Install packages
       become: true
