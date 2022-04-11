@@ -144,6 +144,12 @@ PLUGINS_REGISTRY = {
     },
     'collect-logs': {
         'src': 'plugins/collect-logs',
+        'desc': '(deprecated) Collect log from all nodes in the active workspace',
+        'type': 'other'
+    },
+    'ansible-role-collect-logs': {
+        'src': 'https://github.com/openstack/ansible-role-collect-logs.git',
+        'src_path': 'infrared_plugin',
         'desc': 'Collect log from all nodes in the active workspace',
         'type': 'other'
     },
