@@ -24,6 +24,19 @@
   delay: 100
   when: overcloud_image_name == "hardened-uefi-full"
 
+- name: Install the RPM with hardened FIPS uefi pre-build overcloud images
+  become: yes
+  package:
+      name: rhosp-director-images-uefi-fips-x86_64
+      state: latest
+  register: yum_hardened_install
+  until: "yum_hardened_install is not failed or not yum_hardened_install.msg | regex_search('Operation too slow')"
+  retries: 2
+  # on a regular day this package install takes 120-150sec
+  # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
+  delay: 100
+  when: overcloud_image_name == "hardened-uefi-full-fips"
+
 # create Directory structure for multiarch images
 - name: create multiarch image directory structure
   become_user: "{{ install.user.name }}"
@@ -48,7 +61,22 @@
       list_files: yes
   register: image_files
   with_items: "{{ tar_images }}"
-  when: not multiarch_images
+  when:
+    - not multiarch_images
+    - not fips_images
+  
+- name: untar the FIPS images
+  become: yes
+  unarchive:
+      src: "/usr/share/rhosp-director-images/{{ item }}"
+      dest: "~{{ install.user.name }}/"
+      copy: no
+      owner: "{{ install.user.name }}"
+      group: "{{ install.user.name }}"
+      list_files: yes
+  register: image_files
+  with_items: "{{ fips_tar_images }}"
+  when: fips_images
 
 - name: untar the images - Multiarch deployment
   become: yes
