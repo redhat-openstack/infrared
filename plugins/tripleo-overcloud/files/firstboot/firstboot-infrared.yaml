@@ -1,0 +1,35 @@
+heat_template_version: queens
+
+parameters:
+  FirstBootUniqueID:
+    type: string
+    default: ''
+
+description: >
+  Firstboot tasks
+
+resources:
+  userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: nfs_unique_id_config}
+
+  nfs_unique_id_config:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config:
+        str_replace:
+          template: |
+            #!/bin/bash
+            host_specific_id="$(hostname)-$UNIQUE_ID"
+            echo "options nfs nfs4_unique_id=${host_specific_id}" >/etc/modprobe.d/nfsv4_id.conf
+            if [ -e /sys/module/nfs/parameters/nfs4_unique_id ]; then
+                echo -n ${host_specific_id} >/sys/module/nfs/parameters/nfs4_unique_id
+            fi
+          params:
+            $UNIQUE_ID: {get_param: FirstBootUniqueID}
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: userdata}
