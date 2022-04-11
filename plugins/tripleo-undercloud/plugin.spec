@@ -494,6 +494,12 @@ subparsers:
                       help: |
                           Enables download of ppc64le cloud images and their upload into glance for multiarch deployments
                       default: false
+                      
+                  fips-mode:
+                      type: Bool
+                      help: |
+                          Use the FIPS images for the OverCloud
+                      default: no
 
             - title: Undercloud Upgrade
               options:
