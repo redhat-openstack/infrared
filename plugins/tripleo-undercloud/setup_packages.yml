@@ -189,6 +189,11 @@
             name: "*"
         register: update
 
+      - name: Set FIPS mode on the undercloud
+        command: fips-mode-setup --enable
+        register: fips_mode_status
+        when: install.fips.mode
+
       # We check with systemctl if system has finished booting up
       # but on RHEL7 we don't have --wait option so we check only
       # for the state. We accept running or degraded as some
