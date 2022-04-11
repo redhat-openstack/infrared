@@ -488,12 +488,18 @@ subparsers:
                           * full - overcloud-full.qcow2
                           * hardened-uefi-full - overcloud-hardened-uefi-full.qcow2
                           If not set, 'full' will be used for OSP 16 and below, and 'hardened-uefi-full' for 17 and above.
-                          
+
                   download-ppc64le-images:
                       type: Bool
                       help: |
                           Enables download of ppc64le cloud images and their upload into glance for multiarch deployments
                       default: false
+
+                  fips-mode:
+                      type: Bool
+                      help: |
+                          Use the FIPS images for the OverCloud
+                      default: no
 
             - title: Undercloud Upgrade
               options:

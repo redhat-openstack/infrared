@@ -24,6 +24,15 @@
         when:
           - install.version|default(undercloud_version) | openstack_release >= 17
           - overcloud_image_name is not defined
+          - not install.fips.mode
+
+      - name: Set FIPS overcloud_image_name OSP>=17
+        set_fact:
+          overcloud_image_name: "hardened-uefi-full-fips"
+        when:
+          - install.version|default(undercloud_version) | openstack_release >= 17
+          - overcloud_image_name is not defined
+          - install.fips.mode
 
 - name: Preparing the images
   hosts: undercloud
@@ -41,6 +50,9 @@
           8:
               - "ironic-python-agent.tar"
               - "overcloud-{{overcloud_image_name}}.tar"
+          fips:
+              - "ironic-python-agent-fips.tar"
+              - "overcloud-hardened-uefi-full-fips.tar"
           ppc64le:
               - "ironic-python-agent-latest-{{ undercloud_version }}-x86_64.tar"
               - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
@@ -54,6 +66,8 @@
           # Any higher version defaults to 8
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
+      fips_images: "{{ install.fips.mode == true | ternary(true, false) }}"
+      fips_tar_images: "{{ tar_files.fips }}"
       tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
       overcloud_image_file: "overcloud-{{overcloud_image_name}}.qcow2"
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
@@ -159,12 +173,33 @@
           - install['overcloud']['update']['kernel']
           - install.images.packages
 
+      - name: create fips image symlink for image uploading
+        file:
+          src: ~{{ install.user.name }}/ironic-python-agent-fips.initramfs
+          dest: ~{{ install.user.name }}/ironic-python-agent.initramfs
+          state: link
+        when: fips_images
+
+      - name: create fips kernel symlink for image uploading
+        file:
+          src: ~{{ install.user.name }}/ironic-python-agent-fips.kernel
+          dest: ~{{ install.user.name }}/ironic-python-agent.kernel
+          state: link
+        when: fips_images
+
+      - name: create fips kernel symlink for image uploading
+        file:
+          src: ~{{ install.user.name }}/overcloud-hardened-uefi-full-fips.qcow2
+          dest: ~{{ install.user.name }}/overcloud-hardened-uefi-full.qcow2
+          state: link
+        when: fips_images
+
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --update-existing {% if overcloud_image_name == "hardened-uefi-full" %}--whole-disk{% endif %}
+            openstack overcloud image upload --update-existing {% if overcloud_image_name == "hardened-uefi-full" or overcloud_image_name == "hardened-uefi-full-fips" %}--whole-disk{% endif %}
         tags: skip_ansible_lint
         when: not multiarch_images
 
