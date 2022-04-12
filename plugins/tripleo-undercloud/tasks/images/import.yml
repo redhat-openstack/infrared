@@ -2,7 +2,7 @@
 # TODO(yfried): fetch checksum if available to verify DL of large files (1.5GB)
 - name: download the pre-built overcloud images
   get_url:
-      dest: "~/{{ item }}"
+      dest: "~{{ install.user.name }}/{{ item }}"
       url: "{{ install.images.url }}/{{ item }}"
       timeout: 1000
   with_items: "{{ tar_images }}"
@@ -11,11 +11,25 @@
   retries: 2
   delay: 10
 
+- name: Find all tar images
+  find:
+    path: "~{{ install.user.name }}/"
+    patterns: '*.tar'
+  register: image_tar_files
+
 - name: untar the images
+  become: yes
   unarchive:
-      src: "~/{{ item }}"
-      dest: "~/"
+      src: "~{{ install.user.name }}/"
+      dest: "~{{ install.user.name }}/"
       copy: no
+      owner: "{{ install.user.name }}"
+      group: "{{ install.user.name }}"
       list_files: yes
+  with_items: "{{ image_tar_files }}"
+
+- name: Find all qcow2 images
+  find:
+    path: "~/{{ install.user.name }}"
+    patterns: '*.qcow2'
   register: image_files
-  with_items: "{{ tar_images }}"
