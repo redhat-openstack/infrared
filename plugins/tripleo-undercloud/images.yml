@@ -25,6 +25,18 @@
           - install.version|default(undercloud_version) | openstack_release >= 17
           - overcloud_image_name is not defined
 
+      - name: Set overcloud_image_extension
+        set_fact:
+          overcloud_image_extension: "tar"
+        when: overcloud_image_name =! "hardened-uefi-full" or install.images.task =! "import"
+
+      - name: Set overcloud_image_extension when images-task is import
+        set_fact:
+          overcloud_image_extension: "qcow2"
+        when:
+          - overcloud_image_name == "hardened-uefi-full"
+          - install.images.task == "import"
+
 - name: Preparing the images
   hosts: undercloud
   gather_facts: yes
@@ -37,10 +49,10 @@
           7:
               - "discovery-ramdisk.tar"
               - "deploy-ramdisk-ironic.tar"
-              - "overcloud-{{overcloud_image_name}}.tar"
+              - "overcloud-{{overcloud_image_name}}.{{overcloud_image_extension}}"
           8:
               - "ironic-python-agent.tar"
-              - "overcloud-{{overcloud_image_name}}.tar"
+              - "overcloud-{{overcloud_image_name}}.{{overcloud_image_extension}}"
           ppc64le:
               - "ironic-python-agent-latest-{{ undercloud_version }}-x86_64.tar"
               - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
