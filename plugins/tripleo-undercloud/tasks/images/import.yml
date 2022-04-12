@@ -1,8 +1,16 @@
 ---
 # TODO(yfried): fetch checksum if available to verify DL of large files (1.5GB)
+- name: wipe out /tmp/prebuilt_images/ directory
+  file:
+      path: /tmp/prebuilt_images/
+      state: "{{ item }}"
+  with_items:
+      - absent
+      - directory
+
 - name: download the pre-built overcloud images
   get_url:
-      dest: "~/{{ item }}"
+      dest: "/tmp/prebuilt_images/{{ item }}"
       url: "{{ install.images.url }}/{{ item }}"
       timeout: 1000
   with_items: "{{ tar_images }}"
@@ -11,11 +19,31 @@
   retries: 2
   delay: 10
 
+- name: Find all tar images
+  find:
+    path: /tmp/prebuilt_images
+    patterns: '*.tar'
+  register: image_tar_files
+
 - name: untar the images
   unarchive:
-      src: "~/{{ item }}"
-      dest: "~/"
+      src: "/tmp/prebuilt_images/{{ item }}"
+      dest: "/tmp/prebuilt_images/"
       copy: no
       list_files: yes
+  with_items: "{{ image_tar_files }}"
+
+- name: Find all qcow2 images
+  find:
+    path: /tmp/prebuilt_images
+    patterns: '*.qcow2'
+  register: image_qcow2_files
+
+- name: Copy all images
+  become_user: "{{ install.user.name }}"
+  copy:
+    src: "/tmp/prebuilt_images/{{ item }}"
+    dest: "~/"
+    mode: "0755"
+    remote_src: yes
   register: image_files
-  with_items: "{{ tar_images }}"
