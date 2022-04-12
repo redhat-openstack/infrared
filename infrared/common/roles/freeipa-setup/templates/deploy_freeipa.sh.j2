@@ -1,0 +1,124 @@
+#! /bin/bash
+
+set -eux
+
+### ---start_docs
+
+## Setup FreeIPA
+## =============
+
+## * Set required environment variables::
+
+export TRIPLEO_DOMAIN={{ freeipa_domain }}}}
+export CA_SERVER_HOSTNAME={{ freeipa_hostname }}
+export CA_ADMIN_PASS={{ freeipa_admin_password }}
+export CA_DIR_MANAGER_PASS={{ directory_manager_password }}
+export UNDERCLOUD_FQDN={{ undercloud_fqdn }}
+export IPA_SERVER_IP={{ freeipa_ip }}
+
+## * Set IPA hostname::
+
+hostnamectl set-hostname --static $CA_SERVER_HOSTNAME
+
+## * Prepare the hosts file
+## .. note:: This must be at the top of /etc/hosts
+## ::
+
+sed -i "1i$IPA_SERVER_IP $CA_SERVER_HOSTNAME" /etc/hosts
+
+## * Install required system packages::
+DISABLE_REPO_CMD="yum-config-manager --disable"
+
+{% if ansible_distribution_major_version is version("8", "==") -%}
+
+DISABLE_REPO_CMD="dnf config-manager --set-disabled"
+dnf module enable -y idm:DL1/{dns,adtrust,client,server,common}
+
+{% endif %}
+
+{{ ansible_pkg_mgr }} install -yq ipa-server \
+            ipa-server-dns curl iptables
+
+## * Update NSS (required for CA server to launch during deploy)
+
+{{ ansible_pkg_mgr }} update -y nss
+
+## * Increase system entropy (to prevent slow down during IPA installation)::
+
+{% if ansible_distribution_major_version is version("7", "<=") -%}
+
+curl -Lo ius-release.rpm https://repo.ius.io/ius-release-el7.rpm
+rpm -Uvh ius-release*.rpm
+
+{% endif %}
+
+# Downgrade openssl version
+{% if ansible_distribution_major_version is version("9", ">=") -%}
+sudo dnf downgrade -y openssl-3.0.1-5.el9
+{% endif %}
+
+## * Install FreeIPA::
+
+ipa-server-install -U \
+    -r `hostname -d|tr "[a-z]" "[A-Z]"` \
+    -p $CA_DIR_MANAGER_PASS \
+    -a $CA_ADMIN_PASS \
+    --hostname `hostname -f ` \
+    --ip-address=$IPA_SERVER_IP \
+    --setup-dns \
+{% if custom_nameserver is defined -%}
+{% for dns in custom_nameserver %}
+    --forwarder={{ dns }} \
+{% endfor %}
+{% else %}
+    --auto-forwarders \
+{% endif %}
+    --auto-reverse {{ ipa_server_install_params|default('') }}
+## * Set CA to create CRL on restart
+sed -i "s/ca.crl.MasterCRL.publishOnStart=.*/ca.crl.MasterCRL.publishOnStart=true/" /etc/pki/pki-tomcat/ca/CS.cfg
+systemctl restart pki-tomcatd@pki-tomcat.service
+
+## * Set iptables rules::
+
+cat << EOF > freeipa-iptables-rules.txt
+# Firewall configuration written by system-config-firewall
+# Manual customization of this file is not recommended.
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
+#TCP ports for FreeIPA
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 443  -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 389 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 636 -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 88  -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 464  -j ACCEPT
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 53  -j ACCEPT
+#UDP ports for FreeIPA
+-A INPUT -m state --state NEW -m udp -p udp --dport 88 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 464 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 123 -j ACCEPT
+-A INPUT -m state --state NEW -m udp -p udp --dport 53 -j ACCEPT
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+COMMIT
+EOF
+
+iptables-restore < freeipa-iptables-rules.txt
+
+# Setup sub-CAs
+{% for subca in freeipa_subcas %}
+    {% if loop.first %}
+        echo $CA_ADMIN_PASS | kinit admin
+        ipa caacl-add-ca hosts_services_caIPAserviceCert --cas=ipa
+    {% endif %}
+    ipa ca-add --subject=CN={{subca}} {{subca}}
+    ipa caacl-add-ca hosts_services_caIPAserviceCert --cas={{subca}}
+{% endfor %}
+
+### ---stop_docs

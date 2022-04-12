@@ -1,0 +1,38 @@
+---
+
+- name: Validate FreeIPA Admin password was passed
+  fail: msg="freeipa_admin_password is not passed and or blank"
+  when:
+    - deploy_supplemental_node|bool and not hostvars['supplemental'].freeipa_admin_password|default('')
+    - not freeipa_admin_password|default('')
+
+- name: Validate FreeIPA Server hostname was passed
+  fail: msg="freeipa_server_hostname is not passed and or blank"
+  when: freeipa_server_hostname is not defined or ( freeipa_server_hostname is defined and freeipa_server_hostname == "" )
+
+- name: Validate a domain for the cloud was given
+  fail: msg="overcloud_cloud_domain is not passed and or blank"
+  when: overcloud_cloud_domain is not defined or ( overcloud_cloud_domain is defined and overcloud_cloud_domain == "" )
+
+- name: Validate a undercloud hostname was given
+  fail: msg="undercloud_undercloud_hostname is not passed and or blank"
+  when: undercloud_undercloud_hostname is not defined or ( undercloud_undercloud_hostname is defined and undercloud_undercloud_hostname == "" )
+
+- name: Install tripleo-ipa preparation script
+  template:
+    src: ipa_prep.sh.j2
+    dest: "~{{ supplemental_user }}/ipa_prep.sh"
+    mode: 0755
+
+- name: Run the tripleo-ipa preparation script
+  shell: >
+    set -o pipefail &&
+    ~{{ supplemental_user }}/ipa_prep.sh 2>&1 {{ timestamper_cmd }} >
+    ~{{ supplemental_user }}/ipa_prep.sh.log
+  changed_when: true
+
+- name: Fetch the otp key
+  fetch:
+    src: "{{ freeipa_otp_key }}"
+    dest: "{{ freeipa_otp_key }}"
+    flat: true

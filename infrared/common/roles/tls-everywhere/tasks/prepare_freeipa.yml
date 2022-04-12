@@ -72,6 +72,9 @@
       - java-1.8.0-openjdk-1:1.8.0.282.b08-1.el8_2
       - java-1.8.0-openjdk-headless-1:1.8.0.282.b08-1.el8_2
       allow_downgrade: yes
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version is version("9", "<")
 
   - name: Install Red Hat CA
     become: yes
@@ -94,37 +97,73 @@
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version == '8'
 
-  - name: Download freeipa setup script
-    get_url:
-       url: "{{ freeipa_setup_script }}"
-       dest: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-       mode: 775
-       validate_certs: "{{ ansible_facts['distribution_version'] is version('7.9', '>=') }}"
+  - when:
+      - ansible_distribution in ['CentOS', 'RedHat']
+      - ansible_distribution_major_version is version("9", "<")
+    block:
+      - name: Download freeipa setup script (RHEL<9)
+        get_url:
+           url: "{{ freeipa_setup_script }}"
+           dest: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+           mode: 775
+           validate_certs: "{{ ansible_facts['distribution_version'] is version('7.9', '>=') }}"
 
-  - name: Generate inventory file
-    template:
-        dest: "{{ freeipa_working_dir }}/freeipa-setup.env"
-        src: freeipa-setup.env.j2
-        force: yes
+      - name: Generate freeipa environment file (RHEL<9)
+        template:
+            dest: "{{ freeipa_working_dir }}/freeipa-setup.env"
+            src: freeipa-setup.env.j2
+            force: yes
 
-  - name: Add w/a for ipv6 link local
-    lineinfile:
-        path: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-        insertafter: '^# Set up FreeIPA'
-        line: "sed -i '/^nameserver fe80:.*./d' /etc/resolv.conf"
-        state: present
+      - name: Add w/a for ipv6 link local
+        lineinfile:
+            path: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+            insertafter: '^# Set up FreeIPA'
+            line: "sed -i '/^nameserver fe80:.*./d' /etc/resolv.conf"
+            state: present
 
-  - name: Execute freeipa script
-    become: yes
-    command: "{{ freeipa_working_dir }}/freeipa_setup.sh"
-    register: freeipa_setup
+      - name: Execute freeipa script (RHEL<9)
+        become: yes
+        command: "{{ freeipa_working_dir }}/freeipa_setup.sh"
+        register: freeipa_setup
 
-  - name: Configure FreeIPA to publish Master CRL at start
-    become: yes
-    lineinfile:
-        path: /etc/pki/pki-tomcat/ca/CS.cfg
-        regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
-        line: 'ca.crl.MasterCRL.publishOnStart=true'
+      - name: Configure FreeIPA to publish Master CRL at start (RHEL<9)
+        become: yes
+        lineinfile:
+            path: /etc/pki/pki-tomcat/ca/CS.cfg
+            regexp: '^ca.crl.MasterCRL.publishOnStart=(.*)$'
+            line: 'ca.crl.MasterCRL.publishOnStart=true'
+
+  - when:
+      - ansible_distribution in ['CentOS', 'RedHat']
+      - ansible_distribution_major_version is version("9", ">=")
+    block:
+      - name: find the current nameservers from /etc/resolv.conf - will be used as ipa server dns forwarders
+        shell: grep "^nameserver" /etc/resolv.conf | grep -v "fe80\:.*" | cut -d' ' -f 2
+        register: resolv_conf
+
+      - name: include freeipa-setup role (from tripleo-quickstart-extras) (RHEL>=9)
+        include_role:
+          name: freeipa-setup
+          apply:
+            become: true
+        vars:
+          freeipa_hostname: "{{ freeipa_node }}.{{ freeipa_domain }}"
+          freeipa_server_hostname: "{{ freeipa_node }}.{{ freeipa_domain }}"
+          freeipa_ip: "{{ freeipa_node_ipaddress }}"
+          freeipa_domain: "{{ (install|default({})).get('freeipa', {}).get('domain', 'redhat.local') }}"
+          freeipa_admin_password: 12345678
+          directory_manager_password: "{{ freeipa_directory_manager_password }}"
+          undercloud_fqdn: "{{ groups['undercloud'][0] }}.{{ freeipa_domain }}"
+          # TODO: 'allow-zone-overlap' is passed to 'ipa-server-install' for rhel7/8 - it needs to be checked is it required for rhel9 too
+          ipa_server_install_params: "--no-dnssec-validation --allow-zone-overlap"
+          undercloud_enable_novajoin: "{{ freeipa_enable_novajoin }}"
+          supplemental_user: root
+          custom_nameserver: "{{ resolv_conf.stdout_lines }}"
+          # the below are set to prevent freeipa-setup role to configure undercloud and let this tls-everywhere role to do that
+          # possible TODO to reuse freeipa-setup role for it
+          enable_tls_everywhere: false
+          prepare_ipa: false
+          deploy_supplemental_node: false
 
   - name: Does the DNS ACL exist
     become: yes
@@ -170,6 +209,11 @@
         ipa dnsrecord-add storagemgmt.{{ freeipa_cloud_domain }} overcloud {{ (tls_everywhere.network.storagemgmt_vip|ipv6)|default(False)|ternary('--aaaa-rec','--a-rec') }} {{ tls_everywhere.network.storagemgmt_vip }}
     register: overcloud_dns_entries
 
+  - name: gather facts from the hypervisor
+    setup:
+    delegate_to: hypervisor
+    delegate_facts: true
+
   - name: Configure FreeIPA DNS Forwarder from hypervisor
     become: yes
     shell: |
@@ -177,20 +221,20 @@
         ipa dnsconfig-mod --forwarder={{ hostvars['hypervisor'].ansible_dns.nameservers[0] }} --forward-policy=only
     when: freeipa_forwarder == 'hypervisor'
 
-  - name: Configure FreeIPA DNS Forwarder from paramater
+  - name: Configure FreeIPA DNS Forwarder from parameter
     become: yes
     shell: |
         echo {{ freeipa_admin_password }}|kinit admin
         ipa dnsconfig-mod --forwarder={{ freeipa_forwarder }} --forward-policy=only
     when: freeipa_forwarder != 'hypervisor'
 
-  - name: Check for existance of /etc/sysconfig/iptables file
+  - name: Check for existence of /etc/sysconfig/iptables file
     stat:
        path: /etc/sysconfig/iptables
     register: iptables_file
 
   - block:
-    - name: Assue DNS query isn't blocked by iptables
+    - name: Ensure DNS query isn't blocked by iptables
       become: yes
       iptables:
           action: insert
