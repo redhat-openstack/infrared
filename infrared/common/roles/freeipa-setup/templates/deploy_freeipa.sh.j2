@@ -9,12 +9,12 @@ set -eux
 
 ## * Set required environment variables::
 
-export TRIPLEO_DOMAIN=ooo.test
-export CA_SERVER_HOSTNAME=ipa.$TRIPLEO_DOMAIN
+export TRIPLEO_DOMAIN={{ freeipa_domain }}}}
+export CA_SERVER_HOSTNAME={{ freeipa_hostname }}
 export CA_ADMIN_PASS={{ freeipa_admin_password }}
 export CA_DIR_MANAGER_PASS={{ directory_manager_password }}
-export UNDERCLOUD_FQDN=undercloud.$TRIPLEO_DOMAIN
-export IPA_SERVER_IP={{ supplemental_node_ip }}
+export UNDERCLOUD_FQDN={{ undercloud_fqdn }}
+export IPA_SERVER_IP={{ freeipa_ip }}
 
 ## * Set IPA hostname::
 
@@ -52,10 +52,7 @@ rpm -Uvh ius-release*.rpm
 
 {% endif %}
 
-{{ ansible_pkg_mgr }} install -y haveged
-systemctl start haveged.service
-
-## Downgrade openssl version
+# Downgrade openssl version
 {% if ansible_distribution_major_version is version("9", ">=") -%}
 sudo dnf downgrade -y openssl-3.0.1-5.el9
 {% endif %}
