@@ -1,12 +1,3 @@
-- name: Gather data to create a unique ID (machine-id, current date)
-  shell: |
-      echo "$(cat /etc/machine-id)-$(date +%s)"
-  register: machineid_date
-
-- name: Compute a unique host ID to be used during firstboot
-  set_fact:
-      firstboot_unique_id: "{{ machineid_date.stdout|to_uuid }}"
-
 # The file is in a separate directory so that it's not added to
 # overcloud_deploy.sh by the code which adds all the *.yaml
 # files in the template_base directory to it
