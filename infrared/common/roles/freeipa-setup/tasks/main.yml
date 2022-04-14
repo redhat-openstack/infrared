@@ -1,0 +1,29 @@
+---
+
+- block:
+  - name: Set FreeIPA admin password
+    set_fact:
+      freeipa_admin_password: "{{ lookup('pipe','uuidgen') }}"
+      cacheable: true
+    when: freeipa_admin_password is not defined
+
+  - name: Set directory manager password
+    set_fact:
+      directory_manager_password: "{{ lookup('pipe','uuidgen') }}"
+      cacheable: true
+    when: directory_manager_password is not defined
+
+  - name: Create FreeIPA deployment script
+    template:
+      src: deploy_freeipa.sh.j2
+      dest: "~{{ supplemental_user }}/deploy_freeipa.sh"
+      mode: 0744
+
+  - name: Deploy FreeIPA
+    become: true
+    shell: "~{{ supplemental_user }}/deploy_freeipa.sh &> ~{{ supplemental_user }}/deploy_freeipa.log"
+
+- include: ipa_prep.yml
+  when: enable_tls_everywhere|bool and prepare_ipa|bool and not undercloud_enable_novajoin|bool
+  tags:
+    - undercloud-install

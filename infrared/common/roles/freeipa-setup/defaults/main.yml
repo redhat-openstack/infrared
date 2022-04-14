@@ -1,0 +1,16 @@
+---
+
+freeipa_hostname: "ipa.tripleodomain"
+freeipa_ip: "{{ undercloud_network_cidr|nthhost(250) }}"
+
+# added for compatibility with https://github.com/redhat-openstack/infrared/tree/master/infrared/common/roles/tls-everywhere
+freeipa_domain: "ooo.test"
+
+undercloud_fqdn: "undercloud.tripleodomain"
+provisioning_cidr: "{{ undercloud_network_cidr }}"
+supplemental_user: "root"
+freeipa_subcas: []
+prepare_ipa: true
+# location which the novajoin-ipa-setup will store the FreeIPA token
+freeipa_otp_key: /tmp/ipa-otp.txt
+

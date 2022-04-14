@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -eux
+
+### --start_docs
+
+## Set up the necessary permissions/privileges in novajoin
+## =======================================================
+
+## * Install ansible and tripleo-ipa
+
+{% if ansible_distribution_major_version is version("9", ">=") -%}
+sudo {{ ansible_pkg_mgr }} install -yq ansible-core ansible-tripleo-ipa
+ansible-galaxy collection install -v community.general -p ~/.ansible/collections
+{% else %}
+sudo {{ ansible_pkg_mgr }} install -yq ansible ansible-tripleo-ipa
+{% endif %}
+
+## * Set up FreeIPA permissions and privileges and register the undercloud.
+## ::
+
+export IPA_ADMIN_USER=admin
+export IPA_PRINCIPAL=admin
+{% if deploy_supplemental_node|bool %}
+export IPA_ADMIN_PASSWORD={{ hostvars['supplemental'].freeipa_admin_password }}
+export IPA_PASSWORD={{ hostvars['supplemental'].freeipa_admin_password }}
+{% else %}
+export IPA_ADMIN_PASSWORD={{ freeipa_admin_password }}
+export IPA_PASSWORD={{ freeipa_admin_password }}
+{% endif %}
+export IPA_SERVER_HOSTNAME={{ freeipa_server_hostname }}
+export IPA_REALM=$(echo {{ overcloud_cloud_domain }} | awk '{print toupper($0)}')
+export IPA_DOMAIN={{ overcloud_cloud_domain }}
+export UNDERCLOUD_FQDN={{ undercloud_undercloud_hostname }}
+export CLOUD_DOMAIN="{{ overcloud_cloud_domain }}"
+
+echo $IPA_PASSWORD | kinit $IPA_ADMIN_USER@$IPA_REALM
+
+ansible-playbook --ssh-extra-args \
+  "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+  /usr/share/ansible/tripleo-playbooks/ipa-server-create-role.yaml
+
+ansible-playbook --ssh-extra-args \
+  "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+  /usr/share/ansible/tripleo-playbooks/ipa-server-register-undercloud.yaml \
+    | grep -o '"ipa_otp = .*"$' | sed 's/ipa_otp = //' > {{ freeipa_otp_key }}
+
+ansible-playbook --ssh-extra-args \
+  "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
+  /usr/share/ansible/tripleo-playbooks/ipa-server-create-principal.yaml
+
+### --stop_docs
