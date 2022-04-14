@@ -3,6 +3,13 @@
   hostname_format: controller-%index%
   defaults:
     profile: control
+    config_drive:
+      cloud_config:
+        # unique NFS ID
+        bootcmd: >
+          - 'host_specific_id="$(hostname)-{{ deployment_unique_id }}"'
+          - 'echo "options nfs nfs4_unique_id=${host_specific_id}" >/etc/modprobe.d/nfsv4_id.conf'
+          - ' -e /sys/module/nfs/parameters/nfs4_unique_id ] && echo -n ${host_specific_id} >/sys/module/nfs/parameters/nfs4_unique_id'
     network_config:
       default_route_network:
       - External
