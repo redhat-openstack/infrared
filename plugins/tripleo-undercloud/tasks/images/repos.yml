@@ -14,7 +14,15 @@
   package:
       name: libguestfs-tools
       state: present
+  when: ansible_distribution_version is version('9.0', '<')
 
+- name: install guestfs-tools on RHEL-9 to get virt-customize
+  become: yes
+  package:
+      name: guestfs-tools
+      state: present
+  when: ansible_distribution_version is version('9.0', '>=')
+  
 - name: Get custom repository file stat
   vars:
       repo_dir: /etc/yum.repos.d
