@@ -1,6 +1,23 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "be8f7d3b_ebcb92d9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1006809
+      },
+      "writtenOn": "2022-04-18T17:02:05Z",
+      "side": 1,
+      "message": "What scenarios has this been tested with so far?\n\nWe should of course test with centos 9/rhos 17, but also with centos-9/rhos 16.x to make sure we didn\u0027t break anything.",
+      "revId": "b5168987637ae3f472faf366901cb99ca0ecbb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "af6fc90d_890c4a7c",
@@ -14,6 +31,98 @@
       "writtenOn": "2022-04-13T18:13:21Z",
       "side": 1,
       "message": "Should we take into account the existing setup with hostnames as well as the domain from the tripleo-undercloud plugin call? in the older role we use the --freeipa-domain flag in infrared/common/roles/tls-everywhere/defaults/main.yml\n\nhttps://github.com/redhat-openstack/infrared/blob/master/plugins/tripleo-undercloud/plugin.spec#L156\n\nWhat do you think about these items?\nfreeipa_hostname: \"freeipa-0.{{ (install|default({})).get(\u0027freeipa\u0027, {}).get(\u0027domain\u0027, \u0027redhat.local\u0027) }}\"\n\nfreeipa_domain: \"{{ (install|default({})).get(\u0027freeipa\u0027, {}).get(\u0027domain\u0027, \u0027redhat.local\u0027) }}\"\n\nundercloud_fqdn: \"undercloud-0.{{ (install|default({})).get(\u0027freeipa\u0027, {}).get(\u0027domain\u0027, \u0027redhat.local\u0027) }}\"",
+      "revId": "b5168987637ae3f472faf366901cb99ca0ecbb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4d127c9a_3bc383c3",
+        "filename": "infrared/common/roles/freeipa-setup/meta/main.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1006809
+      },
+      "writtenOn": "2022-04-18T17:02:05Z",
+      "side": 1,
+      "message": "remove this file?",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 18
+      },
+      "revId": "b5168987637ae3f472faf366901cb99ca0ecbb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a19ea4a2_7d0ba7d7",
+        "filename": "infrared/common/roles/freeipa-setup/templates/deploy_freeipa.sh.j2",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1006809
+      },
+      "writtenOn": "2022-04-18T17:02:05Z",
+      "side": 1,
+      "message": "So, if I understand this change correctly, this file is no longer used in RHEL9+.\n\nBut surely havaged will still be needed here for RHEL 8, 7 ?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 27
+      },
+      "revId": "b5168987637ae3f472faf366901cb99ca0ecbb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b25d9f0a_35abc5e5",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_freeipa.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1006809
+      },
+      "writtenOn": "2022-04-18T17:02:05Z",
+      "side": 1,
+      "message": "remove this?",
+      "range": {
+        "startLine": 144,
+        "startChar": 1,
+        "endLine": 149,
+        "endChar": 25
+      },
+      "revId": "b5168987637ae3f472faf366901cb99ca0ecbb16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "07bdbe65_0ed24086",
+        "filename": "infrared/common/roles/tls-everywhere/tasks/prepare_freeipa.yml",
+        "patchSetId": 3
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1006809
+      },
+      "writtenOn": "2022-04-18T17:02:05Z",
+      "side": 1,
+      "message": "Is the only thing that is needed to prevent undercloud setup stuff?\n\nThe conditional is here, right?  https://opendev.org/openstack/tripleo-quickstart-extras/src/branch/master/roles/freeipa-setup/tasks/main.yml#L27\n\nJust need one of those things to be false",
+      "range": {
+        "startLine": 174,
+        "startChar": 9,
+        "endLine": 174,
+        "endChar": 38
+      },
       "revId": "b5168987637ae3f472faf366901cb99ca0ecbb16",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
