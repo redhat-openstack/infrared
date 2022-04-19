@@ -40,6 +40,15 @@
       network_environment_file: "network-environment{{ ((install.version|default(undercloud_version)|openstack_release >= 17)) | ternary('_v2' ,\
            ((install.network.protocol == 'ipv6') | ternary('-v6','')) + ((install.network.protocol == 'ipv6-all') | ternary('-v6-all','') ))}}.yaml"
   tasks:
+      - name: Gather data to create a unique ID (machine-id, current date)
+        shell: |
+            echo "$(cat /etc/machine-id)-$(date +%s)"
+        register: machineid_date
+
+      - name: Compute a unique host ID to be used as part of the NFS ID
+        set_fact:
+            deployment_unique_id: "{{ machineid_date.stdout|to_uuid }}"
+
       - name: read all flavors
         shell: |
             source ~/stackrc
