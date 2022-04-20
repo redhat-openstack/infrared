@@ -38,7 +38,10 @@
   git:
       repo: "{{ extracted_url.skipped | default(False) | ternary(plugin_dict.value.repo, extracted_url.stdout) | default(plugin_dict.value.default) }}"
       dest: "{{ plugins_dir }}/{{ plugin_dict.key }}"
-      version: "{{ plugin_dict.value.version | default(omit) }}"
+      version: >-
+          {{- (plugin_dict.value.version|default('') is mapping)|
+               ternary(plugin_dict.value.version[test.openstack.version|default(overcloud_version)|int]|default(plugin_dict.value.version.default)|default(omit),
+               plugin_dict.value.version) -}}
       refspec: "{{ plugin_dict.value.refspec | default('') }}"
       accept_hostkey: true
   retries: 3
