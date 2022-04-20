@@ -63,7 +63,7 @@
       else
          roles_file=$(grep '\-r\ ' /home/stack/overcloud_deploy.sh | sed 's/.*-r\ \(.*\)\ .*/\1/')
          [ "$roles_file" == "" ] && roles_file=$(grep '\-\-roles\-file\ ' /home/stack/overcloud_deploy.sh | sed 's/.*--roles-file\ \(.*\)\ .*/\1/')
-         echo -n $roles_file
+         [ -s $roles_file ] && echo -n $roles_file
       fi
   register: found_roles_data
 
