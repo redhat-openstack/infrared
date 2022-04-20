@@ -60,7 +60,7 @@ Role variables:
 
 ``freeipa_node_ipv4_address`` - Node ipv4 address
 
-``freeipa_setup_script`` - Script for setup FreeIPA, default : https://raw.githubusercontent.com/openstack/tripleo-heat-templates/master/ci/scripts/freeipa_setup.sh
+``freeipa_setup_script`` - Script for setup FreeIPA, default : https://raw.githubusercontent.com/openstack/tripleo-heat-templates/stable/train/ci/scripts/freeipa_setup.sh
 
 ``freeipa_admin_password`` - Admin password, default: 12345678
 
