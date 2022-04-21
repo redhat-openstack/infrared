@@ -226,11 +226,27 @@
         state: present
         key: "{{ lookup('file', ir_home ~ '/.workspaces/active/id_rsa.pub') }}"
 
+    - name: Modify the hypervisor public key on the inventory
+      replace:
+        path: "{{ ir_home }}/.workspaces/active/hosts"
+        regexp: "ansible_ssh_private_key_file=\/[a-zA-Z./0-9_-]+\/id_rsa-[a-zA-Z./0-9_-]+ "
+        replace: "ansible_ssh_private_key_file={{ provision.host.key }} "
+        backup: true
+      delegate_to: localhost
+
+    - name: Adjust the hypervisor public key for all the VMs
+      replace:
+        path: "{{ ir_home }}/.workspaces/active/hosts"
+        regexp: '-i [\.a-zA-Z0-9\/\_-]+ '
+        replace: "-i {{ provision.host.key }} "
+        backup: true
+      delegate_to: localhost
+
     - name: Adjust the imported workspace inventory for the new hypervisor
       replace:
         path: "{{ ir_home }}/.workspaces/active/hosts"
         regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
-        replace: "{{ hostvars.hypervisor.ansible_fqdn }}"
+        replace: "{{ provision.host.address[0] }}"
       delegate_to: localhost
 
     - name: Read the new inventory
