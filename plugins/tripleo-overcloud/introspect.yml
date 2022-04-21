@@ -44,7 +44,7 @@
           with_items: "{{ flavor_list.stdout_lines }}"
         when:
             - install.boot.mode == 'uefi'
-            - install.version|default(undercloud_version) |openstack_release > 9
+            - install.version|default(undercloud_version) |openstack_release < 17
         tags:
             - ironic
             - skip_ansible_lint
