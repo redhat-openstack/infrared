@@ -173,6 +173,24 @@
           {%- endfor %}
           {{- _server_image_map }}
 
+    - name: Eliminate serial if serial_files is disabled
+      xml:
+        path: "/etc/libvirt/qemu/{{ item }}.xml"
+        xpath: "/domain/devices/serial[@type='file']"
+        state: absent
+      when:
+        - not provision.serial.files | bool
+      loop: "{{ _virsh_snapshot_manifest_content.servers | map(attribute='name') | list }}"
+
+    - name: Eliminate console if serial_files is disabled
+      xml:
+        path: "/etc/libvirt/qemu/{{ item }}.xml"
+        xpath: "/domain/devices/console[@type='file']"
+        state: absent
+      when:
+        - not provision.serial.files | bool
+      loop: "{{ _virsh_snapshot_manifest_content.servers | map(attribute='name') | list }}"
+
     - name: Change nvram path to the correct location
       lineinfile:
         path: "/etc/libvirt/qemu/{{ item.path | basename }}"
