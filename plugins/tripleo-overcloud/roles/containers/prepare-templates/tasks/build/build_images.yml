@@ -173,7 +173,7 @@
           - install.version|default(undercloud_version)|openstack_release >= 14
 
   when:
-    - not install.overcloud.templates| default(False) | select('search', 'rhsm|overloud_cdn') | list | length > 0
+    - not install.overcloud.templates| default(False) | select('search', 'rhsm|overloud_cdn|overcloud_satellite') | list | length > 0
     - install.cdn is not defined or (cdn_status is defined and cdn_status.rc != 0)
 
 - block:
@@ -198,12 +198,22 @@
       when:
         - install.version|default(undercloud_version)|openstack_release >= 14
 
+    - name: Check if Satellite server
+      uri:
+       url: "https://{{ cdn_creds.server_hostname }}/katello/api/ping"
+       validate_certs: no
+       status_code: 200, 404
+      register: _sat6_check
+      when: cdn_creds.server_hostname is defined
+
     - name: add credentials to container images environment file
       blockinfile:
         dest: "containers-prepare-parameter.yaml"
         insertafter: EOF
         block: "  ContainerImageRegistryCredentials:\n    registry.redhat.io:\n      {{ cdn_creds.registry_username }}: {{ cdn_creds.registry_password }}"
-      when: _sat6_check['status'] != 200
+      when:
+       - cdn_creds.server_hostname is defined
+       - _sat6_check['status'] != 200
 
     - name: set neutron_driver in containers-prepare-parameter.yaml
       replace:
