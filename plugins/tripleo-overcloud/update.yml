@@ -46,7 +46,27 @@
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
-        when: hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
+        when:
+          - hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
+          - not install.cdn|default(False)
+
+- name: Update Overcloud repos using CDN
+  hosts: overcloud_nodes:!unused
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - update
+      - update_repos
+  tasks:
+    - include_role:
+        name: cdn_registery
+      vars:
+          ansible_become: true
+          cdn_args_file: "{{ install.cdn|default('') }}"
+          install_version: "{{install.version}}"
+
+      when:
+          - install.cdn|default(False)
 
 - name: Prepare Containerized Environment
   hosts: undercloud
