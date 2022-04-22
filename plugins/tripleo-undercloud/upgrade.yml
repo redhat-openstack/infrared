@@ -48,6 +48,8 @@
             rr_buildmods: "{{ install.buildmods }}"
             enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
             without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
+            custom_script_url: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('url', {})|default('') }}"
+            skip_release: "{{ custom_script_url != '' or install.get('repos', {}).get('skip', {}).release|default('') }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
