@@ -2,6 +2,7 @@ parameter_defaults:
   CertmongerCA: local
   CloudName: {{ deploy_ip.stdout }}
   CloudDomain: localdomain
+{% if container_env is defined %}
   ContainerImagePrepare:
   - set:
       name_prefix: "{{ containers_name_prefix }}"
@@ -10,6 +11,7 @@ parameter_defaults:
       neutron_driver: null
       tag: "{{ containers_tag }}"
     tag_from_label: "{version}-{release}"
+{% endif %}
   # default gateway
   ControlPlaneStaticRoutes:
     - ip_netmask: 0.0.0.0/0
@@ -18,11 +20,17 @@ parameter_defaults:
   Debug: true
   DeploymentUser: {{ deployment_user }}
   DnsServers: {{ dns_server }}
+{% if time_server is defined %}
+  NtpServer: {{ time_server }}
+{% endif %}
   # needed for vip & pacemaker
   KernelIpNonLocalBind: 1
   DockerInsecureRegistryAddress:
   - {{ deploy_ip.stdout }}:8787
   - docker-registry.engineering.redhat.com
+{% if containers_namespace != "" %}
+  - {{ containers_namespace }}
+{% endif %}
   NeutronPublicInterface: {{ install.local.interface }}
   # re-use ctlplane bridge for public net
   NeutronBridgeMappings: datacentre:br-ctlplane

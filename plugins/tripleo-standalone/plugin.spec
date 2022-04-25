@@ -16,6 +16,14 @@ subparsers:
                       type: Value
                       help: The data network interface name
                       default: eth0
+                  default-gateway:
+                      type: Value
+                      help: Gateway for local network interface, used in ControlPlaneStaticRoutes
+                      default: 192.168.24.1
+                  deployment-user:
+                      type: Value
+                      help: User name for the purpose of standalone deployment
+                      default: cloud-user
             - title: Setup Packages
               options:
                   mirror:
@@ -42,6 +50,8 @@ subparsers:
                         - "14"
                         - "15"
                         - "15-trunk"
+                        - "16.1"
+                        - "16.2"
                         - kilo
                         - liberty
                         - mitaka
