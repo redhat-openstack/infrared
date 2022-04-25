@@ -178,12 +178,23 @@
     - include: ../../update/common/endping.yaml
   when: install.dataplaneping|default(False)
 
-- name: List custom roles nodes
+- name: List custom roles nodes < 17
   shell: |
       source {{ undercloud_rc }}
       openstack server list -f json
   register: custom_nodes
   tags: custom_role_post
+  when:
+    - test.openstack.version|default(overcloud_version)|openstack_release < 17
+
+- name: List custom roles nodes >= 17
+  shell: |
+    source {{ undercloud_rc }}
+    metalsmith -f json list
+  register: custom_nodes
+  tags: custom_role_post
+  when:
+    - install.openstack.version|default(overcloud_version)|openstack_release >= 17
 
 - block:
     - debug:
@@ -193,7 +204,7 @@
   vars:
       overcloudrc_file: "{{ ansible_user_dir }}/{{ install.overcloud.stack }}rc"
 
-- include_tasks: custom_roles_upgrade.yml
+- include_tasks: custom_roles_upgrade.yml < 17
   with_items: "{{ custom_nodes.stdout|default([]) }}"
   when:
       - "'objectstorage' not in '{{ item.Name }}'"
@@ -204,8 +215,25 @@
       - "'ctrl' not in '{{ item.Name }}'"
       - "'compute' not in '{{ item.Name }}'"
       - "'comp' not in '{{ item.Name }}'"
+      - install.openstack.version|default(overcloud_version)|openstack_release < 17
   vars:
       node_name: "{{ item.Name }}"
+  tags: custom_role_post
+
+- include_tasks: custom_roles_upgrade.yml >= 17
+  with_items: "{{ custom_nodes.stdout|default([]) }}"
+  when:
+      - "'objectstorage' not in '{{ item.name }}'"
+      - "'swift-r' not in '{{ item.name }}'"
+      - "'ceph' not in '{{ item.name }}'"
+      - "'stor-r' not in '{{ item.name }}'"
+      - "'controller' not in '{{ item.name }}'"
+      - "'ctrl' not in '{{ item.name }}'"
+      - "'compute' not in '{{ item.name }}'"
+      - "'comp' not in '{{ item.name }}'"
+      - install.openstack.version|default(overcloud_version)|openstack_release >= 17
+  vars:
+      node_name: "{{ item.name }}"
   tags: custom_role_post
 
 - block:
