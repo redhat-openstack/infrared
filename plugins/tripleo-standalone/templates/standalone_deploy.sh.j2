@@ -1,8 +1,17 @@
-sudo openstack tripleo deploy --templates   --local-ip={{ deploy_ip.stdout }}/{{ netmask }} \
--e /usr/share/openstack-tripleo-heat-templates/environments/standalone.yaml \
+sudo openstack tripleo deploy --templates \
+--local-ip={{ deploy_ip.stdout }}/{{ netmask }} \
+{% if install.version| openstack_distribution != "OSP" %}
+--control-virtual-ip {{ deploy_ip.stdout | ipmath(1) }} \
+{% endif %}
+-e /usr/share/openstack-tripleo-heat-templates/environments/standalone/standalone-tripleo.yaml \
 -r /usr/share/openstack-tripleo-heat-templates/roles/Standalone.yaml \
 -e {{ home_dir }}/standalone_parameters.yaml \
+{% if install.version | openstack_distribution != "OSP" %}
+-e {{ home_dir }}/{{ containers_images_env_template_download_basename }} \
+{% endif %}
 --output-dir {{ home_dir }} \
 --stack {{ install.stackname }} \
+{% if install.version not in ['wallaby', 'master'] %}
 --standalone \
+{% endif %}
 --log-file standalone_deployment_{{ 100 | random }}.log

@@ -3,9 +3,9 @@
   hosts: standalone
   gather_facts: yes
   vars:
-      home_dir: /home/cloud-user
-      gateway: 10.0.0.1
-      deployment_user: cloud-user
+      home_dir: "/home/{{ deployment_user}}"
+      gateway: "{{ install.default.gateway }}"
+      deployment_user: "{{ install.deployment.user }}"
       netmask: 24
       containers_images_env_template_download_basename: "overcloud_container_image_prepare.yaml"
       containers_images_env_template_dest_file: "{{ inventory_dir }}/overcloud_container_image_prepare.yaml"
@@ -36,6 +36,7 @@
                 name: container_env
 
           - debug: var=container_env
+        when: install.version| openstack_distribution == "OSP"
 
       - name: store ip for template
         shell: |
@@ -52,13 +53,14 @@
       - name: Generate standalone_parameters.yaml file
         vars:
             dns_server: "10.10.160.1"
-            containers_name_prefix: "{{ container_env['container-image-prepare'].prefix }}"
+            time_server: "10.5.26.10"
+            containers_name_prefix: "{{ container_env['container-image-prepare'].prefix|default('') }}"
             containers_name_suffix: "{{ container_env['container-image-prepare'].name_suffix|default('') }}"
-            containers_namespace: "{{ container_env['container-image-prepare'].namespace }}"
-            containers_tag: "{{ container_env['container-image-prepare'].tag }}"
+            containers_namespace: "{{ container_env['container-image-prepare'].namespace|default('')  }}"
+            containers_tag: "{{ container_env['container-image-prepare'].tag|default('')  }}"
         template:
             src: standalone_parameters.yaml.j2
-            dest: /home/cloud-user/standalone_parameters.yaml
+            dest: "{{ home_dir }}/standalone_parameters.yaml"
             owner: "{{ deployment_user }}"
 
       - name: Generate standalone_deployment.sh file
@@ -68,9 +70,17 @@
             owner: "{{ deployment_user }}"
             mode: "0755"
 
+      - name: Generate container file
+        shell: |
+            openstack tripleo container image prepare default \
+            --output-env-file {{ home_dir }}/{{ containers_images_env_template_download_basename }}
+        when: install.version | openstack_distribution != "OSP"
+
       - name: deploy standalone
         shell: |
-            ./standalone_deploy.sh
+          set -o pipefail
+          ./standalone_deploy.sh  >> \
+          standalone-deploy-run.log
         tags: skip_ansible_lint
 
       - name: create old-fashioned rc file
