@@ -38,11 +38,21 @@
                 openstack hypervisor list -f value -c 'Hypervisor Hostname' | grep {{ inventory_hostname }}
             register: compute_fqdn
 
-          - name: Register instances running on compute node
+          - name: Register instances running on compute node < 17
             shell: |
                 source {{ overcloud_rc }}
                 openstack server list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE") or contains("PAUSED")) | .Name'
             register: compute_instances
+            when:
+              - install.openstack.version|default(overcloud_version)|openstack_release < 17
+
+          - name: Register instances running on compute node >= 17
+            shell: |
+                source {{ overcloud_rc }}
+                metalsmith -f json list | grep {{ compute_fqdn.stdout }} | jq -r -c '.[] | select(.state | contains("active") or contains("paused")) | .Name'
+            register: compute_instances
+            when:
+              - install.openstack.version|default(overcloud_version)|openstack_release >= 17
 
           - name: Quiesce compute node
             shell: |
@@ -50,7 +60,7 @@
                 nova host-evacuate-live {% if 'ceph' not in storage_backend.stdout %}--block-migrate{% endif %} {{ compute_fqdn.stdout }}
             when: compute_instances.stdout | length > 0
 
-          - name: Wait for compute node to get quiesced
+          - name: Wait for compute node to get quiesced < 17
             shell: |
                 source {{ overcloud_rc }}
                 openstack server list --host {{ compute_fqdn.stdout }} -f json | jq -r -c '[.[] | select(.Status | contains("ACTIVE") or contains("PAUSED") or contains("MIGRATING"))] | length'
@@ -58,7 +68,22 @@
             until: compute_node_instances.stdout.find("0") > -1
             retries: 30
             delay: 5
-            when: compute_instances.stdout | length > 0
+            when:
+              - compute_instances.stdout | length > 0
+              - test.openstack.version|default(overcloud_version)|openstack_release < 17
+
+          - name: Wait for compute node to get quiesced >= 17
+            shell: |
+              source {{ overcloud_rc }}
+              metalsmith -f json list | grep {{ compute_fqdn.stdout }} | jq -r -c '[.[] | select(.state | contains("active") or contains("paused")) or contains("migrating"))] | .Name'
+            register: compute_node_instances
+            until: compute_node_instances.stdout.find("0") > -1
+            retries: 30
+            delay: 5
+            when:
+              - compute_instances.stdout | length > 0
+              - install.openstack.version|default(overcloud_version)|openstack_release >= 17
+
         delegate_to: "{{ groups['undercloud']|first }}"
         when:
           - "'compute' in group_names"

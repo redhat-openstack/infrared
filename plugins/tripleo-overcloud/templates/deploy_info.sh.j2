@@ -30,14 +30,14 @@ while [ $# -gt 0 ]; do
 done
 
 echo "Server info"
-{% if (install.version|default(undercloud_version)|openstack_release) >= 9 %}
-openstack server list -f value -c ID | xargs -n 1 openstack server show
+{% if (install.version|default(undercloud_version)|openstack_release) >= 17 %}
+metalsmith -f value -c 'UUID' list | xargs -n 1  metalsmith show
 {% else %}
-openstack server list |  awk 'BEGIN {a=0}; /\|/{ if (a>2) print $2} {a=a+1}' | xargs -n 1 openstack server show
+openstack server list -f value -c ID | xargs -n 1 openstack server show
 {% endif %}
 
-{% if (install.version|default(undercloud_version)|openstack_release) >= 11 %}
 echo "BM node info"
+{% if (install.version|default(undercloud_version)|openstack_release) >= 11 %}
 openstack baremetal node list
 openstack baremetal node list -f value -c UUID | xargs -r -n 1 openstack baremetal node show
 {% endif %}
