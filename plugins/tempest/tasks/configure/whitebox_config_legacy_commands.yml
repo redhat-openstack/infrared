@@ -1,4 +1,4 @@
-- name: Run Whitebox plugin configuration commands
+- name: Run Whitebox plugin configuration commands for OSP <= 16
   block:
     - name: Get Compute node IP inventory
       shell: "source ~/stackrc && openstack server list -f value -c Name -c Networks | grep -i compute | sort -h"
@@ -15,7 +15,7 @@
       when: 'item.1.split() | first in item.0.split() | first'
   when: test.configure.whitebox.plugin
 
-- name: Configure Whitebox db parameters
+- name: Configure Whitebox db parameters for OSP <= 16
   block:
     - name: Get controller hostname
       shell: source ~/stackrc && ansible-inventory -i /usr/bin/tripleo-ansible-inventory --graph Controller | sed -ne 's/^[ \t|]\+--\([a-z0-9\-]\+\)$/\1/p' | head -n 1
