@@ -230,6 +230,24 @@
       "parentUuid": "56de1c06_5173189c",
       "revId": "7217b5977945cff71c8fdd00397b8fcf056dba27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5b163b66_a87ff5f9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2022-04-25T13:25:42Z",
+      "side": 1,
+      "message": "Ad commit) thanks, now it makes sense and easily understandable\nad uc-placement) I am not arguing the https://github.com/redhat-openstack/infrared/blob/master/plugins/virsh/defaults/topology/network/3_nets_4_leafs_openvswitch.yml needs to be done during virsh, I wonder whether the non-l3 related parts of plugins/virsh/provision_post_l3appliance.yml might be done there rather, e.g. as some conditional playbook included, meaning split the nature of these changes into 2 stages (virst + uc) like:\n...\n# Some laybook in tripleo-undercloud area\n- name: Specific run of rhos-release in case l3 node is included\n  import_playbook: l3_uc_modifications.yml\n  when:\n      - (install.version|default(undercloud_version) | openstack_release \u003e\u003d 17)\n      - \"\u0027l3\u0027 in topology_node.groups\n...\n\nAnyway I\u0027ll leave that as suggestion.",
+      "parentUuid": "bff78186_cfe98af9",
+      "revId": "7217b5977945cff71c8fdd00397b8fcf056dba27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
