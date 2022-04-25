@@ -94,7 +94,7 @@
 - debug:
     msg: "Build mark: WARNING! some overcloud container images URLs overrides were applied"
 
-- name: add insecure registries to /etc/sysconfig/docker
+- name: add insecure registries to /etc/sysconfig/docker (RHEL == 7)
   replace:
     dest: /etc/sysconfig/docker
     regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
@@ -104,33 +104,17 @@
   when: ansible_distribution_major_version | int == 7
   become: true
 
-- name: "fetch content of the /etc/container/registries.conf file"
-  fetch:
-    src: "/etc/containers/registries.conf"
-    dest: "{{ inventory_dir }}/podman_registries.conf"
-    flat: yes
-
-- name: read value of 'registries.insecure.registries' from podman's /etc/containers/registries.conf
-  vars:
-    podman_registries_orig_file: "{{ inventory_dir }}/podman_registries.conf"
-  set_fact:
-    podman_insecure_registries_orig: "{{ lookup('ini', 'registries section=registries.insecure file={{ podman_registries_orig_file }}') }}"
-
-- name: append insecure registries
-  set_fact:
-    podman_insecure_registries_with_overrides: "{{ podman_insecure_registries_with_overrides | default(podman_insecure_registries_orig) + [item] }}"
-  with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
-
-- debug:
-    var: podman_insecure_registries_with_overrides
-
-- name: add insecure registries (including overrides) to /etc/containers/registries.conf
-  ini_file:
+- name: add insecure registries to /etc/containers/registries.conf (RHEL >= 8)
+  become: true
+  blockinfile:
     path: /etc/containers/registries.conf
+    block: |
+        [[registry]]
+        prefix = "{{ item }}"
+        insecure = true
+        location = "{{ item }}"
     create: no
     backup: yes
-    section: registries.insecure
-    option: registries
-    value: "{{ podman_insecure_registries_with_overrides }}"
+    marker: “# {mark} ANSIBLE MANAGED BLOCK - added by override_container_images_urls.yml”
+  with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
   when: ansible_distribution_major_version | int >= 8
-  become: true
