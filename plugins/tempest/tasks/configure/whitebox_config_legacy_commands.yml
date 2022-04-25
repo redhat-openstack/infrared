@@ -1,8 +1,15 @@
 - name: Run Whitebox plugin configuration commands
   block:
-    - name: Get Compute node IP inventory
+    - name: Get Compute node IP inventory < 17
       shell: "source ~/stackrc && openstack server list -f value -c Name -c Networks | grep -i compute | sort -h"
       register: ip_inventory
+      when:
+        - test.openstack.version|default(overcloud_version)|openstack_release < 17
+    - name: Get Compute node IP inventory for >= 17
+      shell: "source ~/stackrc && metalsmith -f value -c 'Node Name' -c 'IP Addresses' list | grep -i compute | sort -h"
+      register: ip_inventory
+      when:
+        - test.openstack.version|default(overcloud_version)|openstack_release >= 17
     - name: Get hypervisor inventory
       shell: "source ~/keystonerc && openstack hypervisor list -f value -c \"Hypervisor Hostname\" | sort -h"
       register: hostname_inventory
