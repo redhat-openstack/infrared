@@ -1,4 +1,4 @@
-- name: Run Whitebox plugin configuration commands
+- name: Run Whitebox plugin configuration commands for OSP >= 17
   block:
     - name: Get Compute node IP inventory
       shell: "source ~/stackrc && metalsmith -c Hostname -f value -c \"IP Addresses\" -f value list | grep -i compute | sort -h"
@@ -15,7 +15,7 @@
       when: 'item.1.split() | first in item.0.split() | first'
   when: test.configure.whitebox.plugin
 
-- name: Configure Whitebox db parameters for OSP 17+
+- name: Configure Whitebox db parameters for OSP >= 17
   block:
     - name: Get controller hostname
       shell: grep -E '\s+controller_node_names' ~/overcloud-deploy/overcloud/overcloud-export.yaml | cut -d ':' -f 2 | cut -d "," -f 1 | xargs
