@@ -27,6 +27,9 @@
         {% for name, count in roles_count.nodes_count.items() %}
         -c {{ name }} {{ count }} \
         {% endfor %}
+        {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+        -d "{{ install.network.external.dvr.name }}" \
+        {% endif %}
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
