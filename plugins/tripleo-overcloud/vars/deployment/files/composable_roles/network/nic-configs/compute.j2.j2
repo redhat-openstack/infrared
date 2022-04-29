@@ -48,18 +48,27 @@ network_config:
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
 {% endraw %}
-{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+{%- if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+{% raw %}
 - type: ovs_bridge
-  {% raw -%}
   name: {{ neutron_physical_bridge_name }}
-{% endraw %}
+  dns_servers: {{ ctlplane_dns_nameservers }}
+  domain: {{ dns_search_domains }}
   use_dhcp: false
+  addresses:
+  - ip_netmask: {{ external_ip }}/{{ external_cidr }}
+  routes:
+  - default: true
+    next_hop: {{ external_gateway_ip }}
   members:
   - type: interface
     name: nic3
     primary: true
-{% else %}
+{%- endraw %}
+{% else -%}
+{% raw %}
 - type: interface
   name: nic3
   use_dhcp: false
-{% endif %}
+{%- endraw %}
+{% endif -%}

@@ -546,6 +546,11 @@ subparsers:
                           Example:
                           --network-dvr-nic-override /home/stack/templates/network/nic-configs/compute-dvr.yaml
 
+                  network-external-name:
+                      type: Value
+                      default: "external"
+                      help: Name of the external network used by deployment
+
                   network-l2gw:
                       type: Bool
                       default: no

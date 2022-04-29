@@ -57,8 +57,7 @@ class BaremetalRoleData():
             return 'control'
         return self.generic_type
 
-    @classmethod
-    def _parse_networks(cls, networks: List, networks_data: Dict) -> Dict:
+    def _parse_networks(self, networks: List, networks_data: Dict) -> Dict:
 
         def _expanded_id(name: str, sep: str = '_') -> str:
             """Transform a 'ObjectSpecialName' identifier into
@@ -71,6 +70,8 @@ class BaremetalRoleData():
         # parsed_nets = OrderedDict()
         parsed_nets = {}
         parsed_nets['ctlplane'] = {'vif': True}
+        if 'compute' in self._tags and self._dvr_enabled:
+            parsed_nets[self._external_network] = {}
         for net in networks:
             try:
                 net_name = networks_data[net]
@@ -82,14 +83,18 @@ class BaremetalRoleData():
 
     def __init__(self, role_data: Dict, networks_data: Dict,
                  ansible_playbook_dict: Dict,
-                 enable_profiles: bool = False) -> None:
+                 enable_profiles: bool = False,
+                 external_network: str = 'external',
+                 dvr_enabled: bool = False) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
         self._hostname_format = role_data.get('HostnameFormatDefault')
         self._default_network = role_data.get('default_route_networks', [])
+        self._tags = role_data.get('tags', [])
+        self._external_network = external_network
+        self._dvr_enabled = dvr_enabled
         self._networks = self._parse_networks(role_data.get('networks', {}),
                                               networks_data)
-        self._tags = role_data.get('tags', [])
         self._enable_profiles = enable_profiles
         self.ansible_playbook_dict = ansible_playbook_dict
 
@@ -139,11 +144,14 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
                       ansible_playbook_dict: Dict,
+                      dvr_enabled: bool = False,
+                      external_network: str = 'external',
                       enable_profiles: bool = False) -> None:
     all_roles = []
     for role_data in roles_data:
         role_obj = BaremetalRoleData(role_data, networks_data,
-                                     ansible_playbook_dict, enable_profiles)
+                                     ansible_playbook_dict, enable_profiles,
+                                     external_network, dvr_enabled)
         nc = 0
         try:
             nc = int(roles_count.get(role_obj.name))
@@ -182,6 +190,12 @@ def parse_opts(argv):
                         help='Path to a directory with Ansible playbook files '
                              'that contain one or more Ansible '
                              'playbook(s) to add to each role for execution')
+    parser.add_argument('-d', '--dvr-enabled', default='False',
+                        action='store_true',
+                        help='Whether DVR is enabled or not for deployment')
+    parser.add_argument('-e', '--external-network', nargs='?',
+                        const='external', type=str,
+                        help='Name of external network used by deployment')
     # FIXME: add parameter to set the firstboot options
     opts = parser.parse_args(argv[1:])
     return opts
