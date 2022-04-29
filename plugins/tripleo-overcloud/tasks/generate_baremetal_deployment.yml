@@ -40,6 +40,10 @@
         -c {{ name }} {{ count }} \
         {% endfor %}
         -a ansible_playbook \
+        {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+        -d \
+        -e "{{ install.network.external.name }}" \
+        {% endif %}
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
