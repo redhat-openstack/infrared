@@ -54,7 +54,9 @@ class BaremetalRoleData():
         return self.generic_type
 
     @classmethod
-    def _parse_networks(cls, networks: List, networks_data: Dict) -> Dict:
+    def _parse_networks(cls, profile: str, networks: List,
+                        networks_data: Dict,
+                        dvr_enabled: bool) -> Dict:
 
         def _expanded_id(name: str, sep: str = '_') -> str:
             """Transform a 'ObjectSpecialName' identifier into
@@ -67,6 +69,8 @@ class BaremetalRoleData():
         # parsed_nets = OrderedDict()
         parsed_nets = {}
         parsed_nets['ctlplane'] = {'vif': True}
+        if profile == 'compute' and dvr_enabled:
+            parsed_nets['external'] = {}
         for net in networks:
             try:
                 net_name = networks_data[net]
@@ -77,14 +81,18 @@ class BaremetalRoleData():
         return parsed_nets
 
     def __init__(self, role_data: Dict, networks_data: Dict,
-                 enable_profiles: bool = False) -> None:
+                 enable_profiles: bool = False,
+                 dvr_enabled: bool = True) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
         self._hostname_format = role_data.get('HostnameFormatDefault')
         self._default_network = role_data.get('default_route_networks', [])
-        self._networks = self._parse_networks(role_data.get('networks', {}),
-                                              networks_data)
         self._tags = role_data.get('tags', [])
+        self._dvr_enabled = dvr_enabled
+        self._networks = self._parse_networks(self.profile,
+                                              role_data.get('networks', {}),
+                                              networks_data,
+                                              self._dvr_enabled)
         self._enable_profiles = enable_profiles
 
     def to_baremetal_format(self, network_templates_dir: Path):
@@ -125,10 +133,13 @@ class BaremetalRoleData():
 def convert_role_data(roles_data: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
-                      enable_profiles: bool = False) -> None:
+                      enable_profiles: bool = False,
+                      dvr_enabled: bool = True) -> None:
+
     all_roles = []
     for role_data in roles_data:
-        role_obj = BaremetalRoleData(role_data, networks_data, enable_profiles)
+        role_obj = BaremetalRoleData(role_data, networks_data, enable_profiles,
+                                     dvr_enabled)
         nc = 0
         try:
             nc = int(roles_count.get(role_obj.name))
@@ -161,6 +172,8 @@ def parse_opts(argv):
                         help='Override the count of nodes for each node type')
     parser.add_argument('-p', '--enable-profiles', action='store_true',
                         help='Whether add some default profiles to the nodes')
+    parser.add_argument('-d', '--dvr-enabled', action='store_true',
+                        help='DVR is enabled for deployment')
     # FIXME: add parameter to set the firstboot options
     opts = parser.parse_args(argv[1:])
     return opts
@@ -180,7 +193,8 @@ def main():
             networks_data_file = yaml.safe_load(ndf)
         networks_data = parse_networks_names(networks_data_file)
     convert_role_data(roles_data, networks_data, opts.network_templates,
-                      roles_count, opts.enable_profiles)
+                      roles_count, opts.enable_profiles,
+                      opts.dvr_enabled)
 
 
 if __name__ == '__main__':
