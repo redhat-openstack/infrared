@@ -747,6 +747,11 @@ subparsers:
                           Installs a local NFS server on undercloud
                       default: False
 
+                  srv-volume-size:
+                      type: int
+                      help: |
+                        The size to grow the /srv volume for the deployment in GB
+
                   storage-config:
                       type: Value
                       help: |
