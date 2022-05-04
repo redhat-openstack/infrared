@@ -16,6 +16,74 @@
       "message": "Currently evaluating deployments with these changes and confirming guests are reachable from the UC. Will need to discuss how to correctly identify roles that will need br-ex in their nic-configs as well as the correct network name, assuming it is different from external.",
       "revId": "0d57f911fed6e241d412288751b12817292893e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f0917742_f72695f0",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-05-04T09:50:06Z",
+      "side": 1,
+      "message": "_parse_networks is a classmethod and not a normal method only because so far it doesn\u0027t need to access instance properties. It can be rather changed into a normal method and profile can be used by with self.\n\nOn the other hand, profile is probably not the best choice (see below)",
+      "revId": "0d57f911fed6e241d412288751b12817292893e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2c58d368_d76b3320",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-05-04T09:50:06Z",
+      "side": 1,
+      "message": "I think it\u0027s better to check by self._tags and see if \u0027compute\u0027 is there.",
+      "revId": "0d57f911fed6e241d412288751b12817292893e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c1ed367c_35a524ab",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-05-04T09:50:06Z",
+      "side": 1,
+      "message": "What if the external network is not called \u0027external\u0027?",
+      "revId": "0d57f911fed6e241d412288751b12817292893e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ccb34fba_6fae142d",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-05-04T09:50:06Z",
+      "side": 1,
+      "message": "This is a boolean but we may also need the name of the network. Maybe it\u0027s possible to have a parameter with a default value, something like\nhttps://stackoverflow.com/questions/15301147/python-argparse-default-value-or-specified-value\n\nI just don\u0027t remember how it works if you do:\n--dvr-enabled --something-else",
+      "revId": "0d57f911fed6e241d412288751b12817292893e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
