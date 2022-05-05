@@ -9,5 +9,14 @@ openstack overcloud deploy \
 {% endif %}
   --stack {{ install.overcloud.stack }} \
   -r {{ template_base }}/roles/roles_data.yaml \
+{% if install.version|default(undercloud_version) |openstack_release >= 17 %}
+--deployed-server \
+-e /home/stack/templates/overcloud-baremetal-deployed.yaml \
+-e /home/stack/templates/overcloud-networks-deployed.yaml \
+-e /home/stack/templates/overcloud-vip-deployed.yaml \
+-n /home/stack/composable_roles/network/network_data_v2.yaml \
+{% endif %}
   -e {{ template_base }}/roles/nodes.yaml \
+{% if install.version|default(undercloud_version)|openstack_release < 17 %}
   -e {{ template_base }}/roles/network-config.yaml \
+{% endif %}
