@@ -11,12 +11,25 @@ openstack overcloud deploy \
 {% endif %}
 --disable-validation \
 -r {{ template_base }}/roles/roles_data.yaml \
+{% if install.version|default(undercloud_version) |openstack_release >= 17 %}
+--deployed-server \
+-e /home/stack/templates/overcloud-baremetal-deployed.yaml \
+-e /home/stack/templates/overcloud-networks-deployed.yaml \
+-e /home/stack/templates/overcloud-vip-deployed.yaml \
+{% if install.storage.backend|default('') == 'ceph' and not install.storage.external %}
+-e /home/stack/templates/overcloud-ceph-deployed.yaml \
+{% endif %}
+-n /home/stack/composable_roles/network/network_data_v2.yaml \
+{% else %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-environment.yaml \
+{% endif %}
 {% if install.version|default(undercloud_version) |openstack_release < 16 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-bootstrap-environment-rhel.yaml \
 {% endif %}
 {% if install.version|default(undercloud_version) |openstack_release < 15 %}
 -e /usr/share/openstack-tripleo-heat-templates/environments/deployed-server-pacemaker-environment.yaml \
 {% endif %}
+{% if install.version|default(undercloud_version) |openstack_release < 17 %}
 -e {{ template_base }}/network-config.yaml \
 -e {{ template_base }}/ctrlplane-template.yml \
+{% endif %}
