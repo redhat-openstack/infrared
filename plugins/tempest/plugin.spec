@@ -298,7 +298,7 @@ subparsers:
                           Configures ids of customized images and flavors created in cloud-config 'create_flavors_image' task
                           Plugin url: https://github.com/rhos-infra/cloud-config
                           NOTE: 'customized_flavor', 'customized_flavor_alt', <hostname-url>, <hostname-url>_alt should
-                          be pre-created, preferably by the 'create_flavors_image' task before using this option 
+                          be pre-created, preferably by the 'create_flavors_image' task before using this option
                           NOTE: <hostname-url> is the basename of the image used. Both tempest image and cloud-config image specs should
                           be defined the same. Example- 'cirros-0.5.2-x86_64-disk.img' would be the name of the image when the following
                           image spec is passed:  https://download.cirros-cloud.net/0.5.2/cirros-0.5.2-x86_64-disk.img
@@ -311,6 +311,18 @@ subparsers:
                       type: Bool
                       help: Install crudini on all controller nodes (required by some tests).
                       default: no
+                  timing-data-dir-name:
+                      type: Value
+                      help: |
+                        Name of the directory in the repository specified by timing-data-repo option which containes timing data
+                        from the previous job runs.
+                      default: ''
+                  timing-data-repo:
+                      type: Value
+                      help: |
+                        Repository which contains timing data from previous job runs. If specified the timing data is downloaded
+                        from directory specified by the timing-data-dir-name.
+                      default: ''
             - title: ansible facts
               options:
                   collect-ansible-facts:
