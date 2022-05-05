@@ -287,6 +287,11 @@ subparsers:
                           Configures following fields in [whitebox-database] section in tempest.conf:
                           internal_ip (Controller), host (Controller), password (NovaPassword) useful for connections to Nova database
                       default: no
+                  sdir:
+                      type: Value
+                      help: |
+                          A path to a custom stestr dir containing timing data. The custom-stestr-dir will be copied to dir location.
+                          NOTE: the path must end with a trailing slash (/)
                   customized-image-flavor:
                       type: Bool
                       help: |
