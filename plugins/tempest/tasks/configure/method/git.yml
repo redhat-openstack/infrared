@@ -53,3 +53,8 @@
   set_fact:
       config_command: "discover-tempest-config"
       config_dir: "{{ tempest_conf.dir }}"
+
+- name: Get timing data from previous runs
+  import_tasks:
+    file: get_timing_data.yml
+  when: "{{ test.timing_data_repo }}"
