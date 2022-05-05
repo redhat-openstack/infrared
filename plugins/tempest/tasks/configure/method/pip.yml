@@ -36,3 +36,7 @@
   set_fact:
       config_command: "discover-tempest-config"
       config_dir: "{{ tempest_conf.dir }}"
+
+- name: Get timing data from previous runs
+  include_task: get_timing_data.yml
+  when: "{{ timing_data_reuse }}"

@@ -40,3 +40,7 @@
   set_fact:
       config_command: /usr/bin/discover-tempest-config
   when: tempest_conf_tool.stat.exists
+
+- name: Get timing data from previous runs
+  include_task: get_timing_data.yml
+  when: "{{ timing_data_reuse }}"

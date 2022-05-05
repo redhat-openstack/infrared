@@ -1,0 +1,39 @@
+---
+- name: Reuse timing data
+  block:
+
+  - name: Check that timing_data_repo is valid URL
+    fail:
+      msg: |
+        "Value stored in timing_data_repo ({{test.timing_data_repo}}) "
+        "is not a valid URL"
+    when: "{{ test.timing_data_repo is not url }}"
+
+  - name: Remove trailing "/" from the URL
+    set_fact:
+      test:
+        timing_data: '{{ "".rstrip("/") }}'
+
+  - name: Create stestr dir
+    file:
+      path: "~/{{ test.dir }}/.stestr"
+      state: directory
+
+  - name: Copy timing data from remote repository
+    get_url:
+      url: "{{ test.timing_data_repo }}/{{ item }}"
+      dest: "~/{{ test.dir }}/.stestr"
+    with_items: "{{ timing_files }}"
+
+  - name: Unzip archived timing files
+    shell: |
+      gunzip -f ~/{{ test.dir }}/.stestr/{{ item }}
+    with_items: "{{ timing_files }}"
+
+  when: tests.timing_data_repo
+  vars:
+    timing_files:
+      - next-stream.gz
+      - times.dbm.bak.gz
+      - times.dbm.dat.gz
+      - times.dbm.dir.gz
