@@ -1,0 +1,18 @@
+---
+- name: Reuse timing data
+  block:
+
+    - name: Create stestr dir
+      file:
+        path: "~/{{ test.dir }}/.stestr"
+        state: directory
+
+    - name: Copy timing data files to .stestr directory
+      get_url:
+        url: "{{ test.timing.data.http.pointer }}"
+        dest: "~/{{ test.dir }}/.stestr"
+
+  when: test.timing.data.http.pointer | length > 0
+  # Let's ignore the errors because reusing time data is not
+  # critical for successful test execution.
+  ignore_errors: true
