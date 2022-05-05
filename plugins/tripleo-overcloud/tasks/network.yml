@@ -117,7 +117,9 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/roles-port-config.yml \'
-  when: install.splitstack|default(False)
+  when:
+     - install.splitstack|default(False)
+     - install.version|default(undercloud_version)| openstack_release < 17
 
 - name: Append the network_data.yaml to the base overcloud deploy script
   lineinfile:
