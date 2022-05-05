@@ -31,6 +31,16 @@
       creates: "~/{{ test.dir }}/etc"
   when: configure_tempest_dir.rc != 0
 
+- name: Copy custom .stestr files from the given location
+  shell: |
+    cd ~/{{ test.dir }}
+    wget -r -np -nH --cut-dirs=8 -R index.html {{ test.sdir }}
+    rm -f ./.stestr/index*
+  ignore_errors: true
+  when:
+    - configure_tempest_dir.rc != 0
+    - test.sdir is defined
+
 - name: Check if we have tempestconf tool installed
   stat:
       path: /usr/bin/discover-tempest-config
