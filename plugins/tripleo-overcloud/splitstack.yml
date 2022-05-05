@@ -14,17 +14,9 @@
   hosts: undercloud
   any_errors_fatal: true
   gather_facts: yes
-  vars:
-      template_base: "{{ ansible_user_dir }}/composable_roles"
-      role_substitutions:
-          "Compute": "ComputeDeployedServer"
-          "Controller": "ControllerDeployedServer"
-          "CephStorage": "CephDeployedServer"
-          "Database": "DatabaseDeployedServer"
-          "Networker": "NetworkerDeployedServer"
-          "Messaging": "MessagingDeployedServer"
   tags:
       - deploy_preparation
+  
   tasks:
       - name: Append the network type
         yedit:
@@ -92,19 +84,31 @@
             src: "splitstack/ctrlplane-template.yml.j2"
             dest: "{{ template_base }}/ctrlplane-template.yml"
 
-      - name: Modifying role data file to adjust role names
-        replace:
-            path: "{{ template_base }}/roles/roles_data.yaml"
-            regexp: "^(- name: ){{ item.key }}$"
-            replace: "- name: {{ item.value }}"
-        with_dict: "{{ role_substitutions }}"
-
-      - name: Modifying role names in network cofig file
-        replace:
-            path: "{{ template_base }}/network-config.yaml"
-            regexp: "{{ item.key }}"
-            replace: "{{ item.value }}"
-        with_dict: "{{ role_substitutions }}"
+      - name: Modify templates
+        block:
+        vars:
+            template_base: "{{ ansible_user_dir }}/composable_roles"
+            role_substitutions:
+                "Compute": "ComputeDeployedServer"
+                "Controller": "ControllerDeployedServer"
+                "CephStorage": "CephDeployedServer"
+                "Database": "DatabaseDeployedServer"
+                "Networker": "NetworkerDeployedServer"
+                "Messaging": "MessagingDeployedServer"
+        - name: Modifying role data file to adjust role names
+          replace:
+              path: "{{ template_base }}/roles/roles_data.yaml"
+              regexp: "^(- name: ){{ item.key }}$"
+              replace: "- name: {{ item.value }}"
+          with_dict: "{{ role_substitutions }}"
+        
+        - name: Modifying role names in network cofig file
+          replace:
+              path: "{{ template_base }}/network-config.yaml"
+              regexp: "{{ item.key }}"
+              replace: "{{ item.value }}"
+          with_dict: "{{ role_substitutions }}"
+        when: (install.version|default(undercloud_version)|openstack_release < 17)
 
 - name: Deploy the Overcloud with composable roles
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
