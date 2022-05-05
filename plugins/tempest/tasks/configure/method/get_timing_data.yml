@@ -1,0 +1,41 @@
+---
+- name: Reuse timing data
+  block:
+
+  - name: Remove trailing "/" from the URL
+    set_fact:
+      timing_data_repo: '{{ test.timing.data.repo.rstrip("/") }}'
+
+  - name: Create stestr dir
+    file:
+      path: "~/{{ test.dir }}/.stestr"
+      state: directory
+
+  - name: Clone timing data repository
+    git:
+      repo: "{{ timing_data_repo }}"
+      dest: "~/{{ test.dir }}/timing-data"
+      version: main
+
+  - name: Copy timing data files to .stestr directory
+    copy:
+      src: "~/{{ test.dir }}/timing-data/{{ test.timing.data.dir.name }}/{{ item }}"
+      dest: "~/{{ test.dir }}/.stestr"
+      remote_src: true
+    with_items: "{{ timing_files }}"
+
+  - name: Unzip archived timing files
+    shell: |
+      gunzip -f ~/{{ test.dir }}/.stestr/{{ item }}
+    with_items: "{{ timing_files }}"
+
+  when: test.timing.data.repo | length > 0
+  # Let's ignore the errors because reusing time data is not
+  # critical for successful test execution.
+  ignore_errors: true
+  vars:
+    timing_files:
+      - next-stream
+      - times.dbm.bak
+      - times.dbm.dat
+      - times.dbm.dir
