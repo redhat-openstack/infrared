@@ -14,6 +14,7 @@
       default_route_network:
       - External
       template: /home/stack/virt/network/three-nics-vlans/controller{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
+{% if not install.splitstack|default(false) %}
     networks:
     - network: ctlplane
       vif: true
@@ -22,6 +23,24 @@
     - network: internal_api
     - network: tenant
     - network: external
+{% endif %}
+{% if install.splitstack|default(false) %}
+{% for host_name in groups.overcloud_nodes|sort %}
+{% if "controller" in (host_name|lower) %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+      - network: internal_api
+      - network: tenant
+      - network: external
+{% endif %}
+{% endfor %}
+{% endif %}
 {# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
 {% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend == 'lvm' %}
   ansible_playbooks:
@@ -47,6 +66,7 @@
 {% else %}
       template: /home/stack/virt/network/three-nics-vlans/compute.j2
 {% endif %}
+{% if not install.splitstack|default(false) %}
     networks:
     - network: ctlplane
       vif: true
@@ -55,6 +75,23 @@
     - network: tenant
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
     - network: external
+{% endif %}
+{% endif %}
+{% if install.splitstack|default(false) %}
+{% for host_name in groups.compute|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: internal_api
+      - network: tenant
+{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+      - network: external
+{% endif %}
+{% endfor %}
 {% endif %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
@@ -65,12 +102,26 @@
     profile: ceph-storage
     network_config:
       template: /home/stack/virt/network/three-nics-vlans/ceph-storage.j2
+{% if not install.splitstack|default(false) %}
     networks:
     - network: ctlplane
       vif: true
     - network: storage
     - network: storage_mgmt
 {% endif -%}
+{% endif %}
+{% if install.splitstack|default(false) %}
+{% for host_name in groups.ceph|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+{% endfor %}
+{% endif %}
 {%- if install.storage.backend == 'swift' %}
 - name: SwiftStorage
   count: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
@@ -79,10 +130,24 @@
     profile: swift-storage
     network_config:
       template: /home/stack/virt/network/templates/three-nics-vlans/swift-storage.j2
+{% if not install.splittack|default(false) %}
     networks:
     - network: ctlplane
       vif: true
     - network: storage
     - network: storage_mgmt
 {% endif %}
+{% endif %}
+{% endif %}
+{% if install.splitstack|default(false) %}
+{% for host_name in groups.swift|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+{% endfor %}
 {% endif %}
