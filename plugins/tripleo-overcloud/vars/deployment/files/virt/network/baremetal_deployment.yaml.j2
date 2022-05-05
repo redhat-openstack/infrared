@@ -22,6 +22,21 @@
     - network: internal_api
     - network: tenant
     - network: external
+{% if install.splitstack|default(False) %}
+{% for host_name in groups.overcloud_nodes|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+      - network: internal_api
+      - network: tenant
+      - network: external
+{% endfor %}
+{% endif %}
 {# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
 {% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend == 'lvm' %}
   ansible_playbooks:
@@ -56,6 +71,21 @@
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
     - network: external
 {% endif %}
+{% if install.splitstack|default(False) %}
+{% for host_name in groups.overcloud_nodes|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+      - network: internal_api
+      - network: tenant
+      - network: external
+{% endfor %}
+{% endif %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
 - name: CephStorage
@@ -71,6 +101,21 @@
     - network: storage
     - network: storage_mgmt
 {% endif -%}
+{% if install.splitstack|default(False) %}
+{% for host_name in groups.overcloud_nodes|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+      - network: internal_api
+      - network: tenant
+      - network: external
+{% endfor %}
+{% endif %}
 {%- if install.storage.backend == 'swift' %}
 - name: SwiftStorage
   count: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
@@ -85,4 +130,19 @@
     - network: storage
     - network: storage_mgmt
 {% endif %}
+{% endif %}
+{% if install.splitstack|default(False) %}
+{% for host_name in groups.overcloud_nodes|sort %}
+  instances:
+  - hostname: host_name
+    managed: false
+    networks:
+      - network: ctlplane
+        fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
+      - network: storage
+      - network: storage_mgmt
+      - network: internal_api
+      - network: tenant
+      - network: external
+{% endfor %}
 {% endif %}
