@@ -40,3 +40,7 @@
   set_fact:
       config_command: /usr/bin/discover-tempest-config
   when: tempest_conf_tool.stat.exists
+
+- name: Get timing data from previous runs
+  import_tasks: get_timing_data.yml
+  when: test.timing.data.url | length > 0

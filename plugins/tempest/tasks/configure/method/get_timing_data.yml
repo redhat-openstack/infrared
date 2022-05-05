@@ -1,0 +1,19 @@
+---
+- name: Reuse timing data
+  block:
+
+    - name: Create stestr dir
+      file:
+        path: "~/{{ test.dir }}/.stestr"
+        state: directory
+
+    - name: Copy content of remote tarball file with timing data to .stestr directory
+      unarchive:
+        src: "{{ test.timing.data.url }}"
+        dest: "~/{{ test.dir }}/.stestr"
+        remote_src: yes
+
+  when: test.timing.data.url | length > 0
+  # Let's ignore the errors because reusing time data is not
+  # critical for successful test execution.
+  ignore_errors: true

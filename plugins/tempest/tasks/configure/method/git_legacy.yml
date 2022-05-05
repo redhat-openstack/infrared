@@ -2,3 +2,7 @@
 - name: Set defaults facts for the configuration from repo
   set_fact:
       config_command: "tools/config_tempest.py"
+
+- name: Get timing data from previous runs
+  import_tasks: get_timing_data.yml
+  when: test.timing.data.url | length > 0
