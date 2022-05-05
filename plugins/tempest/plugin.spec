@@ -311,6 +311,18 @@ subparsers:
                       type: Bool
                       help: Install crudini on all controller nodes (required by some tests).
                       default: no
+                  timing-data-dir-name:
+                      type: Value
+                      help: |
+                        Name of directory located in git repository specified by timing-data-repo option which contains timing data
+                        from the previous job runs.
+                      default: ''
+                  timing-data-repo:
+                      type: Value
+                      help: |
+                        Git repository which contains timing data from previous job runs. If this value is defined the timing data
+                        are downloaded from directory specified by the timing-data-dir-name option.
+                      default: ''
             - title: ansible facts
               options:
                   collect-ansible-facts:
