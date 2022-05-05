@@ -31,6 +31,33 @@
       creates: "~/{{ test.dir }}/etc"
   when: configure_tempest_dir.rc != 0
 
+- name: Create stestr dir
+  file:
+    path: "~/{{ test.dir }}/.stestr"
+    state: directory
+  ignore_errors: true
+
+- name: Copy custom .stestr files from the given location
+  get_url:
+    url: "{{ test.sdir }}/{{ item }}"
+    dest: "~/{{ test.dir }}/.stestr"
+  with_items:
+    - next-stream.gz
+    - times.dbm.bak.gz
+    - times.dbm.dat.gz
+    - times.dbm.dir.gz
+  ignore_errors: true
+
+- name: Unzip archived .stestr files
+  shell: |
+    gunzip -f ~/{{ test.dir }}/.stestr/{{ item }}
+  with_items:
+    - next-stream.gz
+    - times.dbm.bak.gz
+    - times.dbm.dat.gz
+    - times.dbm.dir.gz
+  ignore_errors: true
+
 - name: Check if we have tempestconf tool installed
   stat:
       path: /usr/bin/discover-tempest-config
