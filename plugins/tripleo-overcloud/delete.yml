@@ -5,31 +5,24 @@
   any_errors_fatal: true
   vars:
     undercloud_version: "{{ install.version | openstack_release }}"
+    stack_name: "{{ install.overcloud.stack }}"
   tasks:
-      - name: Show details about existing Overcloud
+      - name: Show details about existing stack "{{ stack_name }}"
         shell: |
             source ~/stackrc
-            if openstack stack list | grep -qw overcloud; then
-              openstack stack show overcloud > openstack_stack_show_overcloud.log
+            if openstack stack list | grep -qw "{{ stack_name }}"; then
+              openstack stack show "{{ stack_name }}" > openstack_stack_show_"{{ stack_name }}".log
             fi
         args:
           executable: /bin/bash
         changed_when: False
 
-      - name: Delete existing overcloud Heat stack if it exists
+      - name: Delete existing "{{ stack_name }}" stack if it exists
         shell: |
             source ~/stackrc
-            RETURN_CODE=0
-            if openstack stack list | grep -qw overcloud; then
-              openstack stack delete overcloud --yes --wait
-              RETURN_CODE=2
-            fi
-            exit ${RETURN_CODE}
+            openstack overcloud delete -y {{ stack_name }}
         args:
-          executable: /bin/bash
-        register: _delete_stack
-        changed_when: _delete_stack.rc == 2
-        failed_when: _delete_stack.rc not in [0, 2]
+            executable: /bin/bash
 
       - name: Get list of existing baremetal nodes
         shell: |
