@@ -39,6 +39,8 @@ class BaremetalRoleData():
         # by default the "expanded" name,
         # but if a special tag is available use it
         # special cases
+        if 'hci' in self.name.lower():
+            return self.name.lower()
         for special_case in ['controller', 'compute']:
             if special_case in self._tags:
                 return special_case
@@ -144,7 +146,7 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
 
 def parse_opts(argv):
     parser = argparse.ArgumentParser(
-            description='Convert to Ansible Jinja2 NIC config templates.')
+        description='Convert to Ansible Jinja2 NIC config templates.')
     parser.add_argument('roles_data',
                         metavar='ROLES_DATA',
                         help='Path of the roles_data.yaml file',
