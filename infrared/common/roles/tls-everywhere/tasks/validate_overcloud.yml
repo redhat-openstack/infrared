@@ -4,10 +4,14 @@
     stat:
         path: "{{ freeipa_network_environment_file }}"
     register: ipa_network_environment_file
+    when:
+        - freeipa_network_protocol == 'ipv4'
 
   - fail:
         msg: "Network environment file with location {{ freeipa_network_environment_file }} does not exist!"
-    when: not ipa_network_environment_file.stat.exists
+    when:
+        - freeipa_network_protocol == 'ipv4'
+        - not ipa_network_environment_file.stat.exists
 
   - name: Check for network-environment-v6 file
     stat:

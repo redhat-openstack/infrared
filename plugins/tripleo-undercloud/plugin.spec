@@ -216,6 +216,15 @@ subparsers:
                           Specifies whether TLS Everywhere with FreeIPA should be implemented
                       default: no
 
+                  network-protocol:
+                      type: Value
+                      help: IPA network setup.
+                      default: ipv4
+                      choices:
+                          - ipv4
+                          - ipv6
+                          - ipv6-all
+
                   enable-novajoin:
                       type: Bool
                       help: |
