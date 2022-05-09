@@ -112,6 +112,10 @@
                 --run-command 'mkswap /swapfile' \
                 --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab' \
             {% endif -%}{# endif swap #}
+            {% if provision.fips.mode and (topology_node.name == "undercloud") %}
+                --run-command 'fips-mode-setup --enable' \
+                --run-command 'grub2-mkconfig -o /boot/grub2/grub.cfg' \
+            {% endif %} {# endif fips #}
                 --selinux-relabel
             {% endif %}{# endif disk1 #}
 
