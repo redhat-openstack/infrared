@@ -39,7 +39,10 @@ class BaremetalRoleData():
         # by default the "expanded" name,
         # but if a special tag is available use it
         # special cases
-        if 'hci' in self.name.lower():
+
+        if 'computehci' in self.name.lower():
+            return self.name.lower()
+        if 'cephhci' in self.name.lower():
             return self.name.lower()
         for special_case in ['controller', 'compute']:
             if special_case in self._tags:
