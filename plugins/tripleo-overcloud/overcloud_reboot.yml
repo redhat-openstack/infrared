@@ -20,6 +20,7 @@
   vars:
       ceph_client: "{{ groups['controller']|first }}"
       container_runtime: "{{ (install.version | default(undercloud_version) | openstack_release > 14) | ternary('podman', 'docker') }}"
+      overcloud_version: "{{ install.version | default(undercloud_version) | openstack_release }}"
   tasks:
       - set_fact:
             overcloud_rc: "/home/stack/{{ install.overcloud.stack }}rc"
@@ -38,21 +39,15 @@
                 openstack hypervisor list -f value -c 'Hypervisor Hostname' | grep {{ inventory_hostname }}
             register: compute_fqdn
 
-          - name: Register instances running on compute node < 17
+          - name: Register instances running on compute node
             shell: |
                 source {{ overcloud_rc }}
+                {% if overcloud_version is version('17', '<') %}
                 openstack server list --all --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE") or contains("PAUSED")) | .ID'
-            register: compute_instances
-            when:
-              - install.openstack.version|default(overcloud_version)|openstack_release < 17
-
-          - name: Register instances running on compute node >= 17
-            shell: |
-                source {{ overcloud_rc }}
+                {% else %}
                 metalsmith -f json list | grep {{ compute_fqdn.stdout }} | jq -r -c '.[] | select(.state | contains("active") or contains("paused")) | .Name'
+                {% endif %}
             register: compute_instances
-            when:
-              - install.openstack.version|default(overcloud_version)|openstack_release >= 17
 
           - name: Quiesce compute node
             shell: |
