@@ -241,6 +241,13 @@ subparsers:
                       type: Bool
                       help: Save ansible facts as json file(s)
                       default: False
+            - title: Enable FIPS
+              options:
+                  enable-fips:
+                    type: Bool
+                    help: |
+                      Enable fips on the undercloud images
+                    default: false
 
             - title: Snapshots
               options:
