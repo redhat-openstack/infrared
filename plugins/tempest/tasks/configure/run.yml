@@ -75,10 +75,12 @@
               identity.uri $OS_AUTH_URL \
               identity.admin_password $OS_PASSWORD \
               scenario.img_dir ~/{{ test.dir }}/etc \
+              {% if test.openstack.version|default(overcloud_version)|openstack_release >= 17 %}
               {# RHEL9 in fips mode does not allow rsa keys with sha1 signature, cirros does not support newer signatures, so use ecdsa keys instead #}
               {# More in https://review.opendev.org/c/openstack/tempest/+/807465 #}
-              {% if test.openstack.version|default(overcloud_version)|openstack_release >= 17 %}
               validation.ssh_key_type ecdsa \
+              {# os_glance_reserved tests can be enabled since wallaby, see https://review.opendev.org/c/openstack/tempest/+/771071 #}
+              image_feature_enabled.os_glance_reserved true \
               {% endif %}
               {# https://bugzilla.redhat.com/show_bug.cgi?id=1382048 #}
               {# https://github.com/openstack/tripleo-heat-templates/commit/9b739012b71e2833e59e94cbe423cda77405c6cb#diff-2df80226aa5ac8fe81e6159bda8d4d2f #}
