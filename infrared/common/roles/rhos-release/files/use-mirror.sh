@@ -27,6 +27,7 @@ sed -i "s|https\?://download\.devel\.redhat\.com|http://${mirror}|" *.repo
 sed -i "s|https\?://rhos-release.*\.redhat\.com|http://${mirror}/rhos-release|" *.repo
 sed -i "s|https\?://ayanami.*\.redhat.com|http://${mirror}/ayanami|" *.repo
 sed -i "s|https\?://pulp.*\.redhat\.com|http://${mirror}/pulp|" *.repo
+sed -i "s|https\?://rhsm-pulp.*\.redhat\.com|http://${mirror}/pulp|" *.repo
 sed -i "s|https\?://cdn\.stage\.redhat\.com|http://${mirror}/cdn-stage|" *.repo
 sed -i "s|https\?://copr-be\.cloud\.fedoraproject\.org|http://${mirror}/copr-be|" *.repo
 
