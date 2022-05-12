@@ -50,6 +50,29 @@
       "message": "(note to be clear, I am talking about prefixes on libvirt/qemu level (qemu:///session separation support or similarly powerful implementation), not on the osp level, these might be actually achievable, possibly already working and used)",
       "revId": "7246c8b5a451e69ec7b134e9cf917912022db18c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6bcfade4_93e540e3",
+        "filename": "plugins/tripleo-overcloud/templates/instackenv.json.j2",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-05-12T01:13:10Z",
+      "side": 1,
+      "message": "I have slight concern about this approach.\nAfaik it\u0027s not set that node cannot have dashes in their names.\nI do realize even existing code would have issue with that - but if that would be concidered as precedence, then it could be precedence of behavior that utilizing dash in name one can control profile and custom suffix for the node (e.g. controller-default-0, controller-modified-1 etc).\n\nSo it may be worth considering more precise approach.\n\nThat said, I did found there are 5 existing virsh profiles with dash in name, four for openshift-* and vqfx-pfe :\n- https://github.com/redhat-openstack/infrared/blob/master/plugins/virsh/defaults/topology/nodes/openshift-worker.yml (as also openshift-infra, openshift-master, openshift-tester)\n- https://github.com/redhat-openstack/infrared/blob/master/plugins/virsh/defaults/topology/nodes/vqfx-pfe.yml\n\nBut I found no usage of those in CI jobs definitions (possibly not used anymore?).\nFor openshift-* ones there are few mentions there in name of parameters but appears they are not used for virsh provisioning or such.",
+      "range": {
+        "startLine": 52,
+        "startChar": 42,
+        "endLine": 52,
+        "endChar": 48
+      },
+      "revId": "7246c8b5a451e69ec7b134e9cf917912022db18c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
