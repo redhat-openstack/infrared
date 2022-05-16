@@ -46,6 +46,30 @@
       },
       "revId": "3f3dce14cba825ccb596d98f0f661c00749af943",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "30321696_067b0fb5",
+        "filename": "plugins/tripleo-overcloud/plugin.spec",
+        "patchSetId": 2
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2022-05-16T13:59:19Z",
+      "side": 1,
+      "message": "I wonder whether any dynamic calculation will be needed actually. In https://review.gerrithub.io/c/redhat-openstack/infrared/+/537498/3/plugins/tripleo-overcloud/vars/deployment/files/virt/network/baremetal_deployment.yaml.j2#19 is already decided it will be tweaked for the (single) case of lvm and osp\u003e\u003d17 only, so the defaults are set to 10GB without any computing done as \"|default(10)\", but for the casual code reader it might not be clear why that magic number and where it came from.\n\nI am wondering whether rather set in plugin.spec and add proper \"help: |\" message with value 10 and explanation how we invented that...\n\nIn case there will be computation done in the future, like:\n{% if install.version|default(undercloud_version)|openstack_release \u003e\u003d 17}\n{% if (install.storage|default({})).backend \u003d\u003d \u0027lvm\u0027}\n# set to 10G or smth\n{% if (install.storage|default({})).backend \u003d\u003d \u0027ceph\u0027}\n# set it to some minimal value, like 100M\n...\nthen it could be left for IR to dynamically decide?",
+      "parentUuid": "bc3f0c10_79b08ae6",
+      "range": {
+        "startLine": 751,
+        "startChar": 22,
+        "endLine": 751,
+        "endChar": 33
+      },
+      "revId": "3f3dce14cba825ccb596d98f0f661c00749af943",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
