@@ -1,0 +1,46 @@
+---
+test_dict:
+    test_regex:
+      default: ''
+    whitelist:
+        - "^tempest.api.network.*"
+        - "^tempest.scenario.test_network_advanced_server_ops"
+        - "^tempest.scenario.test_network_basic_ops"
+        - "^tempest.scenario.test_network_v6"
+        - "^tempest.scenario.test_security_groups_basic_ops"
+        - "^neutron.tests.tempest.*"
+        - "^neutron_tempest_plugin.*"
+        - "neutron_plugin.*"
+    blacklist:
+        - "^neutron_plugin.tests.scenario.test_sriov.*"
+        - "^neutron_plugin.tests.scenario.test_l3ha_ovn.*"
+        - "^neutron_plugin.tests.scenario.test_provider_network.*"
+        - "^neutron_plugin.tests.scenario.test_multicast.MulticastTestIPv4Sriov.*"
+        - "^neutron_plugin.tests.scenario.test_qos.QosTestSriov.*"
+        - "test_multicast.*restart"
+        - "^neutron_plugin.*test_qos_user_policies"
+        - "^neutron_plugin.tests.scenario.test_qos.QosTestExternalNetwork.*"
+        - "^neutron_plugin.*many_vms"
+        - "^neutron_plugin.*test_previously_used_ip"
+        - "^neutron_plugin.tests.scenario.test_ovn_dbs.OvnDbsMonitoringTest.*"
+        - "^neutron_tempest_plugin.*test_port_forwarding_to_2_fixed_ips"
+        - "^neutron_plugin.tests.scenario.test_internal_dns.InternalDNSInterruptions.*"
+        - "^neutron_plugin.*reboot_node"
+        - "^neutron_plugin.*networker_reboot"
+        - "^neutron_plugin.*ovn_controller_restart"
+    plugins:
+        neutron-tempest-plugin:
+            repo: "https://opendev.org/openstack/neutron-tempest-plugin"
+            package:
+                10: "python-neutron-tests"
+                11: "python-neutron-tests"
+                12: "python-neutron-tests"
+                13: "python2-neutron-tests-tempest"
+                14: "python2-neutron-tests-tempest"
+                default: "python3-neutron-tests-tempest"
+        tempest_helper_plugin:
+           repo: "https://url.corp.redhat.com/downstream-helper-plugin"
+           version: "a1c08fdb53a57d58803e5950844af32c19f4be1f"
+        tempest_neutron_plugin:
+           repo: "https://url.corp.redhat.com/downstream-neutron-plugin"
+           version: "7f3a2b877eaf1c6e2fbe5db3328222346c2eb395"
