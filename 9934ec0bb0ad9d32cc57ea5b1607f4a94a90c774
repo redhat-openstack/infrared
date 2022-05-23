@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "99e2c230_05642816",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1017837
+      },
+      "writtenOn": "2022-05-23T15:27:55Z",
+      "side": 1,
+      "message": "Hi. On our testing we are seeing that openstacksdk-0.99 is still being installed. We think it is related to the constraints.txt that create_env role is passing to the pip install command:\n\n/var/tmp/venv_shade/bin/pip3 install --constraint /var/tmp/venv_shade/constraints.txt openstacksdk\u003d\u003d0.61.0\n\nThat contsraints.txt file looks to be gathered from \"https://github.com/redhat-openstack/infrared/blob/master/infrared/common/roles/create_venv/defaults/main.yml#L10\" and it is forcing to install 0.99.0 as this is the value set on the master branch: https://opendev.org/openstack/requirements/raw/branch/master/upper-constraints.txt\n\nI think we should try to use a different branch (stable one, maybe yoga?) that will use openstacksdk\u003d\u003d0.61.0.\n\n",
+      "revId": "9934ec0bb0ad9d32cc57ea5b1607f4a94a90c774",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
