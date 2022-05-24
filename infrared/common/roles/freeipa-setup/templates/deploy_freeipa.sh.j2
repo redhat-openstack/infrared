@@ -52,11 +52,6 @@ rpm -Uvh ius-release*.rpm
 
 {% endif %}
 
-# Downgrade openssl version
-{% if ansible_distribution_major_version is version("9", ">=") -%}
-sudo dnf downgrade -y openssl-3.0.1-5.el9
-{% endif %}
-
 ## * Install FreeIPA::
 
 ipa-server-install -U \
