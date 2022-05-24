@@ -53,6 +53,12 @@ subparsers:
                       help: |
                           Use this option in order to enable multicast querier on the external virtual network
                       default: False
+                  key-format:
+                      type: Value
+                      default: ""
+                      help: |
+                          Specify a key format for ssh key generation. Allowed values can be RFC4716, PKCS8 and PEM
+
 
             - title: image
               options:
