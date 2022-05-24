@@ -123,8 +123,8 @@
       register: result
 
     - name: if private key doesn't exist, create it
-      command: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''"
-      when: not result.stat.exists | bool
+      shell: "ssh-keygen -f /root/.ssh/id_rsa -t rsa -N '' {{ (provision.key.format == '') | ternary('', '-m ' + provision.key.format + ' <<<y') }}"
+      when: (not result.stat.exists | bool) or provision.key.format
 
     - name: copy server private key from hypervisor for SSH proxy
       vars:
