@@ -18,6 +18,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "e3b8ad6d_f1b45c66",
+        "filename": "plugins/tripleo-undercloud/images.yml",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015419
+      },
+      "writtenOn": "2022-05-25T13:50:15Z",
+      "side": 0,
+      "message": "Luigi, from what i can tell the current runs will key in on \"not import\" and the tar extension is used even when hardend-uefi-full is in use. the full, hardened-uefi-full, and hardened-uefi-fips-full images are all tar files inside the rpm so we dont want to skip the tar extension for any use case except from outside import.  if im missing a use case please let me know.",
+      "parentUuid": "b139f875_2223fed8",
+      "revId": "fcc54f2cd54c184d4ca3bca786673daf223392e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "9fac247c_9a4a6f7e",
@@ -31,6 +49,24 @@
       "writtenOn": "2022-05-25T08:30:29Z",
       "side": 0,
       "message": "ditto",
+      "revId": "fcc54f2cd54c184d4ca3bca786673daf223392e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "dd04e218_592f64f7",
+        "filename": "plugins/tripleo-undercloud/images.yml",
+        "patchSetId": 10
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015419
+      },
+      "writtenOn": "2022-05-25T13:50:15Z",
+      "side": 0,
+      "message": "The reason we saw failures in the earlier runs with my patch for non fips mode was the set fact for qcow2 would get called. this would result in a failure of the unpack of the tar file for hardened-uefi-full rpm images.\n\ni think i confirmed this issue with failure in the #1 run here.\nhttps://rhos-ci-staging-jenkins.lab.eng.tlv2.redhat.com/view/All/job/DFG-security-17.0_compact-director-rhel-9.0-virthost-1cont_1comp-ipv4-geneve-lvm-ssl/",
+      "parentUuid": "9fac247c_9a4a6f7e",
       "revId": "fcc54f2cd54c184d4ca3bca786673daf223392e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
