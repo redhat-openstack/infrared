@@ -89,6 +89,20 @@ class CliParser(object):
 
         parse_args = parse_args.__dict__
 
+        # Save all command line arguments to a file
+        all_argument_file = CoreServices.workspace_manager().get_active_workspace().path + '/' \
+            + parse_args['subcommand'] + '_all_argument_file.txt'
+        with open(all_argument_file, 'w') as file:
+            for arg in parse_args:
+                if 'subcommand' in arg:
+                    arg_name = arg[10:]
+                    if arg_name == '':
+                        data = 'plugin' + ': ' + str(parse_args[arg])
+                    else:
+                        data = arg_name + ': ' + str(parse_args[arg])
+                    file.write(data)
+                    file.write('\n')
+
         # move sub commands to the nested dicts
         result = collections.defaultdict(dict)
         expr = '^(?P<subcmd_name>subcommand)+(?P<arg_name>.*)$$'
