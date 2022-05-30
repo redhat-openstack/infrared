@@ -102,19 +102,24 @@
             dest: "{{ template_base }}/debug.yaml"
         when: install.overcloud.debug
 
-      - name: set parameter_defaults for config_heat.yaml
-        set_fact:
-            config_heat_yaml:
-                parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
-        when: install.get('config', {}).get('heat', {})
+      - name: Config Heat block
+        block:
+        - name: set parameter_defaults for config_heat.yaml
+          set_fact:
+              config_heat_yaml:
+                  parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
+          when:
+          - install.get('config', {}).get('heat', {})
 
-      - name: set resource_registry for config_heat.yaml
-        vars:
-            config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
-        set_fact:
-            config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
-        when: install.get('config', {}).get('resource', {})
-
+        - name: set resource_registry for config_heat.yaml
+          vars:
+              config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
+          set_fact:
+              config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
+          when: install.get('config', {}).get('resource', {})
+        when:
+        - (install.version|default(undercloud_version) | openstack_release < 17)
+        
       - name: Create a custom environment file - NTP Pool
         copy:
           dest: "{{ template_base }}/ntp_pool.yaml"
