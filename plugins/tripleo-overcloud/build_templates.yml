@@ -60,7 +60,7 @@
         file:
             path: '{{ template_base }}'
             state: directory
-            mode: u=rwX,g=rX,o=rX
+            moda: u=rwX,g=rX,o=rX
 
       - name: Delete the symlink to exclude the failure when reapplying the symlink to another dir
         file:
@@ -248,9 +248,17 @@
       - include_tasks: tasks/append_script.yml
         when: not overcloud_deploy_script|default('')
 
-      - include_tasks: tasks/generate_baremetal_deployment.yml
-        tags: deploy
-        when: install.version|default(undercloud_version)|openstack_release >= 17
+      - name: Gather data to create a unique ID (machine-id, current date)
+        shell: |
+            echo "$(cat /etc/machine-id)-$(date +%s)"
+        register: machineid_date
+
+      - name: Render baremetal_deployment file
+        template:
+          src: "vars/deployment/files/virt/network/baremetal_deployment.yaml.j2"
+          dest: "{{ template_base }}/network/baremetal_deployment.yaml"
+        vars:
+          deployment_unique_id: "{{ machineid_date.stdout|to_uuid }}"
 
       - name: set overcloud_deploy script
         set_fact:

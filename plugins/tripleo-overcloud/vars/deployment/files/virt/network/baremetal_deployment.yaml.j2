@@ -1,8 +1,17 @@
-- name: Controller
+{% if 'aio' in groups['controller'] %}
+{% set name_lower = 'standalone' %}
+{% set role_name = 'Standalone' %}
+{% set role_profile = 'aio' %}
+{% else %}
+{% set name_lower = 'controller' %}
+{% set role_name = 'Controller' %}
+{% set role_profile = 'control' %}
+{% endif %}
+- name: {{ role_name }}
   count: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
-  hostname_format: controller-%index%
+  hostname_format: {{ name_lower }}-%index%
   defaults:
-    profile: control
+    profile: {{ role_profile }}
     config_drive:
       cloud_config:
         # unique NFS ID
@@ -57,6 +66,7 @@
           /srv=10GB
           /var=100%
 {% endif %}
+{% if (install.compute|default({})).nodes|default(0) > 0 %}
 - name: Compute
   count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
   hostname_format: compute-%index%
@@ -102,6 +112,7 @@
       - network: external
 {% endif %}
 {% endfor %}
+{% endif %}
 {% endif %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
