@@ -39,7 +39,7 @@ class BaremetalRoleData():
         # by default the "expanded" name,
         # but if a special tag is available use it
         # special cases
-        for special_case in ['controller', 'compute']:
+        for special_case in ['controller', 'compute', 'standalone']:
             if special_case in self._tags:
                 return special_case
         if 'ceph' in self._tags and 'storage' in self._tags:
@@ -51,6 +51,8 @@ class BaremetalRoleData():
         """An opionionated but sane default profile."""
         if self.generic_type == 'controller':
             return 'control'
+        elif self.generic_type == 'standalone':
+            return 'aio'
         return self.generic_type
 
     @classmethod
