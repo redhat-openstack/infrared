@@ -149,7 +149,7 @@
   ipv6: true
 {% endif %}
 
-{% if install.manila.storage.protocol == 'nfs-ganesha' %}
+{% if install.manila.storage.protocol == 'nfs-ganesha' or 'aio-0' in groups['overcloud_nodes'] %}
 - name: StorageNFS
   name_lower: storage_nfs
   vip: true

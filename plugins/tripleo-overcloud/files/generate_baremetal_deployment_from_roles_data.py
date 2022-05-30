@@ -49,6 +49,8 @@ class BaremetalRoleData():
     @property
     def profile(self) -> str:
         """An opionionated but sane default profile."""
+        if self.name == 'Standalone':
+            return 'aio'
         if self.generic_type == 'controller':
             return 'control'
         return self.generic_type
