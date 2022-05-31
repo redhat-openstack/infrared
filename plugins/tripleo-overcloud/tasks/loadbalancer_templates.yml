@@ -23,6 +23,8 @@
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/external-loadbalancer-vip{{ (install.network.protocol != "ipv4") | ternary("-v6","") }}.yaml \'
+      insertbefore: '^-e'
+      firstmatch: yes
 
 - name: Asppend External LB config to the base overcloud deply script
   lineinfile:
