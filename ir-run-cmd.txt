@@ -1,0 +1,3 @@
+infrared plugin remove virsh; infrared plugin add virsh; clsscr; LOG=02-cephonly; ( date > $LOG.log && time infrared virsh -o $LOG.yml --topology-nodes ceph:1 --topology-network 3_nets --host-address titan82.lab.eng.tlv2.redhat.com --host-key ~/.ssh/rhos-jenkins/id_rsa --serial-files false --collect-ansible-facts False -e override.controller.cpu=8 -e override.controller.memory=32768 --pool-name rbd -e provision.pool.name=libvirtpool --rbd-on yes --rbd-source rhel-guest-image-8.4-992.x86_64.raw@upload --rbd-namespace test01 --rbd-clonename rhel-guest-image-8.4-992.gc.rbd -vvvv --cleanup no --ansible-args="tags=pre,vms"  ) >> $LOG.log 2>&1 & # run
+
+ansible-playbook -i ~/.infrared/.workspaces/active/hosts plugins/virsh/tasks/vms_2_install_part.yml
