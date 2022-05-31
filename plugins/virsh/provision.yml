@@ -7,34 +7,34 @@
          (not provision.topology.extend | default(False)) }}
   tags: pre
 
-- name: Validate hypervisor
-  import_playbook: "{{ validate_hypervisor | default('validate_hypervisor.yml') }}"
-  vars:
-    _run_condition: >-
-      {{ (_main_run_condition | bool) and
-         (not provision.host.memory.overcommit | default('False')) and
-         (provision.topology.nodes is defined) }}
-  tags: validations
-
-- name: Prepare the hypervisor for provisioning
-  import_playbook: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
-  vars:
-    _run_condition: >-
-      {{ (_main_run_condition | bool) and
-         (not provision.topology.extend | default(False)) and
-         (not provision.virsh.snapshot.create | bool) and
-         (not provision.virsh.snapshot.export | bool) }}
-  tags: hypervisor
-
-- name: Create Networks
-  import_playbook: "{{ provision_networks | default('provision_networks.yml') }}"
-  vars:
-    _run_condition: >-
-      {{ (_main_run_condition | bool) and
-         (not provision.topology.extend | default(False)) and
-         (not provision.virsh.snapshot.create | bool) and
-         (not provision.virsh.snapshot.export | bool) }}
-  tags: networks
+#- name: Validate hypervisor
+#  import_playbook: "{{ validate_hypervisor | default('validate_hypervisor.yml') }}"
+#  vars:
+#    _run_condition: >-
+#      {{ (_main_run_condition | bool) and
+#         (not provision.host.memory.overcommit | default('False')) and
+#         (provision.topology.nodes is defined) }}
+#  tags: validations
+#
+#- name: Prepare the hypervisor for provisioning
+#  import_playbook: "{{ prepare_hypervisor | default('prepare_hypervisor.yml') }}"
+#  vars:
+#    _run_condition: >-
+#      {{ (_main_run_condition | bool) and
+#         (not provision.topology.extend | default(False)) and
+#         (not provision.virsh.snapshot.create | bool) and
+#         (not provision.virsh.snapshot.export | bool) }}
+#  tags: hypervisor
+#
+#- name: Create Networks
+#  import_playbook: "{{ provision_networks | default('provision_networks.yml') }}"
+#  vars:
+#    _run_condition: >-
+#      {{ (_main_run_condition | bool) and
+#         (not provision.topology.extend | default(False)) and
+#         (not provision.virsh.snapshot.create | bool) and
+#         (not provision.virsh.snapshot.export | bool) }}
+#  tags: networks
 
 - name: Provision VMs
   import_playbook: "{{ provision_vms | default('provision_vms.yml') }}"
