@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "596fc81f_24d06dcd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2022-05-31T22:47:33Z",
+      "side": 1,
+      "message": "Hey Luigi,\n\nYeah, if you take a look at the previous patchset, I did get this working by modifying that Python script:\nhttps://review.gerrithub.io/c/redhat-openstack/infrared/+/538957/4\n\nI just wondered if I should have instead been consolidating my efforts around a single solution, so I started down the jinja2 template route. I\u0027m easy either way, if we want to just use the Python script, it will probably need a bit more work. For example, with this change that unblocks our integration testing downstream:\nhttps://review.gerrithub.io/c/redhat-openstack/infrared/+/537727\n\nWe rely heavily on Ansible variables to render that template. It will be challenging to render that file without passing in all of the same variables to this script. Maybe if we turned the script into a Ansible module on it\u0027s own that would make it easier?\n\nIn any case, for this specific scenario, I had it working using the script instead of the template. So I\u0027ll revert back to patchset 4 and continue testing with that instead.",
+      "parentUuid": "60d17a76_89113df5",
+      "revId": "535425bb3f11c893c354d0be7cc9ae5c56dd0124",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "1f815781_facfaa66",
         "filename": "plugins/tripleo-overcloud/build_templates.yml",
         "patchSetId": 5
