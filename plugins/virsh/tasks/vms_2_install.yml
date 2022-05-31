@@ -2,9 +2,16 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
-- name: define disk pool path
-  set_fact:
-      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
+#- name: Dump all vars
+#  action: template src=dumpall.j2 dest=/tmp/ansible.all
+
+- name: Print the results from the main include loop
+  debug:
+    msg: "{{item}}"
+  with_items: "{{ topology_node }}"
+
+#- name: fail
+#  fail: msg=""
 
   # This is an early inventory host registration.
   # It has 'local' connection type because has no configured network yet.
@@ -33,15 +40,63 @@
   set_fact:
     serial_files_dir: /var/lib/libvirt/qemu/
 
+# First, refresh the RBD remote storage pool as it doesn't detect newly
+# created images in prev. playbook (vms_1_create_disk.yml)
+- name: Refresh volume pool
+  virt_pool:
+    command: refresh
+    name: "{{ pool_name }}"
+
+# First, annulate the created fact as it will be looped on and the value should
+# not be shared between iterations (as it grows)
+- set_fact:
+    node_disks: []
+
+# Create and transform cartesian list of [disk_num, {disks}] into the dict
+# of [ disk_num: x, disk_name: diskY ] format so we don't need to work
+# with [0][1] indexes in dependent playbook (its easier to iterate over it),
+# also let's drop all other unnecesarry info about disks
+
+- set_fact:
+    node_disks: "{{ node_disks | default([]) + [{ 'node_num': item[0], 'disk_name': item[1] }] }}"
+  with_cartesian:
+    - "{{ topology_node.node_indexes }}"
+    - "{{ topology_node.disks }}"
+
+- name: Debug node_disks var result
+  debug:
+    msg: "{{ item }}"
+  with_items: "{{ node_disks }}"
+
+- name: create disk(s) from vm base image
+  vars:
+    node_image: "{{ topology_node.name }}-{{ item.node_num }}-{{ item.disk_name }}.{{ img_format }}"
+  shell: |
+      set -ex
+      if [[ `rbd showmapped | grep "{{ node_image }}" |  awk -F " " '{print $4; exit;}'` == "{{ node_image }}" ]]; then
+        rbd_dev=`rbd showmapped | grep "{{ node_image }}" |  awk -F " " '{print $6; exit;}'`
+      else
+        rbd_dev=`rbd map {{ rbd_namespace_url }}/{{ node_image }}`
+      fi
+      echo rbd_dev
+  register: rbd_device
+  with_items: "{{ node_disks }}"
+
+- name: Debug rbd_device loop result
+  debug:
+    msg: "{{ item }}"
+  with_items: "{{ rbd_device.results }}"
+
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
       virt-install --name {{ topology_node.name }}-{{ item }} \
           {% if topology_node.disks|count > 0 %}
           {% for disk_name, disk_values in topology_node.disks.items() %}
-          {% if disk_values.import_url is defined and disk_values.import_url %}
-           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=
-           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format=qcow2,cache={{ disk_values.cache }} \
+          {% if provision.rbd.on %}
+          --disk path=rbd:///dummy_rbd_placeholder/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.{{ img_format }} \
+          {% elif disk_values.import_url is defined and disk_values.import_url %}
+           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format={{ img_format }},cache={{ disk_values.cache }} \
           {% else %}
            --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
@@ -75,12 +130,47 @@
            --graphics vnc,listen={{ provision.vnc.external | ternary('0.0.0.0','127.0.0.1') }},password={{ provision.vnc.password if provision.vnc.password is defined else '' }} \
            --noautoconsole \
            --autostart \
-           --rng /dev/urandom {{ provision.get('virtopts', '') }}
+           --rng /dev/urandom {{ provision.get('virtopts', '') }} --check all=off \
+           --print-xml > /tmp/{{ topology_node.name }}-{{ item }}.xml
+  with_items: "{{ topology_node.node_indexes }}"
+
+- name: Show the /tmp
+  shell: |
+      ls -lha /tmp/*xml
+
+- name: Copy the right XML file from backup to work on
+  copy:
+    src: "/tmp/{{ topology_node.name }}-{{ item }}.xml"
+    dest: "/tmp/{{ topology_node.name }}-{{ item }}.xml.original"
+    remote_src: yes
+  with_items:
+    - "{{ topology_node.node_indexes }}"
+
+- name: Print cartes
+  debug:
+    msg: "{{ node_disks }}"
+
+- name: Print cartes var
+  debug:
+    var: "{{ node_disks }}"
+
+- name: Fix the XML disk records if we are deploying RBD
+  include_tasks: rbd_xmlfix.yml
+  with_items: "{{ node_disks }}"
+  register: loop_result
+
+- name: Define prepared VMs from XMLs
+  command: >-
+    virsh define /tmp/{{ topology_node.name }}-{{ item }}.xml
+  with_items: "{{ topology_node.node_indexes }}"
+
+- name: Start VMs
+  virt:
+    name: "{{ topology_node.name }}-{{ item }}"
+    command: start
+    state: running
   with_items: "{{ topology_node.node_indexes }}"
   register: vm_install
   async: 7200
   poll: 0
 
-- name: save install jids
-  set_fact:
-      async_install: "{{ async_install|default([]) + vm_install.results|map(attribute='ansible_job_id')|list }}"
