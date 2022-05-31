@@ -1,0 +1,65 @@
+# TODO: this is prepared in recursive form to be able not only to remove
+# basic read only snapshots (v1) but also clones in future (v2)
+- name: Iterating over the following image
+  ansible.builtin.debug:
+    msg: "{{ rbd_image }}"
+
+# TODO: add cyclic support to remove all mountpoints in a loop
+# since there can be multiple remaining if smth didnt go well before
+- name: unmap all mount points related to this rbd image
+  shell: |
+      if [[ `rbd showmapped | grep "{{ rbd_image }}" |  awk -F " " '{print $4; exit;}'` == "{{ rbd_image }}" ]]; then
+        rbd_dev=`rbd showmapped | grep "{{ rbd_image }}" |  awk -F " " '{print $6; exit;}'`
+        rbd unmap $rbd_dev
+      fi
+
+- name: Test whether the RBD image has children (clones), dont fail if not
+  ignore_errors: yes
+  shell: |
+      rbd children --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }} {{ rbd_image }} --format  json
+  register: _rbd_clones
+
+- name: Create yaml of clone details
+  ansible.builtin.set_fact:
+    rbd_clones: "{{ _rbd_clones.stdout | default([]) }}"
+  when: _rbd_clones is defined
+
+- name: The image has following children/clones
+  ansible.builtin.debug:
+    msg: "The image has following clones: {{ rbd_clones }}"
+  when: _rbd_clones is defined
+
+- name: 2Remove images one by one
+  include_tasks: rbd_remove_image_recursive.yml
+  with_list: "{{ rbd_clones | map(attribute='image') | list }}"
+  loop_control:
+      loop_var: rbd_image
+  when: rbd_clones is defined
+
+- name: Test whether the RBD image has snapshots (read only copies)
+  ignore_errors: yes
+  shell: |
+      rbd snap ls --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }} {{ rbd_image }} | sed '1d' | awk '{print $2}'
+  register: rbd_snapshots
+
+- name: The image has following snapshots
+  ansible.builtin.debug:
+    msg: "The image has following snapshots: {{ rbd_snapshots.stdout_lines }}"
+
+- name: Remove all snapshots
+  ignore_errors: yes
+  shell: |
+      echo "Removing snapshot {{ item }} for image {{ rbd_image }}"
+      rbd snap unprotect --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }} {{ rbd_image }}@{{ item }} || true
+      rbd snap rm --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }} {{ rbd_image }}@{{ item }}
+  with_list: "{{ rbd_snapshots.stdout_lines }}"
+
+- name: Finally remove the image itself
+  ignore_errors: yes
+  shell: |
+      echo "Removing the RBD image {{ rbd_image }} now"
+      rbd rm --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }} {{ rbd_image }}
+
+- name: Annulate the rbd_image fact
+  set_fact:
+    rbd_image: ""
