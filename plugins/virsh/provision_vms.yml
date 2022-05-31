@@ -24,17 +24,17 @@
         prefix: "{{ provision.prefix }}"
       when: provision.prefix is defined
 
-    - name: set vswitch type default
-      set_fact:
-        vswitch_type: 'None'
-
-    - name: set vswitch type
-      set_fact:
-        vswitch_type: "{{ switch_type }}"
-      with_list: "{{ infrared_vswitch_types }}"
-      loop_control:
-          loop_var: switch_type
-      when: switch_type in provision.topology.nodes|join('')
+#    - name: set vswitch type default
+#      set_fact:
+#        vswitch_type: 'None'
+#
+#    - name: set vswitch type
+#      set_fact:
+#        vswitch_type: "{{ switch_type }}"
+#      with_list: "{{ infrared_vswitch_types }}"
+#      loop_control:
+#          loop_var: switch_type
+#      when: switch_type in provision.topology.nodes|join('')
 
     - name: load nodes topology configuration
       include_tasks: tasks/load_topology.yml
@@ -42,36 +42,53 @@
       loop_control:
           loop_var: node
 
-    - name: provision image for each node
-      include_tasks: tasks/download_images.yml
-      with_dict: "{{ topology_nodes }}"
-      loop_control:
-          loop_var: node
-      when: node.value.node_indexes|length > 0
-      tags: images
+#    - name: provision image for each node
+#      include_tasks: tasks/download_images.yml
+#      with_dict: "{{ topology_nodes }}"
+#      loop_control:
+#          loop_var: node
+#      when: node.value.node_indexes|length > 0 and not provision.rbd.on
+#      tags: images
+
+#    - name: prepare customized clone of golden rbd image
+#      include_tasks: tasks/prepare_golden_image_clone.yml
+#      when: provision.rbd.on
+#      tags: images
 
     - name: prepare bridge interfaces in the topology
       set_fact:
         topology_nodes: "{{ topology_nodes | wirenodes }}"
 
-    # Create Disks
-    - block:
-        - name: create disks for each VM if not import
-          include_tasks: tasks/vms_1_create_disk.yml
-          with_dict: "{{ topology_nodes }}"
-          loop_control:
-              loop_var: node
-          when: node.value.node_indexes|length > 0
+    #default: "images"
+    - name: define disk pool name
+      set_fact:
+          pool_name: "{{ provision.pool.name }}"
 
-        - name: Wait for all disks to be created
-          async_status:
-              jid: "{{ item }}"
-          register: disk_tasks
-          until: disk_tasks.finished
-          retries: 300
-          with_items: "{{ async_disks }}"
-          when: async_disks is defined
-      tags: disks
+    - name: Start volume pool
+      virt_pool:
+        command: start
+        state: active
+        name: "{{ pool_name }}"
+
+#    # Create Disks
+#    - block:
+#        - name: create disks for each VM if not import
+#          include_tasks: tasks/vms_1_create_disk.yml
+#          with_dict: "{{ topology_nodes }}"
+#          loop_control:
+#              loop_var: node
+#          when: node.value.node_indexes|length > 0
+#
+#        - name: Wait for all disks to be created
+#          async_status:
+#              jid: "{{ item }}"
+#          register: disk_tasks
+#          until: disk_tasks.finished
+#          retries: 300
+#          delay: 3
+#          with_items: "{{ async_disks }}"
+#          when: async_disks is defined
+#      tags: disks
 
     # Build VMs
     - block:

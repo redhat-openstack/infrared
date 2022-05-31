@@ -2,9 +2,16 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
-- name: define disk pool path
-  set_fact:
-      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
+- name: Dump all vars
+  action: template src=dumpall.j2 dest=/tmp/ansible.all
+
+- name: Print the results from the main include loop
+  debug:
+    msg: "{{item}}"
+  with_items: "{{ topology_node }}"
+
+- name: fail
+  fail: msg=""
 
   # This is an early inventory host registration.
   # It has 'local' connection type because has no configured network yet.
@@ -33,15 +40,38 @@
   set_fact:
     serial_files_dir: /var/lib/libvirt/qemu/
 
+# First, refresh the RBD remote storage pool as it doesn't detect newly
+# created images in prev. playbook (vms_1_create_disk.yml)
+- name: Refresh volume pool
+  virt_pool:
+    command: refresh
+    name: "{{ pool_name }}"
+
+#- name: create disk(s) from vm base image
+#  vars:
+#    node_image: "{{ topology_node.name }}-{{ item }}-{{ disk_name }}"
+#  shell: |
+#      set -ex
+#      if (rbd showmapped | grep "{{ node_image }}" |  awk -F " " '{print $4; exit;}' == {{ node_image }}); then
+#        rbd_dev=`rbd showmapped | grep "{{ node_image }}" |  awk -F " " '{print $6; exit;}'`
+#      else
+#        rbd_dev=`rbd map {{ rbd_namespace_url }}/{{ node_image }}`
+#      fi
+#      device=$rbd_dev
+#  register: rbd_device
+#
 # For installation the parallel run should be on the creation of the VMs as the amount is what needs to be paralleled
 - name: create vm's
   shell: |
+      virsh destroy {{ topology_node.name }}-{{ item }}
+      virsh undefine {{ topology_node.name }}-{{ item }}
       virt-install --name {{ topology_node.name }}-{{ item }} \
           {% if topology_node.disks|count > 0 %}
           {% for disk_name, disk_values in topology_node.disks.items() %}
-          {% if disk_values.import_url is defined and disk_values.import_url %}
-           --disk path={{ base_image_path }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus=
-           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format=qcow2,cache={{ disk_values.cache }} \
+          {% if provision.rbd.on %}
+          --disk path=rbd:///dummy_rbd_placeholder/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.{{ img_format }} \
+          {% elif disk_values.import_url is defined and disk_values.import_url %}
+           {%- if topology_node.disks.disk1.bus is defined %}{{ topology_node.disks.disk1.bus }}{% else %}{{ provision.disk.bus }}{% endif %},format={{ img_format }},cache={{ disk_values.cache }} \
           {% else %}
            --disk path={{ disk_pool }}/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.qcow2,device=disk,bus={{ provision.disk.bus }},format=qcow2,cache={{ disk_values.cache }} \
           {% endif -%}
@@ -75,7 +105,23 @@
            --graphics vnc,listen={{ provision.vnc.external | ternary('0.0.0.0','127.0.0.1') }},password={{ provision.vnc.password if provision.vnc.password is defined else '' }} \
            --noautoconsole \
            --autostart \
-           --rng /dev/urandom {{ provision.get('virtopts', '') }}
+           --rng /dev/urandom {{ provision.get('virtopts', '') }} --check all=off \
+           --print-xml > /tmp/{{ topology_node.name }}-{{ item }}.xml
+  with_items: "{{ topology_node.node_indexes }}"
+
+#          {% for disk_name, disk_values in topology_node.disks.items() %}
+#          {% if provision.rbd.on %}
+#          --disk path=rbd:///dummy_rbd_placeholder/{{ topology_node.name }}-{{ item }}-{{ disk_name }}.{{ img_format }} \
+
+- name: Fix the XML disk records if we are deploying RBD
+  include_tasks: rbd_xmlfix.yml
+  loop: "{{ topology_node.node_indexes }}"
+
+- name: Start VMs
+  virt:
+    name: "{{ topology_node.name }}-{{ item }}"
+    command: start
+    state: running
   with_items: "{{ topology_node.node_indexes }}"
   register: vm_install
   async: 7200
