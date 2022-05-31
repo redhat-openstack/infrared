@@ -1,0 +1,71 @@
+---
+- name: Make sure the pre-prepared RBD volume pool is started and ready for use
+  virt_pool:
+    command: start
+    state: active
+    name: "{{ provision.pool.name }}"
+
+- name: Create RBD namespace for this deployment
+  shell: |
+      if [[ ! `rbd namespace create --pool {{ pool_name }} --namespace {{ provision.rbd.namespace }}` ]]; then
+        echo "Namespace already exists, no need to create it"
+      fi
+
+- name: Fresh clone golden image into my namespace and print info
+  shell: |
+      rbd rm {{ rbd_clone_url }} || true
+      rbd clone {{ provision.rbd.source }} {{ rbd_clone_url }} --rbd_default_clone_format=2 || true
+      rbd info {{ rbd_clone_url }}
+
+- name: Map the image into /dev/rbd block device
+  shell: |
+      rbd map {{ rbd_clone_url }}
+  register: rbd_dev
+
+- name: Store the local mapped rbd blockdevice as a fact
+  set_fact:
+      rbd_mapped_dev: "{{ rbd_dev.stdout }}"
+
+- name: adjust cloned rbd image clone for this run
+  shell: |
+      set -ex
+      export LIBGUESTFS_BACKEND=direct
+
+      RBD_CLONE={{ rbd_mapped_dev }}
+
+      virt-sysprep --format=raw -a $RBD_CLONE --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
+      virt-customize --format=raw -a $RBD_CLONE \
+          --run-command 'yum remove -y cloud-init*' \
+          --root-password password:redhat \
+          --run-command 'echo "UseDNS no" >> /etc/ssh/sshd_config' \
+          --mkdir /root/.ssh \
+          --chmod 0700:/root/.ssh \
+          --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
+          --delete /etc/dhcp/dhclient.conf \
+          --selinux-relabel
+
+- name: Snapshot and protect modified image to use it as base for VMs
+  shell: |
+          rbd snap create {{ rbd_clone_url }}@virsh || true
+          rbd snap protect {{ rbd_clone_url }}@virsh || true
+
+- name: Record the name of the golden parent snapshot as fact
+  set_fact:
+    golden_snapshot: "{{ rbd_clone_url }}@virsh"
+    golden_snapshot_url: "'rbd:///'{{ rbd_clone_url }}@virsh"
+
+- name: Fresh clone silver image into my namespace and print info
+  shell: |
+      rbd rm {{ rbd_empty_clone_url }} || true
+      rbd clone {{ provision.rbd.dummy.source }} {{ rbd_empty_clone_url }} --rbd_default_clone_format=2 || true
+      rbd info {{ rbd_empty_clone_url }}
+
+- name: Snapshot and protect modified image to use it as base for VMs
+  shell: |
+          rbd snap create {{ rbd_empty_clone_url }}@virsh || true
+          rbd snap protect {{ rbd_empty_clone_url }}@virsh || true
+
+- name: Record the name of the silver parent snapshot as fact
+  set_fact:
+    silver_snapshot: "{{ rbd_empty_clone_url }}@virsh"
+    silver_snapshot_url: "'rbd:///'{{ rbd_empty_clone_url }}@virsh"
