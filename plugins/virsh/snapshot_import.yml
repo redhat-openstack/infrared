@@ -1,7 +1,8 @@
 ---
 - name: Import snapshots of virtual machines
   hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
-  gather_facts: yes
+  #gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   vars:
     vm_prefix: "{{ provision.prefix | default('') }}"
@@ -10,68 +11,69 @@
     ir_home: "{{ lookup('env', 'IR_HOME') | default(lookup('env', 'HOME') ~ '/.infrared', true) }}"
     inventory_cmd: "{{ (lookup('env', 'VIRTUAL_ENV') != '') | ternary(lookup('env', 'VIRTUAL_ENV') ~ '/bin/ansible-inventory', 'ansible-inventory') }}"
   tasks:
-    - name: Assert that we are using a compatible hypervisor
-      assert:
-        that:
-          - ansible_facts['os_family'] == 'RedHat'
-          - ansible_facts['distribution_version'] is version('8.2', '>=')
-
-    - name: Install required packages
-      package:
-        name: libguestfs-tools-c
-        state: present
-
-    - name: Get info about existing VM's
-      virt:
-        command: list_vms
-      register: _virt_list
-
-    - name: Create the list of existing VM's to remove
-      set_fact:
-        _vm_to_remove_list: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
-
-    - name: Stop any running VM's
-      shell: |
-        set -eo pipefail
-        RETURN_CODE=0
-        if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
-          virsh destroy {{ item }}
-          RETURN_CODE=2
-        fi
-        exit ${RETURN_CODE}
-      args:
-        executable: /bin/bash
-      loop: "{{ _vm_to_remove_list }}"
-      register: _vm_stop
-      changed_when: _vm_stop.rc == 2
-      failed_when: _vm_stop.rc not in [0, 2]
-
-    - name: Wait for all VM's to be stopped
-      command: |
-        virsh domstate {{ item }}
-      changed_when: False
-      register: _vm_shutdown
-      until: _vm_shutdown.stdout.find('shut off') != -1
-      retries: 5
-      delay: 60
-      loop: "{{ _vm_to_remove_list }}"
-
-    - name: Delete any disk images related to running VM's
-      shell: |
-        set -o pipefail
-        for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
-          rm -f ${vdisk}
-        done
-      args:
-        executable: /bin/bash
-      loop: "{{ _vm_to_remove_list }}"
-
-    - name: Undefine all running VM's
-      virt:
-        name: "{{ item }}"
-        command: undefine
-      failed_when: false
-      loop: "{{ _vm_to_remove_list }}"
+#    - name: Assert that we are using a compatible hypervisor
+#      assert:
+#        that:
+#          - ansible_facts['os_family'] == 'RedHat'
+#          - ansible_facts['distribution_version'] is version('8.2', '>=')
+#
+#    - name: Install required packages
+#      package:
+#        name: libguestfs-tools-c
+#        state: present
+#      when: not provision.rbd.on
+#
+#    - name: Get info about existing VM's
+#      virt:
+#        command: list_vms
+#      register: _virt_list
+#
+#    - name: Create the list of existing VM's to remove
+#      set_fact:
+#        _vm_to_remove_list: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
+#
+#    - name: Stop any running VM's
+#      shell: |
+#        set -eo pipefail
+#        RETURN_CODE=0
+#        if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
+#          virsh destroy {{ item }}
+#          RETURN_CODE=2
+#        fi
+#        exit ${RETURN_CODE}
+#      args:
+#        executable: /bin/bash
+#      loop: "{{ _vm_to_remove_list }}"
+#      register: _vm_stop
+#      changed_when: _vm_stop.rc == 2
+#      failed_when: _vm_stop.rc not in [0, 2]
+#
+#    - name: Wait for all VM's to be stopped
+#      command: |
+#        virsh domstate {{ item }}
+#      changed_when: False
+#      register: _vm_shutdown
+#      until: _vm_shutdown.stdout.find('shut off') != -1
+#      retries: 5
+#      delay: 60
+#      loop: "{{ _vm_to_remove_list }}"
+#
+#    - name: Delete any disk images related to running VM's
+#      shell: |
+#        set -o pipefail
+#        for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+#          rm -f ${vdisk}
+#        done
+#      args:
+#        executable: /bin/bash
+#      loop: "{{ _vm_to_remove_list }}"
+#
+#    - name: Undefine all running VM's
+#      virt:
+#        name: "{{ item }}"
+#        command: undefine
+#      failed_when: false
+#      loop: "{{ _vm_to_remove_list }}"
 
     - name: Read the exported manifest file
       slurp:
@@ -82,79 +84,104 @@
       set_fact:
         _virsh_snapshot_manifest_content: "{{ _virsh_snapshot_manifest_file.content | b64decode | from_json }}"
 
+    - debug:
+        msg: "{{ _virsh_snapshot_manifest_content }}"
+
     - name: Import the downloaded content
       block:
         - name: Import the disk images
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
             dest: "{{ provision.disk.pool }}/"
-            checksum: "{{ item.checksum }}"
+            #checksum: "{{ item.checksum }}"
             remote_src: yes
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
           loop_control:
             label: "{{ item.path | basename }}"
 
-        - name: Import the nvram images
-          copy:
-            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-            dest: "{{ provision.disk.pool }}/../qemu/nvram/"
-            checksum: "{{ item.checksum }}"
-            remote_src: yes
-          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
-          loop_control:
-            label: "{{ item.path | basename }}"
+#        - name: Import the nvram images
+#          copy:
+#            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+#            dest: "{{ provision.disk.pool }}/../qemu/nvram/"
+#            checksum: "{{ item.checksum }}"
+#            remote_src: yes
+#          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
+#          loop_control:
+#            label: "{{ item.path | basename }}"
 
         - name: Import the VM configuration
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
             dest: "/etc/libvirt/qemu/"
-            checksum: "{{ item.checksum }}"
+            #checksum: "{{ item.checksum }}"
             remote_src: yes
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
           loop_control:
             label: "{{ item.path | basename }}"
 
-        - name: Fetch the infrared workspace
-          fetch:
-            src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
-            dest: "{{ src_workspace }}/"
-            flat: yes
+#        - name: Fetch the infrared workspace
+#          fetch:
+#            src: "{{ provision.virsh.snapshot.path }}/infrared-workspace.tgz"
+#            dest: "{{ src_workspace }}/"
+#            flat: yes
+#
+#        - name: Import the infrared workspace
+#          shell: |-
+#            IR_ACTIVE_WORKSPACE=$({{ ir_cmd }} workspace list --active)
+#            IR_NEW_WORKSPACE="workspace_$(date +%Y-%m-%d_%H-%M-%S)"
+#            {{ ir_cmd }} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_NEW_WORKSPACE}
+#          delegate_to: localhost
+#          args:
+#            executable: /bin/bash
+#      always:
+#        - name: Clean up the snapshot path
+#          file:
+#            path: "{{ provision.virsh.snapshot.path }}"
+#            state: absent
+#          when:
+#            - provision.virsh.snapshot.cleanup | bool
 
-        - name: Import the infrared workspace
-          shell: |-
-            IR_ACTIVE_WORKSPACE=$({{ ir_cmd }} workspace list --active)
-            IR_NEW_WORKSPACE="workspace_$(date +%Y-%m-%d_%H-%M-%S)"
-            {{ ir_cmd }} workspace import {{ src_workspace }}/infrared-workspace.tgz --name ${IR_NEW_WORKSPACE}
-          delegate_to: localhost
-          args:
-            executable: /bin/bash
-      always:
-        - name: Clean up the snapshot path
-          file:
-            path: "{{ provision.virsh.snapshot.path }}"
-            state: absent
-          when:
-            - provision.virsh.snapshot.cleanup | bool
+#    - name: Change machine type to work on the current hypervisor (pc)
+#      lineinfile:
+#        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+#        regexp: "(.*)machine='pc-i440fx.*'(.*)"
+#        line: "\\1machine='pc'\\2"
+#        backrefs: true
+#      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+#      loop_control:
+#        label: "{{ item.path | basename }}"
+#
+#    - name: Change machine type to work on the current hypervisor (q35)
+#      lineinfile:
+#        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+#        regexp: "(.*)machine='pc-q35.*'(.*)"
+#        line: "\\1machine='q35'\\2"
+#        backrefs: true
+#      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+#      loop_control:
+#        label: "{{ item.path | basename }}"
 
-    - name: Change machine type to work on the current hypervisor (pc)
-      lineinfile:
-        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-        regexp: "(.*)machine='pc-i440fx.*'(.*)"
-        line: "\\1machine='pc'\\2"
-        backrefs: true
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+    - name: Find xml disk records
+      xml:
+        path: "/etc/libvirt/qemu/{{ item }}.xml"
+        xpath: "/domain/devices/disk[@type='network']/source[@name]"
+        content: attribute
+      loop: "{{ _virsh_snapshot_manifest_content.servers | map(attribute='name') | list }}"
+      when: provision.rbd.on
+      register: servers_disks
+
+    - name: Create the node to disk mapping for the RBD import
+      set_fact:
+        node_disks: "{{ node_disks | default([]) + [{ 'node_name': disk_xml.item , 'disks': disk_xml.matches | map(attribute='source') | map(attribute='name') | list }] }}"
+      loop: "{{ servers_disks.results | selectattr('item') | list }}"
       loop_control:
-        label: "{{ item.path | basename }}"
+        loop_var: disk_xml
 
-    - name: Change machine type to work on the current hypervisor (q35)
-      lineinfile:
-        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-        regexp: "(.*)machine='pc-q35.*'(.*)"
-        line: "\\1machine='q35'\\2"
-        backrefs: true
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
+#    - name: print it good
+#      debug:
+#        var: node_disks
+
+#    - fail: msg="fail"
 
     - name: Change pool path to the correct location
       xml:
@@ -172,6 +199,35 @@
           {%-   endfor %}
           {%- endfor %}
           {{- _server_image_map }}
+      when: not provision.rbd.on
+
+    - name: Construct set of { server, image } mappings for Ansible to iterate over
+      set_fact:
+        server_image_map: >-
+          {%- set _server_image_map = [] %}
+          {%- for server in node_disks  %}
+          {%-   for image in server['disks'] %}
+          {%-     set _ = _server_image_map.append({'server': server['node_name'], 'image': image | basename }) %}
+          {%-   endfor %}
+          {%- endfor %}
+          {{- _server_image_map }}
+      when: provision.rbd.on
+
+    - name: print it good
+      debug:
+        var: server_image_map
+
+    - name: Change the pool and the namespace for the RBD image
+      xml:
+        path: "/etc/libvirt/qemu/{{ item.server }}.xml"
+        xpath: "/domain/devices/disk[@type='network']/source[@name='{{ provision.disk.pool }}/{{ provision.rbd.namespace }}/{{ item.image }}']"
+        attribute: "name"
+        value: "{{ provision.disk.pool }}/{{ provision.rbd.dest.namespace }}/{{ item.image }}"
+      loop: "{{ server_image_map }}"
+      when: provision.rbd.on
+
+#    - fail:
+#        msg: "here before defining it"
 
     - name: Eliminate serial if serial_files is disabled
       xml:
@@ -191,15 +247,43 @@
         - not provision.serial.files | bool
       loop: "{{ _virsh_snapshot_manifest_content.servers | map(attribute='name') | list }}"
 
-    - name: Change nvram path to the correct location
-      lineinfile:
-        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-        regexp: "(.*)/var/lib/libvirt/qemu/nvram(.*)"
-        line: "\\1{{ provision.disk.pool }}/../qemu/nvram/\\2"
-        backrefs: true
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
+#    - name: Change nvram path to the correct location
+#      lineinfile:
+#        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+#        regexp: "(.*)/var/lib/libvirt/qemu/nvram(.*)"
+#        line: "\\1{{ provision.disk.pool }}/../qemu/nvram/\\2"
+#        backrefs: true
+#      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+#      loop_control:
+#        label: "{{ item.path | basename }}"
+
+    - name: Create RBD namespace for the imported RBD deployment
+      shell: |
+          if [[ ! `rbd namespace create --pool {{ provision.disk.pool }} --namespace {{ provision.rbd.dest.namespace }}` ]]; then
+            echo "Namespace already exists, no need to create it"
+          fi
+      when: provision.rbd.on
+
+    - name: Clone all images from the desired namespace into newly specified one
+      vars:
+        src: "{{ provision.disk.pool }}/{{ provision.rbd.namespace }}/{{ item.image }}"
+        dest: "{{ provision.disk.pool }}/{{ provision.rbd.dest.namespace }}/{{ item.image }}"
+        snapshot: "{{ provision.rbd.snapname }}"
+      shell: |
+          rbd clone {{ src }}@{{ snapshot }} {{ dest }} --rbd_default_clone_format=2
+          rbd info {{ dest }}
+      loop: "{{ server_image_map }}"
+      ignore_errors: yes
+      when: provision.rbd.on
+
+    - name: Change the pool and the namespace for the RBD image
+      xml:
+        path: "/etc/libvirt/qemu/{{ item.server }}.xml"
+        xpath: "/domain/devices/disk[@type='network']/source[@name='{{ provision.disk.pool }}/{{ provision.rbd.namespace }}/{{ item.image }}']"
+        attribute: "name"
+        value: "{{ provision.disk.pool }}/{{ provision.rbd.dest.namespace }}/{{ item.image }}"
+      loop: "{{ server_image_map }}"
+      when: provision.rbd.on
 
     # We use command here, because the virt module needs the raw XML
     # and a lookup will not work remotely. We could slurp all the files,
@@ -220,106 +304,106 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - name: Add the imported ssh key to the remote hypervisor
-      authorized_key:
-        user: root
-        state: present
-        key: "{{ lookup('file', ir_home ~ '/.workspaces/active/id_rsa.pub') }}"
+#    - name: Add the imported ssh key to the remote hypervisor
+#      authorized_key:
+#        user: root
+#        state: present
+#        key: "{{ lookup('file', ir_home ~ '/.workspaces/active/id_rsa.pub') }}"
 
-    - name: Use the current hypervisor key for direct connections to VMs
-      replace:
-        path: "{{ ir_home }}/.workspaces/active/hosts"
-        regexp: "ansible_ssh_private_key_file=\\/[a-zA-Z./0-9_-]+\\/id_rsa-[a-zA-Z./0-9_-]+ "
-        replace: "ansible_ssh_private_key_file={{ provision.host.key }} "
-      delegate_to: localhost
+#    - name: Use the current hypervisor key for direct connections to VMs
+#      replace:
+#        path: "{{ ir_home }}/.workspaces/active/hosts"
+#        regexp: "ansible_ssh_private_key_file=\\/[a-zA-Z./0-9_-]+\\/id_rsa-[a-zA-Z./0-9_-]+ "
+#        replace: "ansible_ssh_private_key_file={{ provision.host.key }} "
+#      delegate_to: localhost
+#
+#    - name: Use the current hypervisor key for proxy connections to VMs
+#      replace:
+#        path: "{{ ir_home }}/.workspaces/active/hosts"
+#        regexp: '-i [\.a-zA-Z0-9\/\_-]+ '
+#        replace: "-i {{ provision.host.key }} "
+#      delegate_to: localhost
+#
+#    - name: Adjust the imported workspace inventory for the new hypervisor
+#      replace:
+#        path: "{{ ir_home }}/.workspaces/active/hosts"
+#        regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
+#        replace: "{{ provision.host.address[0] }}"
+#      delegate_to: localhost
+#
+#    - name: Read the new inventory
+#      shell: >-
+#        {{ inventory_cmd }} -i {{ ir_home }}/.workspaces/active/hosts --list
+#      register: _new_ir_inventory
+#      delegate_to: localhost
+#      args:
+#        executable: /bin/bash
+#      environment:
+#        ANSIBLE_VERBOSITY: 0
 
-    - name: Use the current hypervisor key for proxy connections to VMs
-      replace:
-        path: "{{ ir_home }}/.workspaces/active/hosts"
-        regexp: '-i [\.a-zA-Z0-9\/\_-]+ '
-        replace: "-i {{ provision.host.key }} "
-      delegate_to: localhost
+#    - name: Wait until boot completes then finalise access
+#      vars:
+#        _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
+#        _running_servers: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
+#      block:
+#        - name: Wait until the boot has completed
+#          shell: >-
+#            ssh
+#            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
+#            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
+#            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
+#            'systemctl is-system-running'
+#            | grep -e running -e degraded
+#          args:
+#            executable: /bin/bash
+#          delegate_to: localhost
+#          register: _wait_boot_complete
+#          delay: 60
+#          retries: 30
+#          until:
+#            - _wait_boot_complete.rc == 0
+#          loop: "{{ _running_servers }}"
 
-    - name: Adjust the imported workspace inventory for the new hypervisor
-      replace:
-        path: "{{ ir_home }}/.workspaces/active/hosts"
-        regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
-        replace: "{{ provision.host.address[0] }}"
-      delegate_to: localhost
-
-    - name: Read the new inventory
-      shell: >-
-        {{ inventory_cmd }} -i {{ ir_home }}/.workspaces/active/hosts --list
-      register: _new_ir_inventory
-      delegate_to: localhost
-      args:
-        executable: /bin/bash
-      environment:
-        ANSIBLE_VERBOSITY: 0
-
-    - name: Wait until boot completes then finalise access
-      vars:
-        _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
-        _running_servers: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
-      block:
-        - name: Wait until the boot has completed
-          shell: >-
-            ssh
-            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
-            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
-            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
-            'systemctl is-system-running'
-            | grep -e running -e degraded
-          args:
-            executable: /bin/bash
-          delegate_to: localhost
-          register: _wait_boot_complete
-          delay: 60
-          retries: 30
-          until:
-            - _wait_boot_complete.rc == 0
-          loop: "{{ _running_servers }}"
-
-        - name: Update /etc/hosts with VM's details
-          lineinfile:
-            dest: /etc/hosts
-            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
-            regexp: ".*{{ item.name }}$"
-            state: present
-          loop: "{{ _running_servers }}"
-
-        - name: Fetch the remote hypervisor's public ssh key
-          fetch:
-            src: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa.pub"
-            dest: "{{ src_workspace }}/"
-          register: _remote_ssh_public_key
-
-        - name: Copy the remote hypervisor's public ssh key into the VM authorized_keys
-          shell: >-
-            ssh
-            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
-            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
-            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
-            'tee -a ~/.ssh/authorized_keys' < {{ _remote_ssh_public_key['dest'] }}
-          args:
-            executable: /bin/bash
-          delegate_to: localhost
-          loop: "{{ _running_servers }}"
-
-        - when: _inventory['undercloud-0'] is defined
-          block:
-            - name: Get the compose/puddle version from the undercloud
-              shell: >-
-                ssh
-                {{ _inventory['undercloud-0']['ansible_ssh_common_args'] }}
-                -i {{ _inventory['undercloud-0']['ansible_ssh_private_key_file'] }}
-                {{ _inventory['undercloud-0']['ansible_user'] }}@{{ _inventory['undercloud-0']['ansible_host'] }}
-                'cat ~/core_puddle_version || echo "not found"'
-              register: _remote_compose_version
-              args:
-                executable: /bin/bash
-              delegate_to: localhost
-
-            - name: Output the compose/puddle version
-              debug:
-                msg: "Build mark: core_puddle={{ _remote_compose_version.stdout }}"
+#        - name: Update /etc/hosts with VM's details
+#          lineinfile:
+#            dest: /etc/hosts
+#            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
+#            regexp: ".*{{ item.name }}$"
+#            state: present
+#          loop: "{{ _running_servers }}"
+#
+#        - name: Fetch the remote hypervisor's public ssh key
+#          fetch:
+#            src: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa.pub"
+#            dest: "{{ src_workspace }}/"
+#          register: _remote_ssh_public_key
+#
+#        - name: Copy the remote hypervisor's public ssh key into the VM authorized_keys
+#          shell: >-
+#            ssh
+#            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
+#            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
+#            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
+#            'tee -a ~/.ssh/authorized_keys' < {{ _remote_ssh_public_key['dest'] }}
+#          args:
+#            executable: /bin/bash
+#          delegate_to: localhost
+#          loop: "{{ _running_servers }}"
+#
+#        - when: _inventory['undercloud-0'] is defined
+#          block:
+#            - name: Get the compose/puddle version from the undercloud
+#              shell: >-
+#                ssh
+#                {{ _inventory['undercloud-0']['ansible_ssh_common_args'] }}
+#                -i {{ _inventory['undercloud-0']['ansible_ssh_private_key_file'] }}
+#                {{ _inventory['undercloud-0']['ansible_user'] }}@{{ _inventory['undercloud-0']['ansible_host'] }}
+#                'cat ~/core_puddle_version || echo "not found"'
+#              register: _remote_compose_version
+#              args:
+#                executable: /bin/bash
+#              delegate_to: localhost
+#
+#            - name: Output the compose/puddle version
+#              debug:
+#                msg: "Build mark: core_puddle={{ _remote_compose_version.stdout }}"
