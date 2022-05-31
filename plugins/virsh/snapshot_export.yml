@@ -11,7 +11,7 @@
       package:
         name:
           - libguestfs-tools-c
-          - parallel
+          #- parallel TODO: not always available
         state: present
 
     - name: Get info about existing VM's
@@ -23,12 +23,21 @@
       set_fact:
         _vm_list: "{{ _virt_list.list_vms | select('match', vm_prefix ~ provision.virsh.snapshot.servers) | list }}"
 
+# TODO: detect cephfs, override path if detected? Maybe no, maybe use param rather?
+
+#    - name: If RBD is used, overwrite snapshot destination
+#      set_fact:
+#        provision.virsh.snapshot.path: "/mnt/mycephfs"
+
+    # TODO - figure this out - possibly replace with while loop or test disk1.os = True
     - name: Shut down any running VM's
       shell: |
         set -eo pipefail
         RETURN_CODE=0
         if ! virsh domstate {{ item }} | grep -qw 'shut off'; then
           virsh shutdown {{ item }}
+          sleep 5
+          virsh destroy {{ item }} || true
           RETURN_CODE=2
         fi
         exit ${RETURN_CODE}
@@ -39,6 +48,8 @@
       changed_when: _vm_stop.rc == 2
       failed_when: _vm_stop.rc not in [0, 2]
 
+# TODO ADD ACPI checks for VMs that do not have OS yet...
+
     - name: Wait for all VM's to be shut down
       command: |
         virsh domstate {{ item }}
@@ -46,8 +57,11 @@
       register: _vm_shutdown
       until: _vm_shutdown.stdout.find('shut off') != -1
       retries: "{{ vm_shutdown_timeout | default(30) }}"
-      delay: 60
+      delay: 10
       loop: "{{ _vm_list }}"
+
+#    - name: Fail
+#      fail: msg="Reached stop"
 
     - name: Make sure that the snapshot path exists
       file:
@@ -70,17 +84,26 @@
             dest: "{{ provision.virsh.snapshot.path }}/"
 
         - name: Sparsify and export disk images
-          shell: |-
-            set -o pipefail
-            DISK_LIST=""
-            for dom in {{ _vm_list | join(' ') }}; do
-              for vdisk in $(virsh domblklist $dom | awk "/$dom/ {print \$2}"); do
-                DISK_LIST="$DISK_LIST $vdisk"
-              done
+          shell: |
+            for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+              virt-sparsify --in-place ${vdisk}
+              qemu-img convert -O qcow2 -c ${vdisk} {{ provision.virsh.snapshot.path }}/${vdisk##*/}
             done
-            parallel --will-cite --use-cores-instead-of-threads --jobs 50% 'virt-sparsify --in-place {}; qemu-img convert -O qcow2 -c {} {{ provision.virsh.snapshot.path }}/$(basename {})' ::: $DISK_LIST
           args:
             executable: /bin/bash
+          loop: "{{ _vm_list }}"
+          when: not provision.rbd.on
+
+        - name: Snapshot the states of all RBD images in image repository
+          ignore_errors: yes
+          shell: |
+            echo "{{ provision.rbd.namespace }}" > "{{ provision.virsh.snapshot.path }}/namespace-info.txt"
+            for vdisk in $(virsh domblklist {{ item }} | awk '/{{ item }}/ {print $2}'); do
+              rbd snap create ${vdisk}@{{ provision.rbd.snapname }}
+              rbd snap protect ${vdisk}@{{ provision.rbd.snapname }}
+            done
+          loop: "{{ _vm_list }}"
+          when: provision.rbd.on
 
         - name: Save nvram image
           shell: |
@@ -91,6 +114,7 @@
           args:
             executable: /bin/bash
           loop: "{{ _vm_list }}"
+          when: not provision.rbd.on
 
         - name: Save VM definitions
           copy:

@@ -2,13 +2,10 @@
 - set_fact:
     topology_node: "{{ node.value }}"
 
+#default: "/var/lib/libvirt/images"
 - name: define disk pool path
   set_fact:
-      disk_pool: "{{ provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path }}"
-
-- name: define disk pool name
-  set_fact:
-      pool_name: "{{ provision.pool.name }}"
+      disk_pool: "{{ (provision.disk.pool if (topology_node.disks.disk1.path == None) else topology_node.disks.disk1.path) if not provision.rbd.on else rbd_namespace_url_libguestfs }}"
 
 - block:
       #todo(yfried): move this to verification section (before execution)
@@ -33,13 +30,16 @@
           follow: yes
         when: disk_pool | default(False)
 
-
       - name: Check volume pool
         command: >
           virsh pool-uuid "{{ pool_name }}"
         register: pool_check
         ignore_errors: true
         changed_when: false
+
+      - name: Print pool_check status
+        debug:
+            msg: "pool check is: {{pool_check}}"
 
       - name: create the volume pool xml file
         template:
@@ -49,24 +49,32 @@
 
       - name: Define volume pool
         command: "virsh pool-define /tmp/volume_pool.xml"
-        when: pool_check is failed
+        when:
+          - pool_check is failed
+          - provision.rbd.on
 
       - name: Start volume pool
         virt_pool:
           command: start
           state: active
           name: "{{ pool_name }}"
+        when: provision.rbd.on
 
       # Cannot be done in the same start operation as above, apparently
       - name: Mark volume pool as autostart
         virt_pool:
           name: "{{ pool_name }}"
           autostart: "yes"
+        when: provision.rbd.on
 
       # For disks usually it will be only 1 disk so the async will run on nodes rather than disks creation
       - name: create disk(s) from vm base image
         vars:
             net_scripts: /etc/sysconfig/network-scripts
+            libguestfs_opts: "{{ ' --format=raw ' if provision.rbd.on }}"
+            img_format: "{{ 'rbd' if provision.rbd.on else 'qcow2' }}"
+            base_image_path: "{{ rbd_namespace_url_libguestfs if provision.rbd.on }}"
+            #golden_image_name: "{{ provision.rbd.clonename }}@virsh"
         shell: |
             set -exo pipefail
             export LIBGUESTFS_PATH=/opt/appliance
@@ -74,33 +82,49 @@
 
             {% for num in topology_node.node_indexes %}
             {% for disk_name, disk_values in topology_node.disks.items() %}
-            {% set node_image = '{0}-{1}-{2}.qcow2'.format(topology_node.name, num, disk_name) %}
-            {% set image_name = (disk_values.import_url|default('') or topology_node.import_url|default('') or url) | basename %}
+            {% set node_image = '{0}-{1}-{2}.{3}'.format(topology_node.name, num, disk_name,img_format) %}
+            {% set image_name = (disk_values.import_url|default('') or topology_node.import_url|default('') or golden_image_name|default('')  or url) | basename %}
             {% if not disk_values.import_url %}
-
-            # create empty disk
-            qemu-img create -f qcow2 -o preallocation={{ disk_values.preallocation }} {{ disk_pool  }}/{{ node_image }} {{ disk_values.size }}
 
             ## Prepare disk image
 
             {% if disk_name == 'disk1' and topology_node.deploy_os|default(True) and topology_node.supports_libguestfs|default(True) -%}
-            # expand (copy-content) into new image in case of system disk
-            # virt-resize needs target file with expected size to already exists
-            os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
-            # Try to find the "root" partition or an first xfs partition. Defaults to /dev/sda1 else.
-            partitions=`virt-filesystems --csv --long --no-title -a {{ base_image_path }}/{{ image_name }}`
-            root_part=`awk -F "," '{ if ($4 == "root") {print $1; exit;} }' <<<"${partitions}"`
-            if [[ -z "$root_part" ]]; then
-                root_part=`awk -F "," '{ if ($3 == "xfs") {print $1; exit;} }' <<<"${partitions}"`
-            fi
+
+            device={{ rbd_namespace_url }}/{{ node_image }}
+
+            {% if provision.rbd.on %}
+            # if (rbd clone {{ rbd_clone_url }}@virsh {{ rbd_namespace_url }}/{{ node_image }}); then
+            rbd clone {{ golden_snapshot }} {{ rbd_namespace_url }}/{{ node_image }} || true
+            rbd resize --size {{ disk_values.size }} {{ rbd_namespace_url }}/{{ node_image }} || true
+            #if (rbd showmapped | grep "{{ node_image }}" |  awk -F " " '{print $4; exit;}' == {{ node_image }}); then
+            #  rbd_dev=`rbd showmapped | grep "{{ node_image }}" |  awk -F " " '{print $6; exit;}'`
+            #else
+              rbd_dev_old=`rbd map {{ rbd_namespace_url }}/{{ node_image }}`
+              rbd_dev=`rbd map {{ rbd_namespace_url }}/{{ node_image }}`
+            #fi
+            #fi
+            device=$rbd_dev
+            {% endif %}
+
+            echo "Image name is {{ image_name }}"
+            echo "device var is $device"
+            #exit 1
+
+            # Try to find the "root" partition or an xfs partition. Defaults to /dev/sda1 else.
+            root_part=`virt-filesystems {{ libguestfs_opts }} --csv --long --no-title -a $device | awk -F "," '{ if ($4 == "root") {print $1; exit;} else if ($3 == "xfs") {print $1; exit;} }'`
             root_part=${root_part:-/dev/sda1}
-            virt-resize --expand $root_part {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
+            # TODO replace base_imagE_path with rbd_clone_url@virsh everywhere here
+            # TODO2: virt-resize will fail raw disk and dest clone are the same size
+            # if disk_values.size not {{ rbd_namespace_url }}/{{ node_image }}; only then resize
+            #virt-resize {{ libguestfs_opts }} --expand $root_part {{ base_image_path }}/{{ image_name }} $device
             # We need to regenerate a new machine-id due to DHCP IPv6 not working otherwise
-            virt-sysprep --selinux-relabel -a {{ disk_pool }}/{{ node_image }} \
+            # TODO replace base_imagE_path with rbd_clone_url@virsh everywhere here
+            virt-resize {{ libguestfs_opts }} --expand $root_part $rbd_dev_old $device || true
+            virt-sysprep {{ libguestfs_opts }} -a $device \
                 --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
-            virt-customize -a {{ disk_pool }}/{{ node_image }} \
+            virt-customize {{ libguestfs_opts }} -a $device --selinux-relabel \
             {% for interface in topology_node.interfaces %}
                 {% if loop.index0 == 0 %}
                     --run-command "echo -e \"$NIC_DEFAULT\" > {{ net_scripts }}/ifcfg-eth{{ loop.index0 }}" \
@@ -117,14 +141,26 @@
                 --run-command 'echo /swapfile none swap defaults 0 0 >> /etc/fstab' \
             {% endif -%}{# endif swap #}
                 --selinux-relabel
-            {% endif %}{# endif disk1 #}
+            {# TODO maybe better approach would be using the import workflow and doing RBD there #}
+            {# we do not work with deploy_os enabled diskX - e.g. controller, compute disks or first ceph disk #}
+            {# (meaning we work with silver rbd image here) #}
+            {% elif disk_name == 'disk1' and not topology_node.deploy_os|default(True) %}
+                rbd clone {{ silver_snapshot }} {{ rbd_namespace_url }}/{{ node_image }} || true
+                rbd resize --size {{ disk_values.size }} {{ rbd_namespace_url }}/{{ node_image }} || true
+            # Otoh some VMs need dummy image to customize it based on deployed app(ceph), that is created here
+            {% else %}
+                {# we work with empty disk - like ceph node disks2-x ready for tripleO ceph deployment #}
+                rbd create --size {{ disk_values.size }} {{ rbd_namespace_url }}/{{ node_image }} || true
+            {% endif %}{# endif disk1, topology_node, libguests #}
 
             # todo(yfried): use builtin module for chown
             {% else %}{# else import_url #}
             # in case of import simply copy that image to use as a disk
             cp -rf {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             {% endif %}{# endif not import_url #}
+            {% if not provision.rbd.on %}
             chown qemu:qemu {{ disk_pool }}/{{ node_image }}
+            {% endif %}
             {% endfor %}{# endfor vm disks #}
             {% endfor %}{# endfor vm-type(controller etc) #}
       #  todo(yfried) needs a "creates"
@@ -132,6 +168,7 @@
       #      creates: "create disk(s) from vm base image"
         register: vm_disks
         async: 7200
+        delay: 5
         poll: 0
 
       - name: save disks jids

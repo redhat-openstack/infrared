@@ -1,7 +1,8 @@
 ---
 - name: Import snapshots of virtual machines
   hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
-  gather_facts: yes
+  #gather_facts: yes
+  gather_facts: no
   any_errors_fatal: true
   vars:
     vm_prefix: "{{ provision.prefix | default('') }}"
@@ -20,6 +21,7 @@
       package:
         name: libguestfs-tools-c
         state: present
+      when: not provision.rbd.on
 
     - name: Get info about existing VM's
       virt:
@@ -65,6 +67,7 @@
       args:
         executable: /bin/bash
       loop: "{{ _vm_to_remove_list }}"
+      when: not provision.rbd.on
 
     - name: Undefine all running VM's
       virt:
@@ -82,33 +85,36 @@
       set_fact:
         _virsh_snapshot_manifest_content: "{{ _virsh_snapshot_manifest_file.content | b64decode | from_json }}"
 
+    - debug:
+        msg: "{{ _virsh_snapshot_manifest_content }}"
+
     - name: Import the downloaded content
       block:
         - name: Import the disk images
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
             dest: "{{ provision.disk.pool }}/"
-            checksum: "{{ item.checksum }}"
+            #checksum: "{{ item.checksum }}"
             remote_src: yes
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*qcow2$') | list }}"
           loop_control:
             label: "{{ item.path | basename }}"
 
-        - name: Import the nvram images
-          copy:
-            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
-            dest: "{{ provision.disk.pool }}/../qemu/nvram/"
-            checksum: "{{ item.checksum }}"
-            remote_src: yes
-          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
-          loop_control:
-            label: "{{ item.path | basename }}"
+#        - name: Import the nvram images
+#          copy:
+#            src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
+#            dest: "{{ provision.disk.pool }}/../qemu/nvram/"
+#            checksum: "{{ item.checksum }}"
+#            remote_src: yes
+#          loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*fd$') | list }}"
+#          loop_control:
+#            label: "{{ item.path | basename }}"
 
         - name: Import the VM configuration
           copy:
             src: "{{ provision.virsh.snapshot.path }}/{{ item.path | basename }}"
             dest: "/etc/libvirt/qemu/"
-            checksum: "{{ item.checksum }}"
+            #checksum: "{{ item.checksum }}"
             remote_src: yes
           loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
           loop_control:
@@ -156,6 +162,22 @@
       loop_control:
         label: "{{ item.path | basename }}"
 
+    - name: Find xml disk records
+      xml:
+        path: "/etc/libvirt/qemu/{{ item }}.xml"
+        xpath: "/domain/devices/disk[@type='network']/source[@name]"
+        content: attribute
+      loop: "{{ _virsh_snapshot_manifest_content.servers | map(attribute='name') | list }}"
+      when: provision.rbd.on
+      register: servers_disks
+
+    - name: Create the node to disk mapping for the RBD import
+      set_fact:
+        node_disks: "{{ node_disks | default([]) + [{ 'node_name': disk_xml.item , 'disks': disk_xml.matches | map(attribute='source') | map(attribute='name') | list }] }}"
+      loop: "{{ servers_disks.results | selectattr('item') | list }}"
+      loop_control:
+        loop_var: disk_xml
+
     - name: Change pool path to the correct location
       xml:
         path: "/etc/libvirt/qemu/{{ item.server }}.xml"
@@ -172,6 +194,35 @@
           {%-   endfor %}
           {%- endfor %}
           {{- _server_image_map }}
+      when: not provision.rbd.on
+
+    - name: Construct set of { server, image } mappings for Ansible to iterate over
+      set_fact:
+        server_image_map: >-
+          {%- set _server_image_map = [] %}
+          {%- for server in node_disks  %}
+          {%-   for image in server['disks'] %}
+          {%-     set _ = _server_image_map.append({'server': server['node_name'], 'image': image | basename }) %}
+          {%-   endfor %}
+          {%- endfor %}
+          {{- _server_image_map }}
+      when: provision.rbd.on
+
+    - name: Server image map print
+      debug:
+        var: server_image_map
+
+    - name: Change the pool and the namespace for the RBD image
+      xml:
+        path: "/etc/libvirt/qemu/{{ item.server }}.xml"
+        xpath: "/domain/devices/disk[@type='network']/source[@name='{{ provision.disk.pool }}/{{ provision.rbd.namespace }}/{{ item.image }}']"
+        attribute: "name"
+        value: "{{ provision.disk.pool }}/{{ provision.rbd.dest.namespace }}/{{ item.image }}"
+      loop: "{{ server_image_map }}"
+      when: provision.rbd.on
+
+#    - fail:
+#        msg: "here before defining it"
 
     - name: Eliminate serial if serial_files is disabled
       xml:
@@ -191,15 +242,43 @@
         - not provision.serial.files | bool
       loop: "{{ _virsh_snapshot_manifest_content.servers | map(attribute='name') | list }}"
 
-    - name: Change nvram path to the correct location
-      lineinfile:
-        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
-        regexp: "(.*)/var/lib/libvirt/qemu/nvram(.*)"
-        line: "\\1{{ provision.disk.pool }}/../qemu/nvram/\\2"
-        backrefs: true
-      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
-      loop_control:
-        label: "{{ item.path | basename }}"
+#    - name: Change nvram path to the correct location
+#      lineinfile:
+#        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+#        regexp: "(.*)/var/lib/libvirt/qemu/nvram(.*)"
+#        line: "\\1{{ provision.disk.pool }}/../qemu/nvram/\\2"
+#        backrefs: true
+#      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+#      loop_control:
+#        label: "{{ item.path | basename }}"
+
+    - name: Create RBD namespace for the imported RBD deployment
+      shell: |
+          if [[ ! `rbd namespace create --pool {{ provision.disk.pool }} --namespace {{ provision.rbd.dest.namespace }}` ]]; then
+            echo "Namespace already exists, no need to create it"
+          fi
+      when: provision.rbd.on
+
+    - name: Clone all images from the desired namespace into newly specified one
+      vars:
+        src: "{{ provision.disk.pool }}/{{ provision.rbd.namespace }}/{{ item.image }}"
+        dest: "{{ provision.disk.pool }}/{{ provision.rbd.dest.namespace }}/{{ item.image }}"
+        snapshot: "{{ provision.rbd.snapname }}"
+      shell: |
+          rbd clone {{ src }}@{{ snapshot }} {{ dest }} --rbd_default_clone_format=2
+          rbd info {{ dest }}
+      loop: "{{ server_image_map }}"
+      ignore_errors: yes
+      when: provision.rbd.on
+
+    - name: Change the pool and the namespace for the RBD image
+      xml:
+        path: "/etc/libvirt/qemu/{{ item.server }}.xml"
+        xpath: "/domain/devices/disk[@type='network']/source[@name='{{ provision.disk.pool }}/{{ provision.rbd.namespace }}/{{ item.image }}']"
+        attribute: "name"
+        value: "{{ provision.disk.pool }}/{{ provision.rbd.dest.namespace }}/{{ item.image }}"
+      loop: "{{ server_image_map }}"
+      when: provision.rbd.on
 
     - name: Change bochs video driver for qxl
       lineinfile:

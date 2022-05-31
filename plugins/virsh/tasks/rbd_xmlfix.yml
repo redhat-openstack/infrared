@@ -1,0 +1,44 @@
+---
+- name: Print the node num and its the disk we work on
+  debug:
+    msg: "{{ item.node_num }} and {{ item.disk_name }}"
+
+- set_fact:
+    xmlfile: "/tmp/{{ topology_node.name }}-{{ item.node_num }}.xml"
+    node_number: "{{ item.node_num }}"
+    disk_name: "{{ item.disk_name }}"
+
+- name: Correct the name of the source RBD image in the XML definition
+  xml:
+    path: "{{ xmlfile }}"
+    xpath: "/domain/devices/disk[@type='network']/source[@name='dummy_rbd_placeholder/{{ topology_node.name }}-{{ node_number }}-{{ disk_name }}.{{ img_format }}']"
+    attribute: "name"
+    value: "{{ pool_name}}/{{ provision.rbd.namespace }}/{{ topology_node.name }}-{{ node_number }}-{{ disk_name }}.{{ img_format }}"
+
+- name: Add ceph monitor host element into the source record
+  xml:
+    path: "{{ xmlfile }}"
+    xpath: "/domain/devices/disk[@type='network']/source[@name='{{ pool_name}}/{{ provision.rbd.namespace }}/{{ topology_node.name }}-{{ node_number }}-{{ disk_name }}.{{ img_format }}']"
+    add_children:
+      - host:
+          name: "titan80.lab.eng.tlv2.redhat.com"
+          port: "6789"
+
+- name: Add auth element to the disk record so it can access the RBD pool
+  xml:
+    path: "{{ xmlfile }}"
+    xpath: "/domain/devices/disk[@type='network']/source[@name='{{ pool_name}}/{{ provision.rbd.namespace }}/{{ topology_node.name }}-{{ node_number }}-{{ disk_name }}.{{ img_format }}']"
+    insertafter: yes
+    add_children:
+      - auth:
+          username: "libvirt"
+
+- name: Add secret element to the disk record so it can access the RBD pool
+  xml:
+    path: "{{ xmlfile }}"
+    xpath: "/domain/devices/disk[@type='network']/auth[@username='libvirt']"
+    add_children:
+      - secret:
+          type: "ceph"
+          uuid: "897987cc-2bdb-4d4b-b96b-20644ba81efd"
+

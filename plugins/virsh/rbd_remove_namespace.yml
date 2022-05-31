@@ -1,0 +1,52 @@
+---
+- name: Detect the state of RBD namespace and print useful info
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: no
+  any_errors_fatal: true
+  tasks:
+    - name: Print command used to list the contents of the RBD namespace
+      ansible.builtin.debug:
+        msg:
+        - "rbd ls --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }}"
+
+#    - name: Print command used to get the storage used by objects in RBD namespace
+#      ansible.builtin.debug:
+#        msg:
+#        - "rbd du --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }}"
+#
+#    - name: Store the storage usage of the RBD namespace for debugging
+#      shell: |
+#        rbd du --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }}
+#      register: _rbd_images_space
+
+    #- name: Show image sizes in the namespace
+    #  ansible.builtin.debug:
+    #    msg: "{{ _rbd_images_space.stdout_lines }}"
+
+    - name: Store the contents of the RBD namespace in variable for looping in simple form
+      shell: |
+        rbd ls --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }}
+      ignore_errors: true
+      register: _rbd_images
+
+    - name: Show images in the namespace
+      ansible.builtin.debug:
+        msg: "{{ _rbd_images.stdout_lines }}"
+
+- name: Iterate through the images in the namespace and remove them
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: no
+  tasks:
+    - name: Include playbook to recursivery remove the images
+      include_tasks: rbd_remove_image_recursive.yml
+      with_list: "{{ _rbd_images.stdout_lines | default([]) }}"
+      loop_control:
+          loop_var: rbd_image
+
+- name: Remove the namespace itself
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: no
+  ignore_errors: true
+  tasks:
+    - shell: |
+        rbd namespace remove --pool {{ provision.rbd.pool }} --namespace {{ provision.rbd.namespace }}

@@ -1,0 +1,77 @@
+- hosts: localhost
+  tasks:
+    - name: Defince custom var
+      set_fact:
+        topology_nodes:
+          - ceph:
+            name: ceph
+            num: 2
+            node_indexes:
+              - 0
+              - 1
+            disks:
+            - disk1:
+                size: 10G
+                point: vda1
+            - disk2:
+                size: 20G
+                point: vda2
+            - disk3:
+                size: 10G
+                point: vda3
+            - disk4:
+                size: 20G
+                point: vda4
+            - disk5:
+                size: 10G
+                point: vda5
+            - disk6:
+                size: 20G
+                point: vda6
+
+    # IR params copied locally in the debug form
+    - set_fact:
+        provision_rbd_namespace: "test01"
+        provision_rbd_clonename: "virshclone"
+        pool_name: "rbd"
+        img_format: "rbd"
+
+    - set_fact:
+        topology_node: "{{ topology_nodes[0] }}"
+        rbd_clone_url: "{{ 'rbd/' + provision_rbd_namespace + '/' + provision_rbd_clonename }}"
+        rbd_namespace_url: "{{ 'rbd/' + provision_rbd_namespace }}"
+        rbd_namespace_url_libguestfs: "{{ 'rbd:///rbd/' + provision_rbd_namespace }}"
+
+    - name: Copy the right XML file from backup to work on
+      copy:
+        src: "/tmp/{{ topology_node.name }}-{{ item }}.xml.backup"
+        dest: "/tmp/{{ topology_node.name }}-{{ item }}.xml"
+      with_items:
+        - "{{ topology_node.node_indexes }}"
+
+    # Create and transform cartesian list of [disk_num, {disks}] into the dict
+    # of [ disk_num: x, disk_name: diskY ] format so we don't need to work
+    # with [0][1] indexes in dependent playbook (its easier to iterate over it),
+    # also let's drop all other unnecesarry info about disks
+    - set_fact:
+        node_disks: "{{ node_disks | default([]) + [{ 'node_num': item[0], 'disk_name': item[1].keys() | first }] }}"
+      with_cartesian:
+        - "{{ topology_node.node_indexes }}"
+        - "{{ topology_node.disks }}"
+
+    - name: Print cartes
+      debug:
+        msg: "{{ node_disks }}"
+
+    - name: Print var
+      debug:
+        var: "{{ node_disks }}"
+
+    - name: Fix the XML disk records if we are deploying RBD
+      include_tasks: rbd_xmlfix.yml
+      with_items: "{{ node_disks }}"
+      register: loop_result
+
+#    - name: Print the results from the main include loop
+#      debug:
+#        var: loop_result

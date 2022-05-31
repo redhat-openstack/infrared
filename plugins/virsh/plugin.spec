@@ -165,7 +165,45 @@ subparsers:
                           Redirect the VMs serial output to files.
                           Files can be found under /var/lib/libvirt/qemu/{prefix-node_name-node_number}-serial.log
                           For example: /var/lib/libvirt/qemu/XYZ-undercloud-0-serial.log
-
+                  rbd-on:
+                      type: Bool
+                      default: False
+                      help: |
+                          Enables experimental RBD snapshot support.
+                  rbd-pool:
+                      type: Value
+                      default: rbd
+                      help: |
+                         Main RBD pool name
+                  rbd-source:
+                      type: Value
+                      help: |
+                         Source golden image to clone from (in RBD URL format: pool/namespace/image).
+                  rbd-dummy-source:
+                      type: Value
+                      help: |
+                         Source for dummy image to be cloned from (in RBD URL format: pool/namespace/image).
+                  rbd-namespace:
+                      type: Value
+                      help: |
+                         Unique RBD namespace for this deployment.
+                  rbd-dest-namespace:
+                      type: Value
+                      help: |
+                         Unique RBD namespace for this deployment.
+                  rbd-clonename:
+                      type: Value
+                      help: |
+                         How to name the "golden image" clone which will be cloned to current namespace and images will be derived from.
+                  rbd-snapname:
+                      type: Value
+                      help: |
+                         Name of global snapshot which will record state of the whole namespace when "export" is run
+                  rbd-cleanup-namespace:
+                      type: Bool
+                      default: False
+                      help: |
+                         This option will remove all images, snapshots and clones from requested namespace
             - title: cleanup
               options:
                   cleanup:
