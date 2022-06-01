@@ -16,6 +16,23 @@
       "message": "recheck",
       "revId": "9d147ee983a096136b1bc6f9161609cb0d1449bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2abc5908_5ca29edc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2022-06-01T09:32:51Z",
+      "side": 1,
+      "message": "So, the issue now appears to be that we\u0027re unable to find any networks for this node:\n\n```\n[stack@undercloud-0 outputs]$ cat RoleNetHostnameMap \nStandalone:\n  canonical:\n  - aio-0.redhat.local\n  ctlplane:\n  - aio-0.ctlplane.redhat.local\n  external:\n  - aio-0.external.redhat.local\n  internal_api:\n  - aio-0.internalapi.redhat.local\n  storage:\n  - aio-0.storage.redhat.local\n  storage_mgmt:\n  - aio-0.storagemgmt.redhat.local\n  storage_nfs:\n  - aio-0.storagenfs.redhat.local\n  tenant:\n  - aio-0.tenant.redhat.local\n```\n\nPotentially something we\u0027re missing the baremetal_deployment.yaml file. Will need to dig into that, but the deployment fails because it can\u0027t find a IP address for the node on the ctlplane network while generating the inventory file.\n\nThe error:\n```\n2022-06-01 09:29:08.899088 | 525400e6-4dcf-ba75-8f8a-00000000000d |       TASK | Generate ansible inventory                                                                                                \n2022-06-01 09:29:11.902574 | 525400e6-4dcf-ba75-8f8a-00000000000d |      FATAL | Generate ansible inventory | localhost | error\u003d{\"changed\": false, \"error\": \"No IPs found for Standalone role on ctlplane network\", \"msg\": \"Error generating inventory for overcloud: No IPs found for Standalone role on ctlplane network\", \"success\": false}\n\n```\n\nError raised from here:\nhttps://github.com/openstack/tripleo-common/blob/master/tripleo_commonhttps://github.com/openstack/tripleo-common/blob/master/tripleo_common/inventory.py#L360/inventory.py#L360",
+      "revId": "9d147ee983a096136b1bc6f9161609cb0d1449bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
