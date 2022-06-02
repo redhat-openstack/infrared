@@ -49,15 +49,6 @@
     - use_network_data|bool
     - install.version|default(undercloud_version)| openstack_release < 17
 
-- name: Add overcloud public IP to ssl configuration
-  become: yes
-  ini_file:
-      path: /etc/pki/tls/openssl.cnf
-      section: ' v3_req '
-      option: subjectAltName
-      value: "IP:{{ external_allocation_pool_start }}"
-  when: not install.overcloud.use.dns.names
-
 - name: Set undercloud/overcloud certificate path fact
   set_fact:
       undercloud_cacert: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
@@ -86,16 +77,13 @@
   with_items: "{{ copy_templates.results }}"
 
 - name: discover undercloud ssl
-  command: "grep -Fq OS_AUTH_URL=https {{ openstackrc }}"
-  vars:
-      openstackrc: ~/stackrc
+  stat:
+    path: "{{ undercloud_cacert }}"
   register: undercloud_ssl
-  failed_when: false
-  changed_when: false
 
 - name: create the self signed SSL
   command: "openssl genrsa -out {{ template_base }}/overcloud-privkey.pem 2048"
-  when: not undercloud_ssl.rc == 0
+  when: not undercloud_ssl.stat.exists
 
 
 # NOTE(oanufrii): OVB deployment does not use network isolation
@@ -110,31 +98,44 @@
   set_fact:
       subj_name: "{{ install.overcloud.stack ~ '.' ~ install.overcloud.domain }}"
       tls_template_name: 'tls-endpoints-public-dns.yaml'
+      ssl_san_type: "DNS"
   when: install.overcloud.use.dns.names
 
 - name: set subject CN and template file when not using dns names
   set_fact:
       subj_name: "{{ external_allocation_pool_start }}"
       tls_template_name: 'tls-endpoints-public-ip.yaml'
+      ssl_san_type: "IP"
   when: not install.overcloud.use.dns.names
+
+- name: Add overcloud public IP or DNS to ssl configuration
+  become: yes
+  ini_file:
+      path: /etc/pki/tls/openssl.cnf
+      section: ' v3_req '
+      option: subjectAltName
+      value: "{{ ssl_san_type }}:{{ external_allocation_pool_start }}"
 
 - name: create CA certificate
   vars:
       self_signed: >
           -new -x509
           -key {{ template_base }}/overcloud-privkey.pem
+          {{ if install.version|default(undercloud_version)| openstack_release >= 17 }}
+          -addext "subjectAltName = {{ ssl_san_type }}:{{ subj_name }}"
+          {{ endif }}
       uc_signed: >
           -newkey rsa:2048 -nodes
           -keyout {{ template_base }}/overcloud-privkey.pem
   command: >
       openssl req
-      {{ uc_signed if undercloud_ssl.rc == 0 else self_signed }}
+      {{ uc_signed if undercloud_ssl.stat.exists else self_signed }}
       -out {{ template_base }}/overcloud-cacert.pem -days 365
       -subj '/C=US/ST=NC/L=Raleigh/O=Red HAt/OU=QE/CN={{ subj_name }}'
 
 - name: process server RSA keys
   command: "openssl rsa -in {{ template_base }}/overcloud-privkey.pem  -out {{ template_base }}/overcloud-privkey.pem"
-  when: undercloud_ssl.rc == 0
+  when: undercloud_ssl.stat.exists
 
 - name: sign request with undercloud CA
   vars:
@@ -148,7 +149,7 @@
       -extfile /etc/pki/tls/openssl.cnf
       -extensions v3_req
       -out {{ template_base }}/overcloud-cacert.pem
-  when: undercloud_ssl.rc == 0
+  when: undercloud_ssl.stat.exists
 
 - name: update the tls template
   replace:
@@ -174,7 +175,7 @@
 - name: register the CA certificate
   command: "cat {{ undercloud_cacert }}"
   register: uc_cacert
-  when: undercloud_ssl.rc == 0
+  when: undercloud_ssl.stat.exists
 
 - name: register the private key
   command: "cat {{ template_base }}/overcloud-privkey.pem"
@@ -182,7 +183,7 @@
 
 - name: insert the content of the CA certificate and private key respectfully
   vars:
-      root_cert: "{{ uc_cacert if undercloud_ssl.rc == 0 else oc_cacert }}"
+      root_cert: "{{ uc_cacert if undercloud_ssl.stat.exists else oc_cacert }}"
   replace:
       dest: "{{ item.dest }}"
       regexp: "{{ item.regex }}"
