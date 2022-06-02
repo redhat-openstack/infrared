@@ -49,15 +49,6 @@
     - use_network_data|bool
     - install.version|default(undercloud_version)| openstack_release < 17
 
-- name: Add overcloud public IP to ssl configuration
-  become: yes
-  ini_file:
-      path: /etc/pki/tls/openssl.cnf
-      section: ' v3_req '
-      option: subjectAltName
-      value: "IP:{{ external_allocation_pool_start }}"
-  when: not install.overcloud.use.dns.names
-
 - name: Set undercloud/overcloud certificate path fact
   set_fact:
       undercloud_cacert: '/etc/pki/ca-trust/source/anchors/undercloud-cacert.pem'
@@ -110,19 +101,32 @@
   set_fact:
       subj_name: "{{ install.overcloud.stack ~ '.' ~ install.overcloud.domain }}"
       tls_template_name: 'tls-endpoints-public-dns.yaml'
+      ssl_san_type: "DNS"
   when: install.overcloud.use.dns.names
 
 - name: set subject CN and template file when not using dns names
   set_fact:
       subj_name: "{{ external_allocation_pool_start }}"
       tls_template_name: 'tls-endpoints-public-ip.yaml'
+      ssl_san_type: "IP"
   when: not install.overcloud.use.dns.names
+
+- name: Add overcloud public IP or DNS to ssl configuration
+  become: yes
+  ini_file:
+      path: /etc/pki/tls/openssl.cnf
+      section: ' v3_req '
+      option: subjectAltName
+      value: "{{ ssl_san_type }}:{{ external_allocation_pool_start }}"
 
 - name: create CA certificate
   vars:
       self_signed: >
           -new -x509
           -key {{ template_base }}/overcloud-privkey.pem
+          {%- if install.version|default(undercloud_version)| openstack_release >= 17 -%}
+          -extensions v3_req
+          {%- endif -%}
       uc_signed: >
           -newkey rsa:2048 -nodes
           -keyout {{ template_base }}/overcloud-privkey.pem
