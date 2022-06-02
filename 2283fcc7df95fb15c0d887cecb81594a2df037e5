@@ -22,6 +22,30 @@
       },
       "revId": "2283fcc7df95fb15c0d887cecb81594a2df037e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "63736e81_0849f54f",
+        "filename": "plugins/tripleo-undercloud/upgrade.yml",
+        "patchSetId": 10
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011919
+      },
+      "writtenOn": "2022-06-02T05:26:51Z",
+      "side": 0,
+      "message": "I was having a look at what these task/upgrade/upgrade.yml does, and it is basically the very old set of tasks used to upgrade the undercloud before OSP10, which it is not supported anymore: https://review.gerrithub.io/plugins/gitiles/redhat-openstack/infrared/+/refs/heads/master/plugins/tripleo-undercloud/tasks/upgrade/upgrade.yml \nAnd it was mostly removed because when upgrading the undercloud with install.cdn set to true, this block of tasks was getting executed too, updating undesired packages (https://review.gerrithub.io/plugins/gitiles/redhat-openstack/infrared/+/refs/heads/master/plugins/tripleo-undercloud/tasks/upgrade/upgrade.yml#44) and running the undercloud upgrade comman (https://review.gerrithub.io/plugins/gitiles/redhat-openstack/infrared/+/refs/heads/master/plugins/tripleo-undercloud/tasks/upgrade/upgrade.yml#85) which should occur in tripleo-upgrade invokation, not here.\nIMHO, I believe this block of tasks can be removed out of the picture.",
+      "parentUuid": "d09d5e6f_cdbb73ac",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 50
+      },
+      "revId": "2283fcc7df95fb15c0d887cecb81594a2df037e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
