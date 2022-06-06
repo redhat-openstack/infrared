@@ -100,7 +100,7 @@ will be later created.
     * ``import`` images from url:
         Download pre-built images from a given ``--images-url``.
     * Download images via ``rpm``:
-        Starting from OSP 8, TripleO is packages with pre-built images avialable via RPM.
+        Starting from OSP 8, TripleO is packages with pre-built images available via RPM.
 
         To use different RPM, use ``--images-url`` to define the location of the RPM. You need
         to provide all dependencies of the remote RPM. Locations have to be separated with comma
