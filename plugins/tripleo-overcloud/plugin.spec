@@ -597,7 +597,10 @@ subparsers:
                   cleaning-network:
                       type: Bool
                       default: no
-                      help: Adds a network for cleaning in OC. Asssumes Ironic in OC was enabled.
+                      help: |
+                          DEPRECATED! Adds a network for cleaning in OC. Assumes Ironic in OC was enabled.
+                          This option has been DEPRECATED, br-baremetal will be created when Ironic in OC is
+                          enabled and remove-br-baremetal is False.
 
             - title: Overcloud Public Network
               options:
@@ -1062,6 +1065,13 @@ subparsers:
                       choices:
                           - swift
                           - http
+
+                  br-baremetal-interface:
+                      type: Value
+                      default: nic1
+                      help: |
+                          Set the "nicX" interface to use for br-baremetal.
+
                   remove-br-baremetal:
                       type: Bool
                       help: |
