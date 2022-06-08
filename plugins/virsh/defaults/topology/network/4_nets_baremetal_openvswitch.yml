@@ -1,0 +1,107 @@
+# NOTE: Use the name of the portgroup instead of the network name if
+#       provisioning over a network with multiple portgroups.
+#       For example: -e provision_virsh_network_name=ctlplane1
+---
+networks:
+    net1:
+      external_connectivity: no
+      name: data
+      forward: bridge
+      virtualport_type: openvswitch
+      ipv6_address: 2001:DB80:1::f:ff/64 # A foo address so NetworkManager keep iface up ...
+      portgroups:
+        - name: ctlplane
+          default: true
+          trunk: true
+          vlans:
+            - id: 5 # ctlplane
+              ipv4_address: 192.168.24.253/24
+              native: true
+            - id: 20 # InternalApi
+            - id: 30 # Storage
+            - id: 40 # StorageMgmt
+            - id: 60 # Management
+        - name: baremetal
+          default: false
+          vlan_id: 6
+          ipv4_address: 192.168.25.1/24
+        - name: tenant
+          default: false
+          trunk: true
+          vlans:
+            - id: 50 # Tenant
+        - name: external
+          default: false
+          vlan_id: 10 # External
+          ipv4_address: 10.0.0.1/24
+    net2:
+      external_connectivity: yes
+      name: management
+      ip_address: 172.16.0.1
+      netmask: 255.255.255.0
+      forward: nat
+      dhcp:
+        range:
+          start: 172.16.0.2
+          end: 172.16.0.100
+        subnet_cidr: 172.16.0.0/24
+        subnet_gateway: 172.16.0.1
+      floating_ip:
+        start: 172.16.0.101
+        end: 172.16.0.150
+
+l3appliance_config:
+  interfaces:
+    - name: eth0
+      mtu: 1500
+      ipv4_address: 192.168.24.254/24
+    - name: eth1
+      mtu: 1500
+      ipv4_address: 10.0.0.1/24
+    - name: eth2
+      mtu: 1500
+      ipv4_address: 192.168.25.1/24
+  masquerade_interfaces:
+    - eth3
+
+nodes:
+  default:
+    interfaces:
+      - network: data
+        portgroup: ctlplane
+      - network: data
+        portgroup: tenant
+      - network: data
+        portgroup: external
+    provision_network: data
+  l3appliance:
+    interfaces:
+      - network: data
+        portgroup: ctlplane
+      - network: data
+        portgroup: external
+      - network: data
+        portgroup: baremetal
+      - network: management
+    external_network:
+      network: management
+  undercloud:
+    interfaces:
+      - network: data
+        portgroup: ctlplane
+      - network: management
+      - network: data
+        portgrou: external
+    external_network:
+      network: management
+  controller:
+    interfaces:
+      - network: data
+        portgroup: ctlplane
+      - network: data
+        portgroup: tenant
+      - network: data
+        portgroup: external
+      - network: data
+        portgroup: baremetal
+    provision_network: data
