@@ -2,13 +2,17 @@
 ---
 network_config:
 {% endraw %}
-{% if install.ironic %}
+{% if install.ironic and not install.remove.br.baremetal %}
 - type: ovs_bridge
   name: br-baremetal
   members:
   - type: interface
-    name: nic1
+    name: {{ install.br.baremetal.interface }}
     primary: true
+{% if install.br.baremetal.interface != 'nic1' %}
+- type: interface
+  name: nic1
+{% endif %}
 {% else %}
 - type: interface
   name: nic1
