@@ -65,6 +65,7 @@
         {% endfor %}
 
     - name: L3 Appliance - Configure network VLAN interfaces
+      when: l3appliance_config.vlan_interfaces is defined
       become: true
       shell: |
         {% for interface in l3appliance_config.vlan_interfaces %}
