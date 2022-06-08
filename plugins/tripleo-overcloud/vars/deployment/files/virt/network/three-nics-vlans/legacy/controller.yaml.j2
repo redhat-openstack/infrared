@@ -80,16 +80,16 @@ resources:
       config:
         os_net_config:
           network_config:
-                        -
-{% if install.cleaning.network %}
-                          type: ovs_bridge
+{% if install.ironic and not install.remove.br.baremetal %}
+                        - type: ovs_bridge
                           name: br-baremetal
                           members:
                           - type: interface
-                            name: nic1
+                            name: {{ install.br.baremetal.interface }}
                             primary: true
-{% else %}
-                          type: interface
+{% endif %}
+{% if install.br.baremetal.interface != 'nic1' %}
+                        - type: interface
                           name: nic1
 {% endif %}
                           use_dhcp: false
