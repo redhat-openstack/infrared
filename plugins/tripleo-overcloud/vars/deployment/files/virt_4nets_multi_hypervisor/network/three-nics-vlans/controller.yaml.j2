@@ -186,16 +186,19 @@ resources:
               params:
                    $network_config:
                        network_config:
-                        -
-{% if install.cleaning.network %}
-                          type: ovs_bridge
+{% if install.ironic and not install.remove.br.baremetal %}
+                        - type: ovs_bridge
                           name: br-baremetal
                           members:
                           - type: interface
-                            name: nic1
+                            name: {{ install.br.baremetal.interface }}
                             primary: true
+{% if install.br.baremetal.interface != 'nic1' %}
+                        - type: interface
+                          name: nic1
+{% endif %}
 {% else %}
-                          type: interface
+                        - type: interface
                           name: nic1
 {% endif %}
                           use_dhcp: false
