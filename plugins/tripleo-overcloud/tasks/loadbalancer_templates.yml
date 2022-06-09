@@ -19,10 +19,19 @@
       src: loadbalancer/external-lb.yaml.j2
       dest: "~/external-lb.yaml"
 
-- name: Append the External LB template line to the base overcloud deploy script
+- name: Append the External LB template line to the base overcloud deploy script >= 17
   lineinfile:
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ install.heat.templates.basedir }}/environments/external-loadbalancer-vip{{ (install.network.protocol != "ipv4") | ternary("-v6","") }}.yaml \'
+      insertbefore: '^-e'
+      firstmatch: yes
+  when: install.version|default(undercloud_version)|openstack_release >= 17
+
+- name: Append the External LB template line to the base overcloud deploy script < 17
+  lineinfile:
+    dest: "~/overcloud_deploy.sh"
+    line: '-e {{ install.heat.templates.basedir }}/environments/external-loadbalancer-vip{{ (install.network.protocol != "ipv4") | ternary("-v6","") }}.yaml \'
+  when: install.version|default(undercloud_version)|openstack_release < 17
 
 - name: Asppend External LB config to the base overcloud deply script
   lineinfile:
