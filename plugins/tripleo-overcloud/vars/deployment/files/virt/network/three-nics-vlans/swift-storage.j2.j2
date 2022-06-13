@@ -11,23 +11,23 @@ network_config:
   - ip_netmask: 0.0.0.0/0
     next_hop: {{ ctlplane_gateway_ip }}
     default: true
-- type: ovs_bridge
-  name: br-isolated
+- type: vlan
+  device: nic1
+  vlan_id: {{ internal_api_vlan_id }}
+  addresses:
+  - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+- type: vlan
+  device: nic1
+  vlan_id: {{ storage_vlan_id }}
+  addresses:
+  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+- type: vlan
+  device: nic1
+  vlan_id: {{ storage_mgmt_vlan_id }}
+  addresses:
+  - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
+- type: interface
+  name: nic2
   use_dhcp: false
-  members:
-  - type: interface
-    name: nic2
-    primary: true
-  - type: vlan
-    vlan_id: {{ internal_api_vlan_id }}
-    addresses:
-    - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
-  - type: vlan
-    vlan_id: {{ storage_vlan_id }}
-    addresses:
-    - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
-  - type: vlan
-    vlan_id: {{ storage_mgmt_vlan_id }}
-    addresses:
-    - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
+  defroute: false
 {% endraw %}
