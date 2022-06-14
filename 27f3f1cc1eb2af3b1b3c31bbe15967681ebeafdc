@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6e6c47aa_ce660ee6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 28
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-06-14T09:49:52Z",
+      "side": 1,
+      "message": "I think the change, as it is, is trying to fix both the normal case, which uses the hardcoded baremetal_deployment.yaml template from the \u0027virt\u0027 templates, and the composable role case, but the latter case is not fully covered.\n\nFor example, the changes to plugins/tripleo-overcloud/composable_roles.yml and plugins/tripleo-overcloud/templates/composable_roles/overcloud_deploy.sh.j2  are not needed. That\u0027s the old composable role model, used up to 12, and should not be touched. The code which deals with the composable role case is under plugins/tripleo-overcloud/tripleo_roles.yml and plugins/tripleo-overcloud/templates/tripleo_roles/overcloud_deploy.sh.j2, which contains already the important changes. \n\nAlso, there is the addition of plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/compute-dvr.j2.j2, but unless the dynamic generator of baremetal_deployment.yaml is fixed to account for that special type, that network template is not going to be used. Instead, you should probably add the relevant if-s to the existing compute.j2.j2, but then please consider also the upcoming https://review.gerrithub.io/c/redhat-openstack/infrared/+/530083/.\n\nMy suggestion is to fix the composable role case, but either do this fully in this review or to split it in another review. Please don\u0027t forget about it: the long term plan is to remove the \u0027virt\u0027 case and use the dynamic generator of baremetal_deployment.yaml in all scenarios.",
+      "revId": "27f3f1cc1eb2af3b1b3c31bbe15967681ebeafdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7f0b5611_ab5f0dcd",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt/network/baremetal_deployment.yaml.j2",
+        "patchSetId": 28
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-06-14T09:49:52Z",
+      "side": 1,
+      "message": "there is already an if install.storage.backend \u003d\u003d \u0027swift\u0027 above, can\u0027t this be unified?",
+      "revId": "27f3f1cc1eb2af3b1b3c31bbe15967681ebeafdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
