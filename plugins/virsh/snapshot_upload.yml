@@ -32,55 +32,69 @@
       vars:
         _cli_aws_endpoint_url: "{{ (lookup('env', 'AWS_ENDPOINT_URL') != '') | ternary('--endpoint-url ' ~ lookup('env', 'AWS_ENDPOINT_URL'), '') }}"
       block:
-        - name: Update status and timestamp to enable status tracking
-          lineinfile:
-            path: "{{ provision.virsh.snapshot.path }}/status"
-            line: "upload-start {{ ansible_facts['date_time']['iso8601'] }}"
-            create: yes
-
-        - &upload_status_file
-          name: Upload the status file to object storage
+        - name: Detect whether an image set exists (but may not be complete)
           shell: >-
             source {{ _object_storage_client_venv_path | basename }}/bin/activate;
             aws {{ _cli_aws_endpoint_url }}
-            s3 cp {{ provision.virsh.snapshot.path }}/status
-            {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}/
+            s3 ls {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}/status
           args:
             executable: "/bin/bash"
             chdir: "{{ provision.virsh.snapshot.path | dirname }}"
-          register: _virsh_snapshot_upload_aws_result
-          retries: 10
-          delay: 30
-          until: _virsh_snapshot_upload_aws_result is success
+          register: _virsh_snapshot_upload_aws_status
+          failed_when: false
 
-        # The ansible s3_sync module does not currently support the s3_url parameter
-        # which would allow it to work with Ceph RGW.
-        # The ansible aws_s3 module supports the s3_url, but requires the upload of
-        # each object to be done in a loop which is highly inefficient.
-        # We use the 'aws s3 sync' option due to it being able to work on the whole
-        # folder at once with a high level of efficiency.
-        - name: Upload the snapshot path folder to object storage
-          shell: >-
-            source {{ _object_storage_client_venv_path | basename }}/bin/activate;
-            aws {{ _cli_aws_endpoint_url }}
-            s3 sync --no-progress --delete
-            {{ provision.virsh.snapshot.path | basename }}
-            {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}
-          args:
-            executable: "/bin/bash"
-            chdir: "{{ provision.virsh.snapshot.path | dirname }}"
-          register: _virsh_snapshot_upload_aws_result
-          retries: 10
-          delay: 30
-          until: _virsh_snapshot_upload_aws_result is success
+        - name: Upload the image set if one does not exist yet
+          when: _virsh_snapshot_upload_aws_status.rc == 1
+          block:
+            - name: Update status and timestamp to enable status tracking
+              lineinfile:
+                path: "{{ provision.virsh.snapshot.path }}/status"
+                line: "upload-start {{ ansible_facts['date_time']['iso8601'] }}"
+                create: yes
 
-        - name: Update status and timestamp to enable status tracking
-          lineinfile:
-            path: "{{ provision.virsh.snapshot.path }}/status"
-            line: "upload-complete {{ ansible_facts['date_time']['iso8601'] }}"
-            create: yes
+            - &upload_status_file
+              name: Upload the status file to object storage
+              shell: >-
+                source {{ _object_storage_client_venv_path | basename }}/bin/activate;
+                aws {{ _cli_aws_endpoint_url }}
+                s3 cp {{ provision.virsh.snapshot.path }}/status
+                {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}/
+              args:
+                executable: "/bin/bash"
+                chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+              register: _virsh_snapshot_upload_aws_result
+              retries: 10
+              delay: 30
+              until: _virsh_snapshot_upload_aws_result is success
 
-        - *upload_status_file
+            # The ansible s3_sync module does not currently support the s3_url parameter
+            # which would allow it to work with Ceph RGW.
+            # The ansible aws_s3 module supports the s3_url, but requires the upload of
+            # each object to be done in a loop which is highly inefficient.
+            # We use the 'aws s3 sync' option due to it being able to work on the whole
+            # folder at once with a high level of efficiency.
+            - name: Upload the snapshot path folder to object storage
+              shell: >-
+                source {{ _object_storage_client_venv_path | basename }}/bin/activate;
+                aws {{ _cli_aws_endpoint_url }}
+                s3 sync --no-progress --delete
+                {{ provision.virsh.snapshot.path | basename }}
+                {{ provision.virsh.snapshot.container }}/{{ provision.virsh.snapshot.path | basename }}
+              args:
+                executable: "/bin/bash"
+                chdir: "{{ provision.virsh.snapshot.path | dirname }}"
+              register: _virsh_snapshot_upload_aws_result
+              retries: 10
+              delay: 30
+              until: _virsh_snapshot_upload_aws_result is success
+
+            - name: Update status and timestamp to enable status tracking
+              lineinfile:
+                path: "{{ provision.virsh.snapshot.path }}/status"
+                line: "upload-complete {{ ansible_facts['date_time']['iso8601'] }}"
+                create: yes
+
+            - *upload_status_file
       always:
         - name: Clean up the snapshot path
           file:
