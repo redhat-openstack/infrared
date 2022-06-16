@@ -12,7 +12,7 @@
           - '[ -e /sys/module/nfs/parameters/nfs4_unique_id ] && echo -n ${host_specific_id} >/sys/module/nfs/parameters/nfs4_unique_id'
     network_config:
       default_route_network:
-      - External
+      - external
       template: /home/stack/virt/network/three-nics-vlans/controller{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
     networks:
     - network: ctlplane
