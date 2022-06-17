@@ -7,20 +7,19 @@ network_config:
   dns_servers: {{ ctlplane_dns_nameservers }}
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-  routes:
-  - ip_netmask: 0.0.0.0/0
-    next_hop: {{ ctlplane_gateway_ip }}
-    default: true
+  routes: {{ ctlplane_host_routes }}
 - type: vlan
   vlan_id: {{ storage_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+  routes: {{ storage_host_routes }}
 - type: vlan
   vlan_id: {{ storage_mgmt_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
+  routes: {{ storage_mgmt_host_routes }}
 - type: interface
   name: nic2
   use_dhcp: false
