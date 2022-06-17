@@ -38,6 +38,27 @@
         register: phys_nics
         changed_when: false
 
+      - block:
+
+          - name: add the repositories using rhos-release
+            include_role:
+                name: rhos-release
+            vars:
+                build: "latest"
+                release: "rhel-{{ ansible_distribution_version }}"
+                rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+
+          - name: install networking compatibility scripts
+            package:
+                name: NetworkManager-initscripts-updown
+                state: present
+                disable_gpg_check: yes
+            become: yes
+
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_major_version | int >= 9
+
       - name: setup unbooted nics
         vars:
             nic: "{{ hostvars[inventory_hostname]['ansible_' + item ] }}"
