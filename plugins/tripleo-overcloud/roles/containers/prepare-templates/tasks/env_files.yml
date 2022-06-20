@@ -2,7 +2,7 @@
 ---
 - name: Get all environment files from the deploy script
   shell: |
-     for file in `awk '/^-e / || /^--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
+     for file in `awk '/-e / || /--environment-file / {print $2}' ~/overcloud_deploy.sh`; do if [ -f $file ]; then echo $file; fi; done
   register: ds_env_files
 
 - name: Create one variable with all the environment yamls
