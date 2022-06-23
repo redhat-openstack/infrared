@@ -6,24 +6,25 @@ network_config:
   use_dhcp: false
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-  routes:
-  - default: true
-    next_hop: {{ ctlplane_gateway_ip }}
+  routes: {{ ctlplane_host_routes }}
 - type: vlan
   vlan_id: {{ internal_api_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+  routes: {{ internal_api_host_routes }}
 - type: vlan
   vlan_id: {{ storage_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+  routes: {{ storage_host_routes }}
 - type: vlan
   vlan_id: {{ storage_mgmt_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
+  routes: {{ storage_mgmt_host_routes }}
 - type: ovs_bridge
   name: br-tenant
   use_dhcp: false
@@ -35,6 +36,7 @@ network_config:
     vlan_id: {{ tenant_vlan_id }}
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
+    routes: {{ tenant_host_routes }}
 - type: ovs_bridge
   name: {{ neutron_physical_bridge_name }}
   dns_servers: {{ ctlplane_dns_nameservers }}
@@ -42,9 +44,7 @@ network_config:
   use_dhcp: false
   addresses:
   - ip_netmask: {{ external_ip }}/{{ external_cidr }}
-  routes:
-  - default: true
-    next_hop: {{ external_gateway_ip }}
+  routes: routes: {{ external_host_routes }}
   members:
   - type: interface
     name: nic3
