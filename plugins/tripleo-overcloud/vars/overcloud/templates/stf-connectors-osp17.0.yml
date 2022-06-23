@@ -6,6 +6,7 @@ tripleo_heat_templates:
 custom_templates:
   parameter_defaults:
     CollectdEnableSensubility: true
+    ContainerHealthCheckDisabled: false
     CollectdSensubilityLogLevel: DEBUG
     CollectdSensubilityTransport: amqp1
     CollectdSensubilityResultsChannel: sensubility/osp17-telemetry
@@ -39,24 +40,24 @@ custom_templates:
       - name: sslProfile
         caCertFileContent: |
          -----BEGIN CERTIFICATE-----
-         MIIDpjCCAo6gAwIBAgIQFF4FQtvnxBbG1WqoIa5l+DANBgkqhkiG9w0BAQsFADBa
+         MIIDpjCCAo6gAwIBAgIQFMVum5wSB6E8bTUaIFWXmzANBgkqhkiG9w0BAQsFADBa
          MRUwEwYDVQQKEwxjZXJ0LW1hbmFnZXIxQTA/BgNVBAMTOGRlZmF1bHQtaW50ZXJj
-         b25uZWN0LnNlcnZpY2UtdGVsZW1ldHJ5LnN2Yy5jbHVzdGVyLmxvY2FsMB4XDTIx
-         MDcwMTEwMjYwOFoXDTIxMDkyOTEwMjYwOFowWjEVMBMGA1UEChMMY2VydC1tYW5h
+         b25uZWN0LnNlcnZpY2UtdGVsZW1ldHJ5LnN2Yy5jbHVzdGVyLmxvY2FsMB4XDTIy
+         MDYwNzA2NTUwM1oXDTIyMDkwNTA2NTUwM1owWjEVMBMGA1UEChMMY2VydC1tYW5h
          Z2VyMUEwPwYDVQQDEzhkZWZhdWx0LWludGVyY29ubmVjdC5zZXJ2aWNlLXRlbGVt
          ZXRyeS5zdmMuY2x1c3Rlci5sb2NhbDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
-         AQoCggEBANuzJal2YWkJXyrLMfoNSTAikfw/LYoNebF9PhGg+4wsqVmUQk73Sy+G
-         KfDteHPSiZtKLAClCutYV1XLNYINhGCzkxK9ID0Wfn/pQBI37SA3HafX70RoYSeT
-         gzhNuvs9o9akHVGgsSULXWYNz8Obh9e4LlWBzasq2SzsrIY5v4PiaYmmyAikTwnZ
-         BnA0DaFksQ+EHrglweIkVLdhpGSx1F1J953Pl5Gl5yoYXi3WpL1NFbAYLo+rt4OJ
-         EXduIy8CupF7BC7r3PdIrl2pHMZCLN+axP6lq7WYGij0kqOhaBcZnKEQUmaS7DX3
-         0vcsJKIMZQooVZ38RnS5BHC11xIcrMUCAwEAAaNoMGYwDgYDVR0PAQH/BAQDAgKk
+         AQoCggEBAM/CVigsYmizjqmg8LzQM0cU1l5ZJbzTJAsu1eLjSuE5WdpxphpR1Q4U
+         ttHcaNfTYtKNnskPjG40BZMteZKT3ajFR9Kzth/W0nnrqxMBf32j8K46zwb9gdHg
+         TrgHwHD47R8+8FTiVUEaG6ihXzGghNY9ke4ETJyvvlxcwPPKVU1rq4hbUtLpLj1/
+         6taUe4dGmX8jP5oiOYUhljOubvcRnXUSf5Tcb2otE8ItGghc6d6WSVPNNZF1EYcE
+         ePphlqq3WgFvM1H93IoB7J+VDd1RYsFyTD1uIqnOulwDqSsCg5vX8KAPjDfCgVOY
+         aTHXWmfhTF1bg/qoJuBp0eWjS0eCJRECAwEAAaNoMGYwDgYDVR0PAQH/BAQDAgKk
          MA8GA1UdEwEB/wQFMAMBAf8wQwYDVR0RBDwwOoI4ZGVmYXVsdC1pbnRlcmNvbm5l
          Y3Quc2VydmljZS10ZWxlbWV0cnkuc3ZjLmNsdXN0ZXIubG9jYWwwDQYJKoZIhvcN
-         AQELBQADggEBAB/kcH93RGepVgHAI3vGx9wWs8bzuWgrJ6dfgoQfwhOzQRTYTeJx
-         E5PrfP/l3Spt/MOWW4gdwxSXG0OSN+rFhEE0E5QIx82wdFNIglZtl3ocoPf+12Wj
-         aD9o6BvAiHDxHQunYJcbKcD0ADrA+xDpWlQPEWnzbtTggOVSAbxLzz/hNfQAhqRb
-         qkaXxsF8NhzXndA4Ni3BgIOKvnDXMVOVUzIaB/YAeAb5BjVMA2W/cYv5cTPGXqs3
-         w6ynMbavoKJx8V08+f4FmQDTFLbdopjBu3gdmJ+VvsKfJ+3AtFyBOZcxB4QgCM5k
-         iPzQmFBxCUCD1hpIDCMr3FahVaOctVT67GI=
+         AQELBQADggEBAFon3T3vdUV2lOn1MauEv7gUe40S9ZIVv6BFu6QEJWpQoOWNQyXI
+         tbvWnM+wxQskLyhOhSg44noZ7/v9q6ACYDZwoAS44qJ2jmDrtrWfRJ2nKBoDh+47
+         sFMzW0WrCAN0ulurrjgy9jRvAtiW0XMKoaSQKY8vOUqjpP13PpLn+vmW9beZ9B8V
+         b0krDnEXRNBKcHcXZnKmBpjb9IeA7uGsF0Cc+2ZxF3XaMOwVFkzALDUFx3dAsGyf
+         rkw7fIiILIbdiDyMqhWigxQomHb6jHxtblGjBd+4arEgmNTcMDQnheBCmgofGsu9
+         473u5gZ2r3DetLGfiCNl8Xx0LkMEOGMBk/8=
          -----END CERTIFICATE-----
