@@ -16,6 +16,24 @@
       "message": "Can you please provide a bit more of insights on what needs to be changed? roles_data.yaml is dynamically generated using the roles/*yaml files from THT, and baremetal_deployment.yaml is in turn created using roles_data.yaml and network_data_v2.yaml.",
       "revId": "4512483422f6c6d069a1f0a6f70e351c26b89182",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a879ec60_587aa2de",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-06-23T17:34:27Z",
+      "side": 1,
+      "message": "So before this patch you _always_ added two default routes, one on nic1 (ctlplane) and the other on the \"br-ex\" interface. The _only_ time two default routes make sense is when you have a mix of IPv4 and IPv6. However the condition on `ipv6` below is just silly, because a) and b) is essentially the same configuration.\n\n  a)\n  - ip_netmask: 0.0.0.0/0\n      next_hop: {{ ctlplane_gateway_ip }}\n      default: true\n  b)  \n    - default: true\n      next_hop: {{ ctlplane_gateway_ip }}\n      \nNow, whith this any job that mix IPv4 and IPv6 you to ensure IPv4 default route is on \"ctlplane\" and IPv6 gateway is on the \"external\" (br-ex) interface you need to set the default route network to:\n\n  default_route_networks:\n    - ctlplane\n    - external\n\nSo when networking is a mix, ipv4_and_ipv6 what generates baremetal_deployment.yaml and roles_data.yaml must set up the `default_route_network` variable so that it includes both the network to use as default gateway for IP4 and the network to use as default gateway for IPv6. See example[1]. This use of \"default_route_networks\" in roles_data.yaml is documented here[2].\n\n[1] https://opendev.org/openstack/tripleo-heat-templates/src/branch/master/roles/Controller.yaml#L26-L28\n[2] https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.2/html-single/ipv6_networking_for_the_overcloud",
+      "parentUuid": "67f0a27f_6a66b927",
+      "revId": "4512483422f6c6d069a1f0a6f70e351c26b89182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
