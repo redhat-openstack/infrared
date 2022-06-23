@@ -65,14 +65,30 @@
         loop: "{{ phys_nics.stdout_lines }}"
         register: nics
 
-      - name: start nics
-        shell: |
-            ifdown {{ item.item }}
-            ifup {{ item.item }}
+      - block:
+          - name: start nics with ifupdown
+            shell: |
+                ifdown {{ item.item }}
+                ifup {{ item.item }}
+            with_items: "{{ nics.results }}"
+            when:
+                - ansible_distribution == 'RedHat'
+                - ansible_distribution_major_version | int < 9
+
+          - name: start nics with NM
+            shell: |
+                nmcli connection down filename /etc/sysconfig/network-scripts/ifcfg-{{ item.item }}
+                nmcli connection up filename /etc/sysconfig/network-scripts/ifcfg-{{ item.item }}
+            with_items: "{{ nics.results }}"
+            when:
+                - ansible_distribution == 'RedHat'
+                - ansible_distribution_major_version | int < 9
+
         tags: skip_ansible_lint
         when: item is changed
-        with_items: "{{ nics.results }}"
         become: yes
+
+
 
 - name: generate inventory file
   hosts: localhost
