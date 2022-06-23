@@ -17,10 +17,9 @@
           <vlan trunk="{% if portgroup.trunk|default(false)|bool %}yes{% else %}no{% endif %}">
           {% if portgroup.vlans is defined %}
           {% for vlan in portgroup.vlans|default([]) %}
-            <tag id="{{ vlan.id }}"/>
+            <tag id="{{ vlan.id }}"{% if vlan.native|default(false)|bool %} nativeMode="untagged"{% endif %}/>
           {% endfor %}
-          {% endif %}
-          {% if portgroup.vlan_id is defined %}
+          {% elif portgroup.vlan_id is defined %}
             <tag id="{{ portgroup.vlan_id }}"/>
           {% endif %}
           </vlan>
