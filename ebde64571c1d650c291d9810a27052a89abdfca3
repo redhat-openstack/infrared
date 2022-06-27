@@ -69,6 +69,24 @@
       "parentUuid": "8df75552_6f81ef46",
       "revId": "ebde64571c1d650c291d9810a27052a89abdfca3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "77d57974_6ada545a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016950
+      },
+      "writtenOn": "2022-06-27T17:44:44Z",
+      "side": 1,
+      "message": "OK, I succeeded to reproduce the ping issue. Actually it\u0027s not related directly to the patch, there is something that should be fixed in composable_roles existing templates since the ping does not work also when deploying a dvr environment without the patch.\nI tried to deploy normal dvr networking-ovn osp17 job with composable roles and ping did not work until I created br-ex on compute nodes by\nsudo ovs-vsctl add-br br-ex -- set bridge br-ex fail-mode\u003dstandalone\nsudo ovs-vsctl add-port br-ex enp3s0\n\nTried also to deploy upgrades DFG job (only deploy, no upgrade) DFG-upgrades-updates-17.0-from-passed_phase1-composable-ipv6 as is, without using this patch, result: also no ping to VMs. \nI\u0027ll try to check tomorrow how it can be fixed but the ping issue is not a result of the patch. Something is wrong in the current state of the composable_roles templates.",
+      "parentUuid": "5d1d0ca6_de21f177",
+      "revId": "ebde64571c1d650c291d9810a27052a89abdfca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
