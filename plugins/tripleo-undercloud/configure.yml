@@ -14,22 +14,34 @@
                 templates/undercloud.conf.j2
                 {%- endif -%}"
   tasks:
-      - name: install custom CA if needed
+
+      - name: "fetch {{ install.tls.ca }} to install custom CA"
+        get_url:
+          url: "{{ install.tls.ca }}"
+          dest: /etc/pki/ca-trust/source/anchors/custom-ssl-ca.crt
+          validate_certs: no
         become: yes
         become_user: root
-        when:
-          - install.tls.ca != ''
-        block:
-          - name: "fetch {{ install.tls.ca }}"
-            get_url:
-              url: "{{ install.tls.ca }}"
-              dest: /etc/pki/ca-trust/source/anchors/custom-ssl-ca.crt
-              validate_certs: no
-            register: custom_ca
+        when: install.tls.ca != ''
+        register: custom_ca_from_url
 
-          - name: update system trust store
-            when: custom_ca is changed
-            command: update-ca-trust
+      - name: "copy {{ install.tls.cafilename}} to install custom CA"
+        copy:
+          src: "files/tls/{{ install.tls.cafilename}}"
+          dest: /etc/pki/ca-trust/source/anchors/custom-ssl-ca.crt
+          owner: root
+          group: root
+          mode: 0644
+        become: yes
+        become_user: root
+        when: install.tls.cafilename != ''
+        register: custom_ca_from_local
+
+      - name: update system trust store if custom CA was installed
+        become: yes
+        become_user: root
+        when: custom_ca_from_url is changed or custom_ca_from_local is changed
+        command: update-ca-trust
 
       - name: set workingr_dir fact
         set_fact:
