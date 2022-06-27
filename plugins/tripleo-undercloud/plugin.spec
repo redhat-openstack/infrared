@@ -114,6 +114,15 @@ subparsers:
                                 --tls-ca=https://foo.com/ca.pem
                       default: ''
 
+                  tls-ca-file-name:
+                      type: Value
+                      help: |
+                          Specifies the name of a specific CA file.
+                          This file must already exist in tripleo-undercloud/files/tls directory.
+                          Example:
+                                --tls-ca-file-name=RH-IT-Root-CA.crt
+                      default: ''
+
                   undercloud-extra-args:
                       type: Value
                       help: |
