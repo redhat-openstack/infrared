@@ -3,7 +3,9 @@ vbmc_host: "{{ (install|default({})).get('vbmc', {}).get('host', 'hypervisor') }
 vbmc_inventory_host: "{{ groups[vbmc_host]|first }}"
 vbmc_hypervisor: "{{ groups.get('hypervisor', ['hypervisor'])|first }}"
 vbmc_start_port: 6230
-action: install
+# actions are comma-delimited:
+# install, configure, check, cleanup, remove
+action: "install,configure"
 vbmc_user: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user|default(ansible_ssh_user), 'root') }}"
 vbmc_home: "{{ (vbmc_host == 'undercloud') | ternary('/home/' ~ ansible_user|default(ansible_ssh_user), '/root') }}"
 vbmc_config_dir: "{{ (vbmc_host == 'undercloud') | ternary(ansible_user_dir, '/root') }}/.vbmc"
