@@ -18,17 +18,28 @@
         become: yes
         become_user: root
         when:
-          - install.tls.ca != ''
+          - install.tls.ca != '' or install.tls.ca.file.name != ''
         block:
           - name: "fetch {{ install.tls.ca }}"
             get_url:
               url: "{{ install.tls.ca }}"
               dest: /etc/pki/ca-trust/source/anchors/custom-ssl-ca.crt
               validate_certs: no
-            register: custom_ca
+            when: install.tls.ca != ''
+            register: custom_ca_from_url
+
+          - name: "copy {{ install.tls.ca.file.name}}"
+            copy:
+              src: "files/tls/{{ install.tls.ca.file.name}}"
+              dest: /etc/pki/ca-trust/source/anchors/custom-ssl-ca.crt
+              owner: root
+              group: root
+              mode: 0644
+            when: install.tls.ca.file.name != ''
+            register: custom_ca_from_local
 
           - name: update system trust store
-            when: custom_ca is changed
+            when: custom_ca_from_url is changed or custom_ca_from_local is changed
             command: update-ca-trust
 
       - name: set workingr_dir fact
