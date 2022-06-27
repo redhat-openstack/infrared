@@ -1,19 +1,20 @@
-- block:
-      - include_tasks: install.yml
+- include_tasks: install.yml
+  when: "'install' in action"
 
-      - include_tasks: configure.yml
+- include_tasks: configure.yml
+  when: "'configure' in action"
 
-      - name: Register vars for instackenv template
-        set_fact:
-            vbmc_ports: "{{ vbmc_ports }}"
-            vbmc_management_address: "{{ vbmc_management_address }}"
-  when: action == 'install'
+- name: Register vars for instackenv template
+  set_fact:
+      vbmc_ports: "{{ vbmc_ports }}"
+      vbmc_management_address: "{{ vbmc_management_address }}"
+  when: "('install' in action) or ('configure' in action)"
 
 - include_tasks: check.yml
-  when: action == 'check'
+  when: "'check' in action"
 
 - include_tasks: cleanup.yml
-  when: action == 'cleanup'
+  when: "'cleanup' in action"
 
 - include_tasks: remove.yml
-  when: action == 'remove'
+  when: "'remove' in action"
