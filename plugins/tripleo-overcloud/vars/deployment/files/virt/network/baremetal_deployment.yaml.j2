@@ -13,6 +13,9 @@
     network_config:
       default_route_network:
       - external
+{% if 'ipv6' in install.network.protocol %}
+      - ctlplane
+{% endif %}
       template: /home/stack/virt/network/three-nics-vlans/controller{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
     networks:
     - network: ctlplane
