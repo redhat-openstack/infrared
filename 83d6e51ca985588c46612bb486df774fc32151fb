@@ -139,6 +139,24 @@
       "message": "I am good to merge this revert and unblock IPv6 deployments. \nif any info is needed from my side please feel free to ask. \nhttps://rhos-ci-jenkins.lab.eng.tlv2.redhat.com/view/DFG/view/network/view/networking-ovn/job/DFG-network-networking-ovn-17.0_director-rhel-virthost-3cont_2comp-ipv6-geneve-dvr-rally/",
       "revId": "83d6e51ca985588c46612bb486df774fc32151fb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "03b863fc_ca736f4a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-06-28T10:05:14Z",
+      "side": 1,
+      "message": "I assume your IPv6 jobs are IPv4 ctlmplane and IPv6 on all isolated nets? if that is the case in barmetal_deployment.yaml you need yo set:\n  \n  default_route_networks:\n    - external\n    - ctlplane\n\n\nThis will ensure IPv4 gateway on ctlplane, and IPv6 gateway on br-ex.",
+      "parentUuid": "cb1f7c5d_4d4dd050",
+      "revId": "83d6e51ca985588c46612bb486df774fc32151fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
