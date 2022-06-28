@@ -141,6 +141,24 @@
       "parentUuid": "16dcc3c0_4643988e",
       "revId": "ebde64571c1d650c291d9810a27052a89abdfca3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1194c6d5_c1a97eb9",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016950
+      },
+      "writtenOn": "2022-06-28T13:01:08Z",
+      "side": 1,
+      "message": "@ykarel, thanks, I\u0027ve made a separate patch for fixing DVR on composable OSP17\nhttps://review.gerrithub.io/c/redhat-openstack/infrared/+/540579\nTBH, it\u0027s not clear to me why compute nodes in tripleo-heat-templates are not connected to External network, at least ComputeDVR role should be connected but it does not https://github.com/openstack/tripleo-heat-templates/blob/master/roles/ComputeDVR.yaml\nThat\u0027s why we have to use DVR workarounds in infrared. Maybe should open a BZ or maybe I am missing something.\nCan it be that if compute node have external_bridge tag it will create an external bridge and attach the node to external network dynamically, even if it not listed under networks: ? According to the link ComputeDVR is connected only to InternalApi, Tenant and Storage networks.",
+      "parentUuid": "41823793_025a4f0b",
+      "revId": "ebde64571c1d650c291d9810a27052a89abdfca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
