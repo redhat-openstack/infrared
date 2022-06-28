@@ -105,6 +105,24 @@
       "parentUuid": "77d57974_6ada545a",
       "revId": "ebde64571c1d650c291d9810a27052a89abdfca3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "16dcc3c0_4643988e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016950
+      },
+      "writtenOn": "2022-06-28T06:42:49Z",
+      "side": 1,
+      "message": "@ykarel Sure, I am currently testing without the patch\n\nTriggered networking-ovn normal osp17 job but replaced \u0027virt\u0027 in OVERCLOUD_DEPLOYMENT_FILES to \u0027composable_roles\u0027 and also added \u0027--role-files Controller,Compute\u0027 to OVERCLOUD_DEPLOY_OVERRIDE_OPTIONS.\n https://rhos-ci-jenkins.lab.eng.tlv2.redhat.com/view/DFG/view/network/view/networking-ovn/job/DFG-network-networking-ovn-17.0_director-rhel-virthost-3cont_2comp-ipv4-geneve-gate-ovn/87/\nResult: no br-ex on compute nodes, no ping to VM from external network (tested with VM directly connected to external network). After adding br-ex manually (as mentioned above) ping worked.\n\nTriggered the updrade DFG job (deploy only, no upgrade) on the playground jenkins\nhttp://staging-jenkins2-qe-playground.usersys.redhat.com/view/DFG/view/upgrades/view/update/job/DFG-upgrades-updates-17.0-from-passed_phase1-composable-ipv6/2/\nResult: no ping to VM connected to external network. IIRC there was also no br-ex on computes so I added br-ex but still there was no ping to the VM. Then I tried to create a router, internal network, VM on the internal network + FIP, then ping to FIP worked.\n\nI also tried to run with modified compute.j2.j2 that ends with the following (in order to create br-ex automatically in case of dvr)\n{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}\n- type: ovs_bridge\n  {% raw -%}\n  name: {{ neutron_physical_bridge_name }}\n{% endraw %}\n  use_dhcp: false\n  members:\n  - type: interface\n    name: nic3\n    primary: true\n{% else %}\n- type: interface\n  name: nic3\n  use_dhcp: false\n{% endif %}\n\nWorked fine for normal networking-ovn job, br-ex on compute nodes created, VM on external network was pingable out-of-the-box as well as on internal network (via FIP). The live environment is still available if needed.\nhttp://staging-jenkins2-qe-playground.usersys.redhat.com/view/DFG/view/network/view/networking-ovn/job/DFG-network-networking-ovn-17.0_director-rhel-virthost-3cont_2comp-ipv4-geneve-gate-ovn/18/\n\nBut this did not help for the upgrade DFG job, for some reason overcloud deploy failed due to ntp issue on a messaging node. Still need investigation. Live environment is available on a devnest host (10.9.95.129, usual devnest credentials). Feel free to take a look, I will be afk for about 3 hours.\nhttp://staging-jenkins2-qe-playground.usersys.redhat.com/view/DFG/view/upgrades/view/update/job/DFG-upgrades-updates-17.0-from-passed_phase1-composable-ipv6/6/",
+      "parentUuid": "3151e3d0_a597cd92",
+      "revId": "ebde64571c1d650c291d9810a27052a89abdfca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
