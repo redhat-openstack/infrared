@@ -12,13 +12,36 @@
     - install.version|default(undercloud_version)| openstack_release < 17
 
 - block:
+  - name: Load network data
+    slurp:
+      src: "{{ template_base }}/network/network_data_v2.yaml"
+    register: network_data
+
+  - name: Set network data struct fact
+    set_fact:
+      network_data_struct: "{{ network_data.content | b64decode | from_yaml }}"
+
+  - name: Get external network name
+    set_fact:
+      external_network_name:
+        "{% for network in network_data_struct
+             if network.name == 'External'
+             or (network.service_net_map_replace is defined
+                 and network.service_net_map_replace == 'external')
+         %}{{ network.name_lower }}{% endfor %}"
+
   - name: extract our external vip addess uri
-    command: "cat /home/stack/templates/overcloud-vip-deployed.yaml"
-    register: network_env
+    slurp:
+      src: /home/stack/templates/overcloud-vip-deployed.yaml
+    register: overcloud_vip_deployed
+
+  - name: Set overcloud-vip-deployed struct fact
+    set_fact:
+      overcloud_vip_deployed_struct: "{{ overcloud_vip_deployed.content | b64decode | from_yaml }}"
 
   - name: get IP address of VIP
     set_fact:
-        external_allocation_pool_start: "{{ (network_env.stdout | from_yaml).parameter_defaults.VipPortMap.external.ip_address }}"
+        external_allocation_pool_start: "{{ overcloud_vip_deployed_struct['parameter_defaults']['VipPortMap'][external_network_name]['ip_address'] }}"
   when:
     - "not 'bmc' in groups"
     - install.version|default(undercloud_version)| openstack_release >= 17
