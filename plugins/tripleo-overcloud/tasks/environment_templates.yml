@@ -28,6 +28,14 @@
     - current_file.custom_templates is defined
     - ('RetryFilter' in (current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | default([])))
 
+- name: Search for templates in tripleo-heat-templates
+  ansible.builtin.find:
+    paths: '/usr/share/openstack-tripleo-heat-templates/environments'
+    patterns: "{{ item }}\\.(?:yaml|j2\\.yaml)$"
+    with_items: "{{ templates_list_file }}"
+  when: default_templates.results|rejectattr('matched')|map(attribute='item')|list
+  register: default_templates
+
 - name: include templates from default location
   lineinfile:
       dest: "~/overcloud_deploy.sh"
