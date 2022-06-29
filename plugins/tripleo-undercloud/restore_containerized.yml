@@ -137,7 +137,7 @@
             virsh net-dhcp-leases {{ install.snapshot.access.network }} | grep {{ mac_access.stdout }} | awk '($4 == "ipv4") && ($6 =="{{ undercloud_node.name }}") {print $5}'
         register: undercloud_ip
         until: undercloud_ip.stdout != ''
-        retries: 15
+        retries: 30
         delay: 15
 
       - name: waiting for the undercloud to be SSH available
