@@ -29,4 +29,7 @@
   loop_control:
       loop_var: templates_list_file
   # avoid empty strings
-  when: "templates_list_file != ''"
+  when:
+    - 'templates_list_file != ""'
+    - 'templates_list_file != "none"'
+    - '"tripleo-heat-templates" not in templates_list_file'
