@@ -23,8 +23,13 @@
     - network: tenant
     - network: external
 {# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
-{% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend == 'lvm' %}
+{% if install.get('overcloud', {}).get('node', {}).get('kernelargs', {}).get('Controller', {})
+     or (install.version|default(undercloud_version)|openstack_release >= 17
+         and (install.storage|default({})).backend == 'lvm') %}
   ansible_playbooks:
+{% endif %}
+{% if (install.version|default(undercloud_version)|openstack_release >= 17
+         and (install.storage|default({})).backend == 'lvm') %}
     - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
       extra_vars:
         growvols_args: >
@@ -35,6 +40,19 @@
           /home=1GB
           /srv=10GB
           /var=100%
+{% endif %}
+{% if install.get('overcloud', {}).get('node', {}).get('kernelargs', {}).get('Controller', {}) %}
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+      extra_vars:
+{% if install.overcloud.node.kernelargs.Controller.kernel_args is defined %}
+        kernel_args: {{ install.overcloud.node.kernelargs.Controller.kernel_args }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.Controller.tuned_isolated_cores is defined %}
+        tuned_isolated_cores: {{ install.overcloud.node.kernelargs.Controller.tuned_isolated_cores }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.Controller.tuned_profile is defined %}
+        tuned_profile: {{ install.overcloud.node.kernelargs.Controller.tuned_profile }}
+{% endif %}
 {% endif %}
 - name: Compute
   count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
@@ -56,6 +74,22 @@
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
     - network: external
 {% endif %}
+{% if install.overcloud.node.kernelargs.get('Compute', {}) %}
+  ansible_playbooks:
+{% endif %}
+{% if install.overcloud.node.kernelargs.get('Compute', {}) %}
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+      extra_vars:
+{% if install.overcloud.node.kernelargs.Compute.kernel_args is defined %}
+        kernel_args: {{ install.overcloud.node.kernelargs.Compute.kernel_args }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.Compute.tuned_isolated_cores is defined %}
+        tuned_isolated_cores: {{ install.overcloud.node.kernelargs.Compute.tuned_isolated_cores }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.Compute.tuned_profile is defined %}
+        tuned_profile: {{ install.overcloud.node.kernelargs.Compute.tuned_profile }}
+{% endif %}
+{% endif %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
 - name: CephStorage
@@ -70,6 +104,22 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+{% if install.get('overcloud', {}).get('node', {}).get('kernelargs', {}).get('CephStorage', {}) %}
+  ansible_playbooks:
+{% endif %}
+{% if install.overcloud.node.kernelargs.get('CephStorage', {}) %}
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+      extra_vars:
+{% if install.overcloud.node.kernelargs.CephStorage.kernel_args is defined %}
+        kernel_args: {{ install.overcloud.node.kernelargs.CephStorage.kernel_args }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.CephStorage.tuned_isolated_cores is defined %}
+        tuned_isolated_cores: {{ install.overcloud.node.kernelargs.CephStorage.tuned_isolated_cores }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.CephStorage.tuned_profile is defined %}
+        tuned_profile: {{ install.overcloud.node.kernelargs.CephStorage.tuned_profile }}
+{% endif %}
+{% endif %}
 {% endif -%}
 {%- if install.storage.backend == 'swift' %}
 - name: SwiftStorage
@@ -84,5 +134,21 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+{% if install.get('overcloud', {}).get('node', {}).get('kernelargs', {}).get('SwiftStorage', {}) %}
+  ansible_playbooks:
+{% endif %}
+{% if install.overcloud.node.kernelargs.get('SwiftStorage', {}) %}
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+      extra_vars:
+{% if install.overcloud.node.kernelargs.SwiftStorage.kernel_args is defined  %}
+        kernel_args: {{ install.overcloud.node.kernelargs.SwiftStorage.kernel_args }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.SwiftStorage.tuned_isolated_cores is defined %}
+        tuned_isolated_cores: {{ install.overcloud.node.kernelargs.SwiftStorage.tuned_isolated_cores }}
+{% endif %}
+{% if install.overcloud.node.kernelargs.SwiftStorage.tuned_profile is defined %}
+        tuned_profile: {{ install.overcloud.node.kernelargs.SwiftStorage.tuned_profile }}
+{% endif %}
+{% endif %}
 {% endif %}
 {% endif %}

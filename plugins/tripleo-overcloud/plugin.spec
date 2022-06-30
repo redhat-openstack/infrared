@@ -359,6 +359,24 @@ subparsers:
                             NOTE: Omit this to not include any extra files, or use "none"
                             __LISTYAMLS__
 
+                  overcloud-node-kernelargs:
+                      type: NestedDict
+                      action: append
+                      help: |
+                          Add kernel arguments and tuned configuration for overcloud nodes. (Wallaby/OSP-17 and later)
+                          Example:
+                              --overcloud-node-kernelargs Compute.kernelargs="default_hugepagesz=1GB hugepagesz=1G hugepages=64 intel_iommu=on iommu=pt"
+                              --overcloud-node-kernelargs Compute.tuned_isolated_cores="1-11,13-23"
+                              --overcloud-node-kernelargs Compute.tuned_profile="cpu-partitioning"
+                          should inject the following yaml section to Compute role section of baremetal_deployment.yaml:
+
+                              ansible_playbooks:
+                                - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+                                  extra_vars:
+                                    kernel_args: default_hugepagesz=1GB hugepagesz=1G hugepages=64 intel_iommu=on iommu=pt
+                                    tuned_isolated_cores: 1-11,13-23
+                                    tuned_profile: cpu-partitioning
+
                   config-heat:
                       type: NestedDict
                       action: append
