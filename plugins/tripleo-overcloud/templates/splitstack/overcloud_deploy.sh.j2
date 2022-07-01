@@ -1,8 +1,8 @@
 #!/bin/bash
 
 . ~/stackrc
-openstack overcloud deploy \
---timeout {{ install.deployment.timeout | int | default(100) }} \
+openstack -vvvv overcloud deploy \
+--timeout {{ install.deployment.timeout | int | default(100) }} --ansible-forks 8 \
 --templates {{ install.heat.templates.basedir }} \
 --stack {{ install.overcloud.stack }} \
 --libvirt-type {{ install.libvirt.type }} \
