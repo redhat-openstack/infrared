@@ -18,6 +18,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1c9ef967_fec85e11",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1003797
+      },
+      "writtenOn": "2022-07-03T22:10:17Z",
+      "side": 1,
+      "message": "\u003e How exactly does this issue appears in the deployment please?\n\nThe current problem is that changing kernel parameters do not persist across reboots because the filenames in /boot/loader/entries don\u0027t match the newly created machine-id.\n\nThe solution was to create a systemd unit reset-bls-entries which renames /boot/loader/entries files that only runs on first boot. The only documented way to trigger units on first boot is to write \"uninitialized\" to meet the criteria for ConditionFirstBoot\u003dyes, see the systemd documentation:\n\nhttps://www.freedesktop.org/software/systemd/man/machine-id.html#First%20Boot%20Semantics\n\n\u003e I\u0027m wondering that if this is some new change in OSP17 ironic/... parts, then maybe it\u0027s bug and it should support/detect both ways of reset machine-id (old used up until now whatever it is, as also new with \u0027uninitialized\u0027 value)?\n\nThis is a choice to use the systemd firstboot mechanism to trigger a custom unit on first-boot. It will likely only be required for RHEL-9, since the systemd and grub components are making many changes around how to handle BLS entries and their relation to machine-id.\n\n\u003e Other thing would be, maybe this task here needs to be duplicated (or the command params) and conditionally select right one for \u003c17 and for \u003e\u003d17?\n\nAs we surfaced in the original review, prior to RHEL-9 \"uninitialized\" and empty file behave identically, so I don\u0027t think there needs to be any conditional on release version, see:\nhttps://review.opendev.org/c/openstack/diskimage-builder/+/837251/comments/644c7608_f165d2ac",
+      "parentUuid": "540912fb_90e1cb50",
+      "revId": "69490ac49ccc6e81c4b63ce05a22f9f9848cf54f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "4dc493e0_ed2d7fd8",
@@ -31,6 +49,24 @@
       "writtenOn": "2022-06-30T13:54:12Z",
       "side": 1,
       "message": "I\u0027m not completely sure, but I\u0027m guessing that by removing the --operation param, sysprep may be now trying to run all operations by default - resulting in performing more and unexpected/undesired changes too?\n\nSee the OPERATIONS section in https://linux.die.net/man/1/virt-sysprep",
+      "revId": "69490ac49ccc6e81c4b63ce05a22f9f9848cf54f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d67e89b2_1bdd5fbf",
+        "filename": "plugins/tripleo-undercloud/tasks/images/update-kernel.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1003797
+      },
+      "writtenOn": "2022-07-03T22:10:17Z",
+      "side": 1,
+      "message": "Here is a newer man page which mentions --write as a customize operation:\n\nhttps://libguestfs.org/virt-sysprep.1.html\n\nI tried both and you\u0027re correct. This will need \"--enable customize\" as well:\n\n# virt-sysprep --enable customize --write /etc/machine-id:uninitialized -a overcloud-hardened-uefi-full-write.qcow2 \n[   0.0] Examining the guest ...\n[   4.7] Performing \"customize\" ...\n[   4.7] Setting a random seed\n[   4.7] Writing: /etc/machine-id",
+      "parentUuid": "4dc493e0_ed2d7fd8",
       "revId": "69490ac49ccc6e81c4b63ce05a22f9f9848cf54f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
