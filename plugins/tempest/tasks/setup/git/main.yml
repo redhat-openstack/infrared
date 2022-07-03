@@ -28,6 +28,9 @@
       version: "{{ (test.get('revision')| ternary(test.revision, setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch )) }}"
       dest: "~/{{ setup.clone_dir }}"
   register: tempest_repo
+  until: tempest_repo is not failed
+  retries: 10
+  delay: 30
   when: setup.local_dir is not defined
 
 - name: Install gerrit review package
