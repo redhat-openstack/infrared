@@ -149,7 +149,7 @@
       lineinfile:
         path: /etc/chrony.conf
         line: "server {{ item }} iburst minpoll 6 maxpoll 10"
-      loop: "{{ l3appliance_config.ntp_servers|default(['clock.redhat.com', 'clock2.redhat.com']) }}"
+      loop: "{{ l3appliance_config.ntp_servers|default(['clock.corp.redhat.com']) }}"
       when:
         - l3appliance_config.enable_timeserver|default(false)
 
