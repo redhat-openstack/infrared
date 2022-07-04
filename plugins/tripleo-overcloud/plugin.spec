@@ -252,7 +252,7 @@ subparsers:
                       help: |
                             Ntp server name (or IP) to use.
                             NOTE: This parameter will be ignored if 'ntp-pool' is given.
-                      default: clock1.rdu2.redhat.com
+                      default: clock.redhat.com
 
                   ntp-pool:
                       type: Value
