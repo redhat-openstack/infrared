@@ -27,9 +27,10 @@
           ntpd -q -g -x
         changed_when: false
         register: _ntp_reset
-        retries: 5
+        retries: 10
         delay: 60
         until: _ntp_reset.rc == 0
+
       - name: Start the time service
         service:
           name: ntpd
