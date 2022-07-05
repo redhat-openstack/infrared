@@ -85,6 +85,7 @@ ROLE_NAMES_MAPPING = {
     'compute_dvr': 'ComputeDVR',
     'aio': 'Standalone',
     'computehci': 'ComputeHCI',
+    'ironicconductor': 'IronicConductor',
 }
 
 
@@ -109,6 +110,8 @@ THT_ROLES_MAPPING = dict([
         {'node_name': 'hcicephall'}),
     ('^(ComputeHCI).*',
         {'node_name': 'computehci'}),
+    ('^(IronicConductor).*',
+        {'node_name': 'ironicconductor'}),
 ])
 
 
