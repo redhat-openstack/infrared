@@ -49,7 +49,7 @@
             - name: Update status and timestamp to enable status tracking
               lineinfile:
                 path: "{{ provision.virsh.snapshot.path }}/status"
-                line: "upload-start {{ ansible_facts['date_time']['iso8601'] }}"
+                line: "upload-start {{ lookup('pipe', 'date --utc +%FT%T%Z') }}"
                 create: yes
 
             - &upload_status_file
@@ -91,7 +91,7 @@
             - name: Update status and timestamp to enable status tracking
               lineinfile:
                 path: "{{ provision.virsh.snapshot.path }}/status"
-                line: "upload-complete {{ ansible_facts['date_time']['iso8601'] }}"
+                line: "upload-complete {{ lookup('pipe', 'date --utc +%FT%T%Z') }}"
                 create: yes
 
             - *upload_status_file
