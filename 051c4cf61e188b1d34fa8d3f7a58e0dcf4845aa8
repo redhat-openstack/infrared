@@ -52,6 +52,24 @@
       "parentUuid": "e0b801e7_9a438972",
       "revId": "051c4cf61e188b1d34fa8d3f7a58e0dcf4845aa8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "74e9197c_7df34e5f",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1017127
+      },
+      "writtenOn": "2022-07-06T20:11:06Z",
+      "side": 1,
+      "message": "I think if we want to go fully generic it would require some logic changes in the script as well. The script would need to have the IR value from either install.network.dvr or install.network.force.compute.dvr passed and processed as an argument to the script.  I think this would result in the parameter being split like below:\n\n    parser.add_argument(\u0027-n\u0027, \u0027--external-network\u0027, nargs\u003d\u0027?\u0027,\n                        const\u003d\u0027external\u0027, type\u003dstr,\n                        help\u003d\u0027Name of external network used by deployment\u0027)\n    parser.add_argument(\u0027-d\u0027, \u0027--dvr-enabled\u0027, default\u003d\u0027False\u0027, action\u003d\u0027store_true\u0027,\n                        help\u003d\u0027Whether DVR is enabled or not for deployment\u0027)\n\n\n#L73-74 would then need to change to something like: \n\nif \u0027compute\u0027 in self._tags and self._dvr_enabled:\n  parsed_nets[self._external_network] \u003d {}\n  \nIf you are ok with splitting the variable and the above approach I can work on the changes later this week.",
+      "parentUuid": "082597a4_62966ffe",
+      "revId": "051c4cf61e188b1d34fa8d3f7a58e0dcf4845aa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
