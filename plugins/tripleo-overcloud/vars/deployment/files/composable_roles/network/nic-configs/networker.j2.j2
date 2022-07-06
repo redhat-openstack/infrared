@@ -1,9 +1,23 @@
 {% raw -%}
 ---
 network_config:
+{% endraw %}
+{% if install.ironic and not install.remove.br.baremetal %}
+- type: ovs_bridge
+  name: br-baremetal
+  members:
+  - type: interface
+    name: {{ install.br.baremetal.interface }}
+    primary: true
+{% if install.br.baremetal.interface != 'nic1' %}
 - type: interface
   name: nic1
-  use_dhcp: false
+{% endif %}
+{% else %}
+- type: interface
+  name: nic1
+{% endif %}
+  {% raw %}use_dhcp: false
   dns_servers: {{ ctlplane_dns_nameservers }}
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
