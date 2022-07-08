@@ -33,6 +33,24 @@
       "message": "If we merge this file, would it invalidate all the existing reviews which touches files inside plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/ because they would need to fix this one as well?",
       "revId": "0560535a33ddf1bdac6b1a312c2fe4a883df3103",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "94249be8_19732ada",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/ironicconductor.j2.j2",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-07-08T20:36:00Z",
+      "side": 1,
+      "message": "I think invalidate is a bit strong, but, in a way yes. \n\nI.e if [1] lands after this and does not update this file. It will break jobs using the ironicconductor role. \n\nHowever! I think that is fair. If we land this first, updating[1] for the new file and forcing reviewers to go over the XL-sized patch is not necessary. Instead a separate follow up patch to update only this file to align with changes in [1] would make sense.\n\n[1] https://review.gerrithub.io/c/redhat-openstack/infrared/+/530083",
+      "parentUuid": "e15acce7_213acb15",
+      "revId": "0560535a33ddf1bdac6b1a312c2fe4a883df3103",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
