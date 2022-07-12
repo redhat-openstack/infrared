@@ -55,7 +55,7 @@ compute_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release == 13 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
         - OS::TripleO::Services::Snmp
         - "{% if roles_sshd %}OS::TripleO::Services::Sshd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 15 %}OS::TripleO::Services::Timesync{% endif %}"
