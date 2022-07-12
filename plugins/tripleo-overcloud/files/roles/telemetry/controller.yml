@@ -35,8 +35,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
         - OS::TripleO::Services::CinderApi
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCUnity{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
         - OS::TripleO::Services::CinderBackup
         - OS::TripleO::Services::CinderScheduler
         - OS::TripleO::Services::CinderVolume
@@ -44,7 +44,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ContainersLogrotateCrond{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
         - OS::TripleO::Services::GlanceApi
@@ -104,8 +104,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release >= 14 %}OS::TripleO::Services::OpenStackClients{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 14 %}OS::TripleO::Services::RabbitMQ{% endif %}"
         - OS::TripleO::Services::Redis
-        - OS::TripleO::Services::SaharaApi
-        - OS::TripleO::Services::SaharaEngine
+        - "{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::SaharaApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::SaharaEngine{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
         - OS::TripleO::Services::Snmp

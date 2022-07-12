@@ -46,7 +46,7 @@ serviceapi_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
         - OS::TripleO::Services::GlanceApi
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::GlanceRegistry{% endif %}"
@@ -113,8 +113,8 @@ serviceapi_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 16 %}OS::TripleO::Services::Rsyslog{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
-        - OS::TripleO::Services::SaharaApi
-        - OS::TripleO::Services::SaharaEngine
+        - "{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::SaharaApi{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::SaharaEngine{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release == 13 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
@@ -128,4 +128,4 @@ serviceapi_role:
         - OS::TripleO::Services::TripleoFirewall
         - OS::TripleO::Services::TripleoPackages
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Zaqar{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Zaqar{% endif %}"
