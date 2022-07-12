@@ -12,9 +12,9 @@ controller_role:
     services:
         - OS::TripleO::Services::CACerts
         - OS::TripleO::Services::CephClient
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCUnity{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
         - OS::TripleO::Services::CinderBackup
         - OS::TripleO::Services::CinderVolume
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Clustercheck{% endif %}"
@@ -22,7 +22,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12  and install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Congress{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ec2Api{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Etcd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"

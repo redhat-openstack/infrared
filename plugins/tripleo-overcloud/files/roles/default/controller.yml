@@ -52,9 +52,9 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 10 %}OS::TripleO::Services::CephRbdMirror{% endif %}"
         - OS::TripleO::Services::CephRgw
         - OS::TripleO::Services::CinderApi
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CinderBackendVRTSHyperScale{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCUnity{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CinderBackendDellEMCVMAXISCSI{% endif %}"
         - OS::TripleO::Services::CinderBackup
         - OS::TripleO::Services::CinderScheduler
         - OS::TripleO::Services::CinderVolume
@@ -63,7 +63,7 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12  and install.version|default(undercloud_version) |openstack_release < 15 %}OS::TripleO::Services::Congress{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 13 %}OS::TripleO::Services::ContainerImagePrepare{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::Core{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Ec2Api{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Etcd{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::ExternalSwiftProxy{% endif %}"
@@ -146,8 +146,8 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Rhsm{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release >= 16 %}OS::TripleO::Services::Rsyslog{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::RsyslogSidecar{% endif %}"
-        - OS::TripleO::Services::SaharaApi
-        - OS::TripleO::Services::SaharaEngine
+        - ""{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::SaharaApi{% endif %}""
+        - "{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::SaharaEngine{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Securetty{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::SensuClient{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release == 13 %}OS::TripleO::Services::SkydiveAgent{% endif %}"
@@ -165,4 +165,4 @@ controller_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Tuned{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Vpp{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Zaqar{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 12 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Zaqar{% endif %}"
