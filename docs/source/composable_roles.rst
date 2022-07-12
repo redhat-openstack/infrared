@@ -267,7 +267,7 @@ Below is an example of the controller default role::
             - OS::TripleO::Services::NeutronOvsAgent
             - OS::TripleO::Services::RabbitMQ
             - OS::TripleO::Services::HAproxy
-            - OS::TripleO::Services::Keepalived
+            - "{% if install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Keepalived {% endif %}"
             - OS::TripleO::Services::Memcached
             - OS::TripleO::Services::Pacemaker
             - OS::TripleO::Services::Redis

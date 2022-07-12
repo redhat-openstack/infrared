@@ -13,9 +13,9 @@ heat_role:
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Aide{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::AuditD{% endif %}"
         - OS::TripleO::Services::CACerts
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::CertmongerUser{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::CertmongerUser{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release > 12 %}OS::TripleO::Services::Collectd{% endif %}"
-        - "{% if install.version|default(undercloud_version) |openstack_release > 11 %}OS::TripleO::Services::Docker{% endif %}"
+        - "{% if install.version|default(undercloud_version) |openstack_release > 11 and install.version|default(undercloud_version) |openstack_release < 17 %}OS::TripleO::Services::Docker{% endif %}"
         - "{% if install.version|default(undercloud_version) |openstack_release < 16 %}OS::TripleO::Services::Fluentd{% if install.version|default(undercloud_version) |openstack_release < 13 %}Client{% endif %}{% endif %}"
         - OS::TripleO::Services::HeatApi
         - OS::TripleO::Services::HeatApiCfn
