@@ -1,0 +1,25 @@
+---
+- name: generate files that needs to be generated before upgrade packages
+  block:
+      - name: list the stacks
+        environment:
+           OS_CLOUD: undercloud
+        command: openstack stack list -c "Stack Name" -f value
+        register: export_stacks
+
+      - name: remove export file if exits
+        file:
+           state: absent
+           path: "/home/stack/{{item}}-export.yaml"
+        loop: "{{ export_stacks.stdout_lines }}"
+
+      - name: export the stacks
+        environment:
+           OS_CLOUD: undercloud
+        command: openstack overcloud export --stack {{ item }}
+        loop: "{{ export_stacks.stdout_lines }}"
+
+  when: undercloud_version|openstack_release >= 16
+  tags:
+    - upgrade
+    - upgrade_repos
