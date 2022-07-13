@@ -201,6 +201,16 @@
       loop_control:
         label: "{{ item.path | basename }}"
 
+    - name: Change bochs video driver for qxl
+      lineinfile:
+        path: "/etc/libvirt/qemu/{{ item.path | basename }}"
+        regexp: "(.*)<model type=\"bochs\"(.*)"
+        line: "\\1<model type=\"qxl\" ram=\"65536\"\\2"
+        backrefs: true
+      loop: "{{ _virsh_snapshot_manifest_content.files | selectattr('path', 'match', '.*xml$') | list }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+
     # We use command here, because the virt module needs the raw XML
     # and a lookup will not work remotely. We could slurp all the files,
     # but that's a lot of work for very little gain.
