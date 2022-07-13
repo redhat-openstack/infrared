@@ -34,6 +34,14 @@
       # uc_version for update).
       undercloud_upgrade_version: "{{ install.version|default(install.upgrade|default(false) | ternary(undercloud_version|int +1, undercloud_version) ) }}"
   tasks:
+      - name: Export the stack (for later use during the upgrade)
+        include_tasks: "tasks/upgrade/generate_files.yml"
+        when:
+                - operation_type == 'Upgrade'
+                - undercloud_version|openstack_release == 16
+        tags:
+            - export
+
       - include_role:
             name: rhos-release
             apply:
