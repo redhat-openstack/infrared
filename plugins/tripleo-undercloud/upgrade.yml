@@ -21,6 +21,12 @@
             - validation
             - upgrade_repos
 
+      - name: Export the stack (for later use during the upgrade)
+        include_tasks: "tasks/upgrade/generate_files.yml"
+        tags:
+            - upgrade
+            - upgrade_repos
+
 - name: Undercloud Upgrade
   hosts: undercloud
   gather_facts: yes
