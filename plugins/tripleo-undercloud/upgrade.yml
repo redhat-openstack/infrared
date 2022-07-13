@@ -48,6 +48,36 @@
             - upgrade
             - upgrade_repos
   tasks:
+      - name: list the stacks
+        tags:
+           - upgrade
+           - upgrade_repos
+        environment:
+           OS_CLOUD: undercloud
+        command: openstack stack list -c "Stack Name" -f value
+        register: export_stacks
+        when: undercloud_version|openstack_release >= 16
+
+      - name: remove export file
+        tags:
+           - upgrade
+           - upgrade_repos
+        file:
+           state: absent
+           path: "/home/stack/{{item}}-export.yaml"
+        loop: "{{ export_stacks.stdout_lines }}"
+        when: undercloud_version|openstack_release >= 16
+
+      - name: get the export file
+        tags:
+           - upgrade
+           - upgrade_repos
+        environment:
+           OS_CLOUD: undercloud
+        command: openstack overcloud export --stack {{ item }}
+        loop: "{{ export_stacks.stdout_lines }}"
+        when: undercloud_version|openstack_release >= 16
+
       - name: update packages for the upgrade
         become: true
         tags:
