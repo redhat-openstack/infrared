@@ -1,80 +1,55 @@
-- name: Include templates from provided path
+# include environment template files from undercloud in overcloud_deploy script
+- include_vars:
+      file: "{{ templates_list_file }}"
+      name: current_template_file
+
+- set_fact:
+    current_file: "{{ current_template_file }}"
+
+- name: find the template file or corresponding j2 template
+  find:
+      path: "{{ item| dirname }}"
+      pattern: "{{ item|basename|splitext|first }}\\.(?:yaml|j2\\.yaml)$"
+      use_regex: yes
+  with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
+  register: default_templates
+
+- name: remove deprecated RetryFilter from OSP 16 onwards
   block:
-    # include environment template files from undercloud in overcloud_deploy script
-    - include_vars:
-          file: "{{ templates_list_file }}"
-          name: current_template_file
+  - set_fact:
+      filters_without_retry:
+          custom_templates:
+              parameter_defaults:
+                  NovaSchedulerDefaultFilters: "{{ current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | reject('match', 'RetryFilter') | list }}"
+  - set_fact:
+      current_file: "{{ current_file | combine(filters_without_retry, recursive=True) }}"
+  when:
+    - install.version|default(undercloud_version) | openstack_release >= 16
+    - current_file.custom_templates is defined
+    - ('RetryFilter' in (current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | default([])))
 
-    - set_fact:
-        current_file: "{{ current_template_file }}"
+- name: include templates from default location
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '  --environment-file {{ item.item }} \'
+      insertafter: '^\s*--templates.*'
+  with_items: "{{ default_templates.results }}"
+  when: item.matched > 0
 
-    - name: find the template file or corresponding j2 template
-      find:
-          path: "{{ item| dirname }}"
-          pattern: "{{ item|basename|splitext|first }}\\.(?:yaml|j2\\.yaml)$"
-          use_regex: yes
-      with_items: "{{ current_file.tripleo_heat_templates | default([]) }}"
-      register: default_templates
+- name: fail because file not found
+  vars:
+      missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
+  fail:
+      msg:
+          error: "Unable to locate templates from file '{{ templates_list_file }}'"
+          source_file: "{{ templates_list_file }}"
+          missing_templates: "{{ missing_templates }}"
+  when: missing_templates | default([])
 
-    - name: remove deprecated RetryFilter from OSP 16 onwards
-      block:
-      - set_fact:
-          filters_without_retry:
-              custom_templates:
-                  parameter_defaults:
-                      NovaSchedulerDefaultFilters: "{{ current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | reject('match', 'RetryFilter') | list }}"
-      - set_fact:
-          current_file: "{{ current_file | combine(filters_without_retry, recursive=True) }}"
-      when:
-        - install.version|default(undercloud_version) | openstack_release >= 16
-        - current_file.custom_templates is defined
-        - ('RetryFilter' in (current_file.custom_templates.parameter_defaults.NovaSchedulerDefaultFilters | default([])))
-
-    - name: include custom templates
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '  --environment-file {{ item.item }} \'
-          insertafter: '^\s*--templates.*'
-      with_items: "{{ default_templates.results }}"
-      when: item.matched > 0
-
-    - name: fail because file not found
-      vars:
-          missing_templates: "{{ default_templates.results|rejectattr('matched')|map(attribute='item')|list }}"
-      fail:
-          msg:
-              error: "Unable to locate templates from file '{{ templates_list_file }}'"
-              source_file: "{{ templates_list_file }}"
-              missing_templates: "{{ missing_templates }}"
-      when: missing_templates | default([])
-
-    - name: create custom templates file
-      copy:
-          dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ raw_name }}.yaml"
-          content: "{{ current_file.custom_templates|to_nice_yaml }}"
-      when: current_file.custom_templates is defined
-      vars:
-          raw_name: "{{ templates_list_file | basename | splitext | first }}"
-  when: '"tripleo-heat-templates" not in templates_list_file'
-
-- name: Include templates from THT path
-  block:
-    - name: Check if provided environment file exists
-      stat:
-        path: "{{ templates_list_file }}"
-      register: tht_file
-
-    - name: include tht template
-      lineinfile:
-          dest: "~/overcloud_deploy.sh"
-          line: '  --environment-file {{ templates_list_file }} \'
-          insertafter: '^\s*--templates.*'
-      when: tht_file.stat.exists
-
-    - name: Fail because file not found
-      fail:
-        msg:
-          error: "Unable to locate provided template in tripleo-heat-templates directory: '{{ templates_list_file }}'"
-      when: not tht_file.stat.exists
-
-  when: '"tripleo-heat-templates" in templates_list_file'
+- name: create custom templates file
+  copy:
+      dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/{{ raw_name }}.yaml"
+      content: "{{ current_file.custom_templates|to_nice_yaml }}"
+  when: current_file.custom_templates is defined
+  vars:
+      raw_name: "{{ templates_list_file | basename | splitext | first }}"

@@ -352,7 +352,7 @@ subparsers:
                             provided templates / options.
 
                   overcloud-templates:
-                      type: ListValue
+                      type: ListOfVarFiles
                       help: |
                             Add extra environment template files to "overcloud deploy" command
                             File (in YAML format) containing a list of paths to template files on the UnderCloud.

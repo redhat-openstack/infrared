@@ -209,9 +209,8 @@
         with_items: "{{ install.overcloud.templates|default([]) }}"
         loop_control:
             loop_var: templates_list_file
-        when:
-            - "templates_list_file != ''"
-            - "templates_list_file != 'none'"
+        # avoid empty strings
+        when: "templates_list_file != ''"
 
       - name: append templates for ironic enabled OC
         include_tasks: tasks/ironic_environment_templates.yml
