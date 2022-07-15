@@ -25,9 +25,6 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
-  tags:
-    - upgrade
-    - upgrade_repos
   vars:
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
       # NOTE(jfrancoa) The target release will be set by --version param, so we
@@ -36,20 +33,18 @@
       # fallback into the previous handling (uc_version+1 for upgrade,
       # uc_version for update).
       undercloud_upgrade_version: "{{ install.version|default(install.upgrade|default(false) | ternary(undercloud_version|int +1, undercloud_version) ) }}"
-  tasks:
-      - include_role:
-            name: rhos-release
-        vars:
-            release: "{{ undercloud_upgrade_version }}"
-            director_build: "{{ install.get('director', {}).build|default(omit) }}"
-            build: "{{ install.build | default(omit) }}"
-            mirror: "{{ install.mirror | default(omit) }}"
-            rr_distro_version: "{{ install.osrelease|default(omit) }}"
-            rr_buildmods: "{{ install.buildmods }}"
-            enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
-            without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
-            custom_script_url: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('url', {})|default('') }}"
-            skip_release: "{{ custom_script_url != '' or install.get('repos', {}).get('skip', {}).release|default('') }}"
+  roles:
+      - role: rhos-release
+        release: "{{ undercloud_upgrade_version }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        build: "{{ install.build | default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        rr_buildmods: "{{ install.buildmods }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+        without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
+        custom_script_url: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('url', {})|default('') }}"
+        skip_release: "{{ custom_script_url != '' or install.get('repos', {}).get('skip', {}).release|default('') }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
@@ -58,19 +53,17 @@
             - upgrade
             - upgrade_repos
 
-      - include_role:
-            name: cdn_registery
-        vars:
-            ansible_become: true
-            cdn_args_file: "{{ install.cdn|default('') }}"
-            install_version: "{{ install.version }}"
+      - role: cdn_registery
+        ansible_become: true
+        cdn_args_file: "{{ install.cdn|default('') }}"
+        install_version: "{{ install.version }}"
         when:
             - install.cdn|default(False)
             - "install.version|openstack_distribution == 'OSP'"
         tags:
             - upgrade
             - upgrade_repos
-
+  tasks:
       - name: update packages for the upgrade
         become: true
         tags:
