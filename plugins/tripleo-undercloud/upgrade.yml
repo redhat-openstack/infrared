@@ -25,9 +25,6 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
-  tags:
-    - upgrade
-    - upgrade_repos
   vars:
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
       # NOTE(jfrancoa) The target release will be set by --version param, so we
