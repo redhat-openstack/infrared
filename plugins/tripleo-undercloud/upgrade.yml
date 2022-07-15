@@ -25,9 +25,6 @@
   hosts: undercloud
   gather_facts: yes
   any_errors_fatal: true
-  tags:
-    - upgrade
-    - upgrade_repos
   vars:
       operation_type: "{{ 'Update' if install.get('update', {}).undercloud|default(False) else 'Upgrade' }}"
       # NOTE(jfrancoa) The target release will be set by --version param, so we
@@ -39,6 +36,10 @@
   tasks:
       - include_role:
             name: rhos-release
+            apply:
+                tags:
+                    - upgrade
+                    - upgrade_repos
         vars:
             release: "{{ undercloud_upgrade_version }}"
             director_build: "{{ install.get('director', {}).build|default(omit) }}"
@@ -55,21 +56,22 @@
             - not install.cdn|default(False)
             - not skip_release
         tags:
-            - upgrade
-            - upgrade_repos
+          - always
 
       - include_role:
             name: cdn_registery
+            apply:
+                tags:
+                    - upgrade
+                    - upgrade_repos
         vars:
-            ansible_become: true
             cdn_args_file: "{{ install.cdn|default('') }}"
             install_version: "{{ install.version }}"
         when:
             - install.cdn|default(False)
             - "install.version|openstack_distribution == 'OSP'"
         tags:
-            - upgrade
-            - upgrade_repos
+            - always
 
       - name: update packages for the upgrade
         become: true
@@ -85,14 +87,12 @@
             - "rhosp-release"
           state: latest
         when: undercloud_version|openstack_release >= 13
-
       - name: prepare undercloud containers
         tags:
             - undercloud_containers
             - upgrade
         import_tasks: tasks/prepare_uc_images.yml
         when: undercloud_version|openstack_release >= 13
-
       - name: "{{ operation_type }} to version {{ undercloud_upgrade_version }} build {{ install.build | default('latest') }}"
         include_tasks: "tasks/upgrade/upgrade.yml"
         when: undercloud_version|openstack_release <= 10
