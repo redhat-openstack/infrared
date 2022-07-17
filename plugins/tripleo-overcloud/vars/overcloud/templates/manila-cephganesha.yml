@@ -4,4 +4,4 @@ tripleo_heat_templates:
 
 custom_templates:
   parameter_defaults:
-      ManilaCephFSCephFSEnableSnapshots: "{{ (install.version|default(undercloud_version)|openstack_release >= 16)|ternary('True', 'False') }}"
+      ManilaCephFSCephFSEnableSnapshots: "{{ ((install.version|default(undercloud_version)|openstack_release)) | int == 16)|ternary('True', 'False') }}"
