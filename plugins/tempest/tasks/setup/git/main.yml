@@ -28,6 +28,8 @@
       version: "{{ (test.get('revision')| ternary(test.revision, setup.repo.get(test.openstack.version|default(overcloud_version)|openstack_release, setup.repo.defaults).branch )) }}"
       dest: "~/{{ setup.clone_dir }}"
   register: tempest_repo
+  retries: 10
+  delay: 30
   when: setup.local_dir is not defined
 
 - name: Install gerrit review package
@@ -55,8 +57,6 @@
       chdir: "{{ setup.clone_dir }}"
   register: tempest_repo_version
 
-- debug: "msg='Build mark: tempest={{ tempest_repo_version.stdout }}'"
-
 - name: Set venv_distro_package_list for OSP13 and forced Python3 venv
   set_fact:
     venv_distro_package_list:
@@ -65,6 +65,17 @@
   when:
     - test.openstack.version|default(overcloud_version)|openstack_release == 13
     - venv_python_version | int == 3
+
+- set_fact:
+    foo: "{{ test.openstack.version|default(overcloud_version)|openstack_release|int }}"
+
+- name: Set Python38 for OSP16 and above
+  block:
+    - set_fact:
+        venv_distro_package_list:
+          - python38
+    - shell: alternatives --set python3 /usr/bin/python3.8
+  when: test.openstack.version|default(overcloud_version)|openstack_release >= 16
 
 - name: Create the venv and install tempest
   import_role:
