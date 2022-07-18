@@ -33,6 +33,24 @@
       "message": "I would set 3 retries and 300 seconds delay.\n\n» dig a clock.corp.redhat.com\n\n; \u003c\u003c\u003e\u003e DiG 9.10.6 \u003c\u003c\u003e\u003e a clock.corp.redhat.com\n;; global options: +cmd\n;; Got answer:\n;; -\u003e\u003eHEADER\u003c\u003c- opcode: QUERY, status: NOERROR, id: 11632\n;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1\n\n;; OPT PSEUDOSECTION:\n; EDNS: version: 0, flags:; udp: 1220\n;; QUESTION SECTION:\n;clock.corp.redhat.com.\t\tIN\tA\n\n;; ANSWER SECTION:\nclock.corp.redhat.com.\t258\tIN\tA\t10.13.199.1\nclock.corp.redhat.com.\t258\tIN\tA\t10.11.160.238\n\nDefault value - 258 sec\n\n» dig +nocmd +noall +answer +ttlid clock.corp.redhat.com\nclock.corp.redhat.com.\t222\tIN\tA\t10.11.160.238\nclock.corp.redhat.com.\t222\tIN\tA\t10.13.199.1\n\nLocal value will expire in 222 sec\n\n» dig +nocmd +noall +answer +ttlid clock.corp.redhat.com\nclock.corp.redhat.com.\t218\tIN\tA\t10.13.199.1\nclock.corp.redhat.com.\t218\tIN\tA\t10.11.160.238\n\nLocal value will expire in 218 sec.\n\n» dig +nocmd +noall +answer +ttlid clock.corp.redhat.com\nclock.corp.redhat.com.\t212\tIN\tA\t10.11.160.238\nclock.corp.redhat.com.\t212\tIN\tA\t10.13.199.1\n\n» dig +nocmd +noall +answer +ttlid clock.corp.redhat.com\nclock.corp.redhat.com.\t210\tIN\tA\t10.13.199.1\nclock.corp.redhat.com.\t210\tIN\tA\t10.11.160.238\n\nDefault TTL is 258 sec, so if we retry every minute we\u0027ll get the same IP which is down. so 5 retries with 60 seconds it\u0027s only one chance to get a different IP.",
       "revId": "e5e5566f194436a35d8fec1337e10103856b0cd8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d5c86e85_92879740",
+        "filename": "plugins/virsh/snapshot_quiesce.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2022-07-18T08:13:59Z",
+      "side": 1,
+      "message": "Resolved with https://review.gerrithub.io/c/redhat-openstack/infrared/+/540850",
+      "parentUuid": "d77be6c4_e90fdc29",
+      "revId": "e5e5566f194436a35d8fec1337e10103856b0cd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ],
   "submitRequirementResults": []
