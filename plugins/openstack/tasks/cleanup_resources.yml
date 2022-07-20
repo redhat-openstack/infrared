@@ -30,47 +30,31 @@
   ignore_errors: yes
 
 - name: Cleanup servers
-  async: "{{ provision.os.server.timeout | int + 10 }}"
-  poll: 0
   os_server:
       cloud: "{{ provision.cloud | default(omit) }}"
       name: "{{ item.id }}"
       state: absent
+      wait: yes
       delete_fip: yes
   with_items: "{{ servers|default([]) }}"
-  register: servers_cleanup_async
+  register: servers_cleanup
+  retries: 5
+  delay: 60
+  until: servers_cleanup is successful
   ignore_errors: yes
 
-- name: Check servers cleanup
-  async_status:
-    jid: "{{ async_result_item.ansible_job_id }}"
-  loop: "{{ servers_cleanup_async.results }}"
-  loop_control:
-    loop_var: "async_result_item"
-  register: servers_cleanup
-  until: servers_cleanup.finished
-  retries: 300
-
 - name: Cleanup volumes
-  async: "{{ provision.os.server.timeout | int +10 }}"
-  poll: 0
   os_volume:
       cloud: "{{ provision.cloud | default(omit) }}"
       name: "{{ item.id }}"
       state: absent
+      wait: yes
   with_items: "{{ volumes|default([]) }}"
-  register: volumes_cleanup_async
-  ignore_errors: yes
-
-- name: Check volumes cleanup
-  async_status:
-    jid: "{{ async_result_item.ansible_job_id }}"
-  loop: "{{ volumes_cleanup_async.results }}"
-  loop_control:
-    loop_var: "async_result_item"
   register: volumes_cleanup
-  until: volumes_cleanup.finished
-  retries: 300
+  retries: 5
+  delay: 60
+  until: volumes_cleanup is successful
+  ignore_errors: yes
 
 # Block tasks are needed for shade >= 1.24.0
 - block:
