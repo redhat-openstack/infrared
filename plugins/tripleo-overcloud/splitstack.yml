@@ -54,16 +54,20 @@
         loop_control:
             loop_var: role
 
-      - name: create roles folder
-        file:
-            path: "{{ template_base }}/roles"
-            state: directory
+      - name: render roles_data.yaml when not tht-roles
+        block:
+        - name: create roles folder
+          file:
+              path: "{{ template_base }}/roles"
+              state: directory
 
-      - name: create the roles_data file
-        template:
-            src: composable_roles/roles_data.yaml.j2
-            dest: "{{ template_base }}/roles/roles_data.yaml"
-            force: yes
+        - name: create the roles_data file
+          template:
+              src: composable_roles/roles_data.yaml.j2
+              dest: "{{ template_base }}/roles/roles_data.yaml"
+              force: yes
+        when:
+          - (install.version|default(undercloud_version)|openstack_release < 17)
 
       - name: create the network template file
         vars:
@@ -105,6 +109,19 @@
             regexp: "{{ item.key }}"
             replace: "{{ item.value }}"
         with_dict: "{{ role_substitutions }}"
+
+- name: Deploy the Overcloud with tripleo composable roles
+  vars:
+      deploy_script_template: templates/tripleo_roles/overcloud_deploy.sh.j2
+      templates:
+          generate_host_name_template: yes
+          storage_add_scale: no
+      use_network_data: "{{ install.network.render.templates|default(False) or ( install.manila.storage.protocol != 'nfs-ganesha' and install.network.protocol == 'ipv6' and
+      install.version|default(undercloud_version) | openstack_release >= 13 ) }}"
+  import_playbook: "{{ composable_roles | default('tripleo_roles.yml') }}"
+  when:
+   - (install.version|default(undercloud_version)|openstack_release >= 17)
+   - install.tht.roles | bool
 
 - name: Deploy the Overcloud with composable roles
   include: "{{ overcloud_deploy | default('deploy.yml') }}"
