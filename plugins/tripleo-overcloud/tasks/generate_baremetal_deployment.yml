@@ -11,6 +11,13 @@
         dest: "generate_baremetal_deployment_from_roles_data.py"
         mode: 0755
 
+    - name: Copy growvols Ansible playbook Controller file
+      copy:
+        src: "files/ansible_playbook/Controller.yaml"
+        dest: "ansible_playbook/Controller.yaml"
+        mode: 0644
+      when: install.storage|default({})).backend != 'ceph'
+
     - name: Find out the number of nodes per role
       roles_node_count:
         tht_roles: "{{ install.role.files }}"
@@ -27,6 +34,7 @@
         {% for name, count in roles_count.nodes_count.items() %}
         -c {{ name }} {{ count }} \
         {% endfor %}
+        -a ansible_playbook \
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
