@@ -11,6 +11,12 @@
         dest: "generate_baremetal_deployment_from_roles_data.py"
         mode: 0755
 
+    - name: Copy the Ansible growvols Playbook file
+      copy:
+        src: "files/growvols.yaml"
+        dest: "growvols.yaml"
+        mode: 0644
+
     - name: Find out the number of nodes per role
       roles_node_count:
         tht_roles: "{{ install.role.files }}"
@@ -27,6 +33,7 @@
         {% for name, count in roles_count.nodes_count.items() %}
         -c {{ name }} {{ count }} \
         {% endfor %}
+        -a growvols.yaml \
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
