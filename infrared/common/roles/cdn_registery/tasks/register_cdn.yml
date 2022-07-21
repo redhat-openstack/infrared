@@ -21,16 +21,9 @@
   when: cdn_creds.server_hostname is defined
 
 - block:
-    - name: Download katello-ca-consumer-latest.noarch.rpm
-      get_url:
-          url: "https://{{ cdn_creds.server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm"
-          dest: "/tmp/katello-ca-consumer-latest.noarch.rpm"
-          force: yes
-          validate_certs: no
-
     - name: Install katello-ca-consumer-latest.noarch.rpm
       package:
-          name: /tmp/katello-ca-consumer-latest.noarch.rpm
+          name: "https://{{ cdn_creds.server_hostname }}/pub/katello-ca-consumer-latest.noarch.rpm"
           state: present
           disable_gpg_check: true
       become: true
