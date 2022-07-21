@@ -11,6 +11,12 @@
         dest: "generate_baremetal_deployment_from_roles_data.py"
         mode: 0755
 
+    - name: Copy custom per role Ansible playbook files
+      copy:
+        src: "files/ansible_playbook"
+        dest: "ansible_playbook"
+        mode: 0755
+
     - name: Find out the number of nodes per role
       roles_node_count:
         tht_roles: "{{ install.role.files }}"
@@ -27,6 +33,7 @@
         {% for name, count in roles_count.nodes_count.items() %}
         -c {{ name }} {{ count }} \
         {% endfor %}
+        -a ansible_playbook \
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
