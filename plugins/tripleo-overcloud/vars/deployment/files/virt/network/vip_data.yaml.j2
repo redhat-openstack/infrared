@@ -1,11 +1,26 @@
 # NOTE: dns_name: maybe redhat.local needs to be used here too
 - network: ctlplane
   dns_name: overcloud
+{% if loadbalancer is defined and loadbalancer.network.plain.ip %}
+  ip_address: {{ loadbalancer.network.plain.ip | ipaddr('address') }}
+{% endif %}
 - network: external
   dns_name: overcloud
+{% if loadbalancer is defined and loadbalancer.network.external.vip %}
+  ip_address: {{ loadbalancer.network.external.vip | ipaddr('address') }}
+{% endif %}
 - network: internal_api
   dns_name: overcloud
+{% if loadbalancer is defined and loadbalancer.network.internal_api.vip %}
+  ip_address: {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}
+{% endif %}
 - network: storage
   dns_name: overcloud
+{% if loadbalancer is defined and loadbalancer.network.storage.vip %}
+  ip_address: {{ loadbalancer.network.storage.vip | ipaddr('address') }}
+{% endif %}
 - network: storage_mgmt
   dns_name: overcloud
+{% if loadbalancer is defined and loadbalancer.network.storage_mgmnt.vip %}
+  ip_address: {{ loadbalancer.network.storage_mgmnt.vip | ipaddr('address') }}
+{% endif %}

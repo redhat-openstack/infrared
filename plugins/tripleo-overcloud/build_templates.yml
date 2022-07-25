@@ -78,6 +78,13 @@
         with_filetree: '{{ source_dir }}'
         when: item.state == 'directory'
 
+      # Ensure to include external loadbalancer IP addresses before the creation of vip_data.yaml and
+      # baremetal_deployment.yaml
+      - name: Include loadbalancer configuration vars
+        include_vars:
+          file: "vars/loadbalancer/external-{{ (install.network.protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
+        when: "'loadbalancer' in groups"
+
       # consider all the files as templates
       - name: Copy deployment folder
         vars:
