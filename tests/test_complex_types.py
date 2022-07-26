@@ -29,6 +29,13 @@ def nested_dict():
 
 
 @pytest.fixture
+def nested_list():
+    """Create a new IniType complex type
+    """
+    return cli.NestedList("TestNestedList", None, None, None)
+
+
+@pytest.fixture
 def flag_type():
     """Create a new Flag complex type
     """
@@ -66,6 +73,15 @@ def test_nested_dict_resolve(input_value, expected_return, nested_dict):
     """
     assert nested_dict.resolve(input_value) == expected_return
 
+
+@pytest.mark.parametrize("input_value, expected_return", [
+    ([{"k1=v1"},{"k2=v2"}], [{"k1":"v1"},{"k2":"v2"}])    
+])
+def test_nested_list_resolve(input_value, expected_return, nested_list):
+    """Verifies the return value of 'resolve' method in 'IniType' Complex type
+    """
+    assert nested_list.resolve(input_value) == expected_return
+    
 
 @pytest.mark.parametrize("input_value, expected_return", [
     (['k1=v1'], {'k1': 'v1'}),
