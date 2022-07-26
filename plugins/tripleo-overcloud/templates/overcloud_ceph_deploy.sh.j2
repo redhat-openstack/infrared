@@ -4,6 +4,7 @@ openstack overcloud ceph deploy \
 -o /home/stack/templates/overcloud-ceph-deployed.yaml \
 --container-image-prepare "{{ containers_home_dir }}/containers-prepare-parameter.yaml" \
 {% if install.ceph.initial.conf.file %} --config {{ ansible_user_dir }}/initial-ceph.conf{% endif %} \
+{% if install.ceph.osd.spec.file %} --osd-spec {{ ansible_user_dir }}/osd-spec.yml{% endif %} \
 {% if ceph_node_cnt|int < 3 %}--single-host-defaults {% endif %} \
 --stack "{{ install.overcloud.stack }}" \
 {% if install.ceph.cluster.name and install.ceph.cluster.name|length > 0 %}--cluster {{ install.ceph.cluster.name }}{% endif %} \
