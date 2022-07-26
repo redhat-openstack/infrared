@@ -693,6 +693,14 @@ subparsers:
                           include {{ ansible_vars }} which are set during infrared
                           run. Only supported for OSP 17 and newer.
 
+                    ceph-osd-spec-file:
+                        type: Value
+                        default: ''
+                        help: |
+                            The absolute path of a Ceph OSD spec file. It will be
+                            copied to the undercloud:/home/stack/osd-spec.yml
+                            and passed to 'openstack overcloud ceph deploy --osd-spec'.
+
                   glance-backend:
                       type: Value
                       choices:
