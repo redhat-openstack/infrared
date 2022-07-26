@@ -81,6 +81,7 @@ class BaremetalRoleData():
         return parsed_nets
 
     def __init__(self, role_data: Dict, networks_data: Dict,
+                 ansible_playbook_dict: Dict,
                  enable_profiles: bool = False) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
@@ -90,6 +91,7 @@ class BaremetalRoleData():
                                               networks_data)
         self._tags = role_data.get('tags', [])
         self._enable_profiles = enable_profiles
+        self.ansible_playbook_dict = ansible_playbook_dict
 
     def to_baremetal_format(self, network_templates_dir: Path):
         out = {}
@@ -123,16 +125,25 @@ class BaremetalRoleData():
 
         if defaults:
             out['defaults'] = defaults
+
+        if self.ansible_playbook_dict:
+            if self.ansible_playbook_dict.get(self.name, None):
+                out['ansible_playbooks'] = (
+                    self.ansible_playbook_dict[self.name]
+                )
+
         return out
 
 
 def convert_role_data(roles_data: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
+                      ansible_playbook_dict: Dict,
                       enable_profiles: bool = False) -> None:
     all_roles = []
     for role_data in roles_data:
-        role_obj = BaremetalRoleData(role_data, networks_data, enable_profiles)
+        role_obj = BaremetalRoleData(role_data, networks_data,
+                                     ansible_playbook_dict, enable_profiles)
         nc = 0
         try:
             nc = int(roles_count.get(role_obj.name))
@@ -141,6 +152,7 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
             # and add the role to the list, so that
             # the validation does not fail.
             pass
+
         role_obj.roles_count = nc
         all_roles.append(role_obj.to_baremetal_format(network_templates_dir))
     print(yaml.dump(all_roles, sort_keys=False))
@@ -165,6 +177,11 @@ def parse_opts(argv):
                         help='Override the count of nodes for each node type')
     parser.add_argument('-p', '--enable-profiles', action='store_true',
                         help='Whether add some default profiles to the nodes')
+    parser.add_argument('-a', '--ansible-playbook',
+                        metavar='ANSIBLE_PLAYBOOK',
+                        help='Path to a directory with Ansible playbook files '
+                             'that contain one or more Ansible '
+                             'playbook(s) to add to each role for execution')
     # FIXME: add parameter to set the firstboot options
     opts = parser.parse_args(argv[1:])
     return opts
@@ -177,6 +194,16 @@ def main():
 
     with open(opts.roles_data, 'r') as rdf:
         roles_data = yaml.safe_load(rdf)
+
+    ansible_playbook_dict = {}
+    if opts.ansible_playbook:
+        ansible_playbook_files = Path(opts.ansible_playbook).glob('*')
+        ansible_playbook_dict = {}
+        for ansible_playbook_file in ansible_playbook_files:
+            role_name = ansible_playbook_file.name.split('.')[0]
+            with open(ansible_playbook_file, 'r') as apf:
+                ansible_playbook_dict[role_name] = yaml.safe_load(apf)
+
     # get the names of the networks
     networks_data = {}
     if opts.networks_file:
@@ -184,7 +211,7 @@ def main():
             networks_data_file = yaml.safe_load(ndf)
         networks_data = parse_networks_names(networks_data_file)
     convert_role_data(roles_data, networks_data, opts.network_templates,
-                      roles_count, opts.enable_profiles)
+                      roles_count, ansible_playbook_dict, opts.enable_profiles)
 
 
 if __name__ == '__main__':
