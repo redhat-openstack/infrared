@@ -51,7 +51,7 @@
 {% endfor %}
 {% endif %}
 {# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
-{% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend == 'lvm' %}
+{% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend != 'ceph' %}
   ansible_playbooks:
     - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
       extra_vars:
