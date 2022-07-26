@@ -23,9 +23,16 @@ def dict_type():
 
 @pytest.fixture
 def nested_dict():
-    """Create a new IniType complex type
+    """Create a new NestedDict complex type
     """
     return cli.NestedDict("TestNestedDict", None, None, None)
+
+
+@pytest.fixture
+def nested_list():
+    """Create a new NestedList complex type
+    """
+    return cli.NestedList("TestNestedList", None, None, None)
 
 
 @pytest.fixture
@@ -62,9 +69,18 @@ def test_list_value_resolve(list_value_type, test_value, expected):
      {'s1': {'k1': 'v1', 'l2': {'k2': 'v2'}}, 's2': {'k3': 'v3'}}),
 ])
 def test_nested_dict_resolve(input_value, expected_return, nested_dict):
-    """Verifies the return value of 'resolve' method in 'IniType' Complex type
+    """Verifies the return value of 'resolve' method in 'NestedDict' Complex type
     """
     assert nested_dict.resolve(input_value) == expected_return
+
+
+@pytest.mark.parametrize("input_value, expected_return", [
+    (["k1=v1","k2=v2"], [{"k1":"v1"},{"k2":"v2"}])
+])
+def test_nested_list_resolve(input_value, expected_return, nested_list):
+    """Verifies the return value of 'resolve' method in 'NestedList' 
+    Complex type"""
+    assert nested_list.resolve(input_value) == expected_return
 
 
 @pytest.mark.parametrize("input_value, expected_return", [

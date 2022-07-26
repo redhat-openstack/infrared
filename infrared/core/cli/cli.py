@@ -220,7 +220,9 @@ class CliParser(object):
 
         if 'type' in option_data:
             if option_data['type'] in COMPLEX_TYPES:
-                complex_action = COMPLEX_TYPES.get(option_data['type'], None)
+                complex_action = COMPLEX_TYPES.get(option_data['type'])
+                if hasattr(complex_action, 'DEFAULT_ACTION'):
+                    opt_kwargs['action'] = complex_action.DEFAULT_ACTION
                 if hasattr(complex_action, 'VALUES_AUTO_PROPAGATION') and \
                         complex_action.VALUES_AUTO_PROPAGATION:
                     complex_action = complex_action(
@@ -537,7 +539,7 @@ class NestedList(ComplexType, NestedBase):
         -> [{'section1': {'option1': 'value1'}},
             {'section1': {'option2': 'value2'}}]
     """
-
+    DEFAULT_ACTION='append'
     def resolve(self, value):
         if isinstance(value, string_types):
             return [self._resolve(value)]
