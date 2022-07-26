@@ -235,6 +235,9 @@ class CliParser(object):
                 opt_kwargs['action'] = 'store_true'
                 opt_kwargs.pop('type', None)
                 opt_kwargs.pop('metavar', None)
+            elif option_data['type'] == 'NestedList' and 'action' not in opt_kwargs:
+                opt_kwargs['action'] = 'append'
+
 
         if allowed_values:
             opt_kwargs['help'] += "\nAllowed values: {}.".format(
