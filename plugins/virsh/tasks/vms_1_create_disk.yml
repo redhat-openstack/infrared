@@ -87,8 +87,12 @@
             # expand (copy-content) into new image in case of system disk
             # virt-resize needs target file with expected size to already exists
             os_version=`virt-cat -a {{ base_image_path }}/{{ image_name }} /etc/os-release | awk '/^VERSION=/ {print $1}' | grep -oP '[0-9]+' | head -1`
-            # Try to find the "root" partition or an xfs partition. Defaults to /dev/sda1 else.
-            root_part=`virt-filesystems --csv --long --no-title -a {{ base_image_path }}/{{ image_name }} | awk -F "," '{ if ($4 == "root") {print $1; exit;} else if ($3 == "xfs") {print $1; exit;} }'`
+            # Try to find the "root" partition or an first xfs partition. Defaults to /dev/sda1 else.
+            partitions=`virt-filesystems --csv --long --no-title -a {{ base_image_path }}/{{ image_name }}`
+            root_part=`awk -F "," '{ if ($4 == "root") {print $1; exit;} }' <<<"${partitions}"`
+            if [[ -z "$root_part" ]]; then
+                root_part=`awk -F "," '{ if ($3 == "xfs") {print $1; exit;} }' <<<"${partitions}"`
+            fi
             root_part=${root_part:-/dev/sda1}
             virt-resize --expand $root_part {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # We need to regenerate a new machine-id due to DHCP IPv6 not working otherwise
