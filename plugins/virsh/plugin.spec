@@ -165,6 +165,56 @@ subparsers:
                           Redirect the VMs serial output to files.
                           Files can be found under /var/lib/libvirt/qemu/{prefix-node_name-node_number}-serial.log
                           For example: /var/lib/libvirt/qemu/XYZ-undercloud-0-serial.log
+                          
+                  version:
+                      type: Value
+                      help: |
+                          The product version (product == director)
+                          Numbers are for OSP releases
+                          Names are for RDO releases
+                      choices:
+                        - "7"
+                        - "8"
+                        - "9"
+                        - "10"
+                        - "11"
+                        - "12"
+                        - "13"
+                        - "14"
+                        - "15"
+                        - "15-trunk"
+                        - "16"
+                        - "16-trunk"
+                        - "17"
+                        - "17.0"
+                        - "17.1"
+                        - "17-trunk"
+                        - "16.0"
+                        - "16.0-trunk"
+                        - "16.1"
+                        - "16.1-trunk"
+                        - "16.2"
+                        - "16.2-trunk"
+                        - kilo
+                        - liberty
+                        - mitaka
+                        - newton
+                        - ocata
+                        - pike
+                        - queens
+                        - rocky
+                        - stein
+                        - train
+                  build:
+                      help: |
+                          String represents a timestamp of the OSP puddle.
+                          Note: for versions 6 < OSPd < 10 to specify director
+                          version use '--director-build' flag.
+                          (for the given product core version).
+                          Supports any rhos-release labels.
+                          RDO supported labels: master-tripleo-ci
+                          Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                      type: Value
 
             - title: cleanup
               options:

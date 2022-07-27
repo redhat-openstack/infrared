@@ -1,0 +1,12 @@
+- name: Install Repo
+  become: yes
+  block:
+    - include_role:
+        name: rhos-release
+      vars:
+        release: "{{ provision.version }}"
+        build: "{{ provision.build }}"
+
+    - name: Use rhos-release rhel
+      command:
+        cmd: "rhos-release rhel"
