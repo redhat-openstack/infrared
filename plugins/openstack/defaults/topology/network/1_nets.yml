@@ -1,0 +1,37 @@
+---
+# This is network topology for OpenStack Standalone with one nic config
+networks_vars:
+    networks:
+        data:
+            name: 'data'
+
+networks_data:
+    networks: "{{ networks_vars.networks }}"
+
+    subnets:
+        data:
+            name: "{{ networks_vars.networks.data.name }}"
+            network_name: "{{ networks_vars.networks.data.name }}"
+            allocation_pool_start: 192.168.24.10
+            allocation_pool_end: 192.168.24.99
+            cidr: 192.168.24.0/24
+
+    routers:
+        router:
+            name: 'router'
+            attach_subnets:
+                - "{{ networks_vars.networks.data.name }}"
+
+security_groups:
+    general_access:
+        rules:
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: icmp
+            - direction: 'ingress'
+              ethertype: 'IPv4'
+              remote_ip_prefix: '0.0.0.0/0'
+              protocol: tcp
+              port_range_min: '22'
+              port_range_max: '22'
