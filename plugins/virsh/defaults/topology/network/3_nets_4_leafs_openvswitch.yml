@@ -12,24 +12,104 @@ networks:
       portgroups:
         - name: ctlplane0
           default: true
-          vlan_id: 4
-          ipv4_address: 192.168.24.253/24
-          ipv6_address: 2620:dead:beef:4::f:fe/64
+          trunk: true
+          vlans:
+            - id: 4
+              ipv4_address: 192.168.24.253/24
+              ipv6_address: 2620:dead:beef:4::f:fe/64
+              native: true
+            - id: 10 # External
+            - id: 23 # InternalApi - leaf 0
+            - id: 20 # InternalApi - leaf 1
+            - id: 21 # InternalApi - leaf 2
+            - id: 22 # InternalApi - leaf 3
+            - id: 33 # Storage - leaf 0
+            - id: 30 # Storage - leaf 1
+            - id: 31 # Storage - leaf 2
+            - id: 32 # Storage - leaf 3
+            - id: 43 # StorageMgmt - leaf 0
+            - id: 40 # StorageMgmt - leaf 1
+            - id: 41 # StorageMgmt - leaf 2
+            - id: 42 # StorageMgmt - leaf 3
+            - id: 60 # Management - leaf 0
+            - id: 61 # Management - leaf 1
+            - id: 62 # Management - leaf 2
+            - id: 63 # Management - leaf 3
         - name: ctlplane1
           default: false
-          vlan_id: 5
-          ipv4_address: 192.168.25.253/24
-          ipv6_address: 2620:dead:beef:5::f:fe/64
+          trunk: true
+          vlans:
+            - id: 5
+              ipv4_address: 192.168.25.253/24
+              ipv6_address: 2620:dead:beef:5::f:fe/64
+              native: true
+            - id: 10 # External
+            - id: 23 # InternalApi - leaf 0
+            - id: 20 # InternalApi - leaf 1
+            - id: 21 # InternalApi - leaf 2
+            - id: 22 # InternalApi - leaf 3
+            - id: 33 # Storage - leaf 0
+            - id: 30 # Storage - leaf 1
+            - id: 31 # Storage - leaf 2
+            - id: 32 # Storage - leaf 3
+            - id: 43 # StorageMgmt - leaf 0
+            - id: 40 # StorageMgmt - leaf 1
+            - id: 41 # StorageMgmt - leaf 2
+            - id: 42 # StorageMgmt - leaf 3
+            - id: 60 # Management - leaf 0
+            - id: 61 # Management - leaf 1
+            - id: 62 # Management - leaf 2
+            - id: 63 # Management - leaf 3
         - name: ctlplane2
           default: false
-          vlan_id: 6
-          ipv4_address: 192.168.26.253/24
-          ipv6_address: 2620:dead:beef:6::f:fe/64
+          trunk: true
+          vlans:
+            - id: 6
+              ipv4_address: 192.168.26.253/24
+              ipv6_address: 2620:dead:beef:6::f:fe/64
+              native: true
+            - id: 10 # External
+            - id: 23 # InternalApi - leaf 0
+            - id: 20 # InternalApi - leaf 1
+            - id: 21 # InternalApi - leaf 2
+            - id: 22 # InternalApi - leaf 3
+            - id: 33 # Storage - leaf 0
+            - id: 30 # Storage - leaf 1
+            - id: 31 # Storage - leaf 2
+            - id: 32 # Storage - leaf 3
+            - id: 43 # StorageMgmt - leaf 0
+            - id: 40 # StorageMgmt - leaf 1
+            - id: 41 # StorageMgmt - leaf 2
+            - id: 42 # StorageMgmt - leaf 3
+            - id: 60 # Management - leaf 0
+            - id: 61 # Management - leaf 1
+            - id: 62 # Management - leaf 2
+            - id: 63 # Management - leaf 3
         - name: ctlplane3
           default: false
-          vlan_id: 7
-          ipv4_address: 192.168.27.253/24
-          ipv6_address: 2620:dead:beef:7::f:fe/64
+          trunk: true
+          vlans:
+            - id: 7
+              ipv4_address: 192.168.27.253/24
+              ipv6_address: 2620:dead:beef:7::f:fe/64
+              native: true
+            - id: 10 # External
+            - id: 23 # InternalApi - leaf 0
+            - id: 20 # InternalApi - leaf 1
+            - id: 21 # InternalApi - leaf 2
+            - id: 22 # InternalApi - leaf 3
+            - id: 33 # Storage - leaf 0
+            - id: 30 # Storage - leaf 1
+            - id: 31 # Storage - leaf 2
+            - id: 32 # Storage - leaf 3
+            - id: 43 # StorageMgmt - leaf 0
+            - id: 40 # StorageMgmt - leaf 1
+            - id: 41 # StorageMgmt - leaf 2
+            - id: 42 # StorageMgmt - leaf 3
+            - id: 60 # Management - leaf 0
+            - id: 61 # Management - leaf 1
+            - id: 62 # Management - leaf 2
+            - id: 63 # Management - leaf 3
         - name: external
           default: false
           vlan_id: 10
