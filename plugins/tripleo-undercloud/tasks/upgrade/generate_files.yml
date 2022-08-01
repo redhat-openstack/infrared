@@ -19,7 +19,7 @@
         command: openstack overcloud export --stack {{ item }}
         loop: "{{ export_stacks.stdout_lines }}"
 
-  when: undercloud_version|openstack_release >= 16
+  when: undercloud_version|openstack_release == 16
   tags:
     - upgrade
     - upgrade_repos
