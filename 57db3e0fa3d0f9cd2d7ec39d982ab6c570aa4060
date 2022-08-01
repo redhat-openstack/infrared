@@ -16,6 +16,29 @@
       "message": "recheck",
       "revId": "57db3e0fa3d0f9cd2d7ec39d982ab6c570aa4060",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "39af9da5_94f3d667",
+        "filename": "plugins/tripleo-undercloud/tasks/upgrade/generate_files.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1016895
+      },
+      "writtenOn": "2022-08-01T09:12:37Z",
+      "side": 1,
+      "message": "This condition could be on the include_tasks task to allow this to be skipped.\n\nAlso, this causes issues with OSP 17.0 updates. Should the condition be something like:\n\n  when:\n    - operation_type \u003d\u003d \u0027Upgrade\u0027\n    - undercloud_version|openstack_release \u003d\u003d 16\n\nThen we move the include_tasks to the next playbook which has the operation_type defined.",
+      "range": {
+        "startLine": 22,
+        "startChar": 8,
+        "endLine": 22,
+        "endChar": 50
+      },
+      "revId": "57db3e0fa3d0f9cd2d7ec39d982ab6c570aa4060",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ],
   "submitRequirementResults": []
