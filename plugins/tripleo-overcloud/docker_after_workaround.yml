@@ -1,4 +1,34 @@
 ---
-- name: Placeholder for workarounds(container related)
-  hosts: localhost
+- name: Prepare hosts group of single controller where the RGW definitions are
+  hosts: controller
   gather_facts: no
+  become: yes
+  tasks:
+      - name: Find out what controller node needs w/a for RHBZ#2111902
+        ignore_errors: yes
+        shell: |
+          sudo cephadm shell -v /home/ceph-admin/specs:/specs -- ls /specs/rgw
+        register: rgw_controller_files
+
+      - group_by: key=controller_workaround_rhbz_2111902
+        when:
+          - rgw_controller_files is defined
+          - rgw_controller_files.rc == 0
+
+- name: Apply w/a for RHBZ#2111902 on the specific controller
+  hosts: controller_workaround_rhbz_2111902
+  become: no
+  gather_facts: no
+  tasks:
+      - name: Remove other controllers from /specs/rgw definitions and backup the file
+        shell: |
+          sudo cephadm shell -v /home/ceph-admin/specs:/specs -- sed -i.bkp '/- controller-[^0]/d' /specs/rgw
+
+      - name: Redeploy the RGW components (scale down)
+        shell: |
+          sudo cephadm shell -v /home/ceph-admin/specs:/specs -- ceph orch apply -i /specs/rgw
+
+      - name: Check whether there is really only single RGW instance running
+        shell: |
+          sudo cephadm shell -v /home/ceph-admin/specs:/specs -- ceph orch ls
+
