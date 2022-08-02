@@ -1,4 +1,18 @@
 ---
-- name: Placeholder for workarounds(container related)
+- name: Placeholder for post-deployment workarounds(container related)
   hosts: localhost
   gather_facts: no
+  tasks:
+  - name: Workarounds
+    hosts: controller
+    become: yes
+    gather_facts: no
+    ignore_errors: yes
+    tasks:
+        - name: "w/a for RHBZ#2111902"
+          shell: |
+            sudo cephadm shell -v /home/ceph-admin/specs:/specs
+            sed -i '/- controller-[^0]/d' /specs/rgw
+            ceph orch apply -i specs/rgw
+            ceph orch ls
+
