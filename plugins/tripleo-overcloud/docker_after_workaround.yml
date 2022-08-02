@@ -1,4 +1,40 @@
 ---
-- name: Placeholder for workarounds(container related)
-  hosts: localhost
+- name: Construct the URL to obtain the needed ceph 5-235 container
+  hosts: undercloud,controller-0
+  tasks:
+      - set_fact:
+           ceph_container_url: "{{ container_env['container-image-prepare']['namespace'] }}/{{ container_env['container-image-prepare']['ceph_image'] }}:5-235"
+
+- name: Make the 235 container available in the local registry
+  hosts: undercloud
   gather_facts: no
+  become: yes
+  tasks:
+      - name: Pull rhceph:5-235 from closest mirror
+        shell: |
+          podman pull {{ ceph_container_url }}
+
+      - name: Push rhceph:5-235 to localhost registry
+        shell: |
+          openstack tripleo container image push {{ ceph_container_url }}
+
+      - name: Make sure we now have 2 versions of the ceph container ready for use
+        shell: |
+          openstack tripleo container image list | grep rhceph
+
+- name: Access cephadm on arbitrary controller
+  hosts: controller-0
+  gather_facts: no
+  become: yes
+  tasks:
+      - name: Check the orchestration layout before any changes are done
+        shell: |
+          cephadm shell -- bash -c "ceph orch ls && ceph orch ps | grep rgw"
+
+      - name: Redeploy rgw services with downgraded(235) container
+        shell: |
+          sudo cephadm shell 2>/dev/null -- bash -c "ceph orch ps | grep rgw | cut -d' ' -f1 | xargs -n 1 -I {} ceph orch daemon redeploy {} --image undercloud-0.ctlplane.redhat.local:8787/rhceph/rhceph:5-235"
+
+      - name: Recheck the orchestration layout after
+        shell: |
+          cephadm shell -- bash -c "ceph orch ls && ceph orch ps | grep rgw"
