@@ -10,24 +10,7 @@
         update_password: always
         password: "$6$vg/TEVCJamwUJ3zj$Nr8V6mJE7E96bBTe9v8ZZ1aLnzlBTegc53dnPs0zYWPzUmDlpVgpgnU4YXlxD7y.ygEV2f7u5BXuHGEXdXp5T."
 
-    - name: rhos-release
-      yum:
-        name: http://download.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm
-        disable_gpg_check: yes
-
-    - name: base os repo install
-      copy:
-        remote_src: yes
-        src: "/var/lib/rhos-release/repos/rhos-release-rhel-{{ ansible_distribution_version }}.repo"
-        dest: "/etc/yum.repos.d/rhos-release-rhel-{{ ansible_distribution_version }}.repo"
-          #src: "/var/lib/rhos-release/repos/rhos-release-rhel-8.3.repo"
-          #dest: "/etc/yum.repos.d/rhos-release-rhel-8.3.repo"
-
-    - name: osp repo install
-      copy:
-        remote_src: yes
-        src: /var/lib/rhos-release/repos/rhos-release-16.2.repo
-        dest: /etc/yum.repos.d/rhos-release-16.2.repo
+    - import_tasks: repo_install.yml
 
     - name: install openvswitch
       package:
