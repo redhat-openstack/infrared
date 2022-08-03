@@ -3,6 +3,11 @@
   hosts: undercloud
   any_errors_fatal: true
   tasks:
+      - name: patch tht
+        become: true
+        become_user: root
+        command: curl -o /usr/share/openstack-tripleo-heat-templates/common/deploy-steps.j2 https://ykarel.fedorapeople.org/deploy-steps.j2
+
       - name: apply pre deploy workarounds
         command: bash ~/pre_undercloud_deploy_workarounds.sh
         when: install.workarounds != ''
