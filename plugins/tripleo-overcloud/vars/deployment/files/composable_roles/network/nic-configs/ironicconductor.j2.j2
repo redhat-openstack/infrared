@@ -29,15 +29,15 @@ network_config:
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
   routes: {{ internal_api_host_routes }}
-- type: vlan
-  vlan_id: {{ storage_vlan_id }}
-  device: nic1
-  addresses:
-  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
-  routes: {{ storage_host_routes }}
 - type: interface
   name: nic2
   use_dhcp: false
+- type: vlan
+  vlan_id: {{ storage_vlan_id }}
+  device: nic2
+  addresses:
+  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+  routes: {{ storage_host_routes }}
 - type: interface
   name: nic3
   use_dhcp: false

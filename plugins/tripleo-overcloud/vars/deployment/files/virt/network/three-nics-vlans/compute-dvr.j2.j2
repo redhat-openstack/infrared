@@ -15,12 +15,6 @@ network_config:
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
   routes: {{ internal_api_host_routes }}
-- type: vlan
-  device: nic1
-  vlan_id: {{ storage_vlan_id }}
-  addresses:
-  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
-  routes: {{ storage_host_routes }}
 - type: ovs_bridge
   name: br-tenant
   use_dhcp: false
@@ -33,6 +27,11 @@ network_config:
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
     routes: {{ tenant_host_routes }}
+  - type: vlan
+    vlan_id: {{ storage_vlan_id }}
+    addresses:
+    - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+    routes: {{ storage_host_routes }}
 - type: ovs_bridge
   name: {{ neutron_physical_bridge_name }}
   dns_servers: {{ ctlplane_dns_nameservers }}
