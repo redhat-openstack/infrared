@@ -36,7 +36,7 @@
       - (install.version|default(undercloud_version)|openstack_release >= 12)
       - (install.version|default(undercloud_version)|openstack_release < 17)
       - install.storage.external
-      - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release > 12)) or (install.storage.method is defined and install.storage.method == 'ansible'))
+      - ((install.ceph.deploy.method is not defined and (install.version|default(undercloud_version)|openstack_release > 12)) or (install.ceph.deploy.method is defined and install.ceph.deploy.method == 'ansible'))
 
 - name: append the storage template line to apply the external-ceph deploy script for >= OSP17
   lineinfile:
@@ -53,7 +53,7 @@
   when:
       - (install.version|default(undercloud_version)|openstack_release >= 12)
       - install.storage.external
-      - ((install.storage.method is not defined and (install.version|default(undercloud_version)|openstack_release == 12)) or (install.storage.method is defined and install.storage.method == 'puppet'))
+      - ((install.ceph.deploy.method is not defined and (install.version|default(undercloud_version)|openstack_release == 12)) or (install.ceph.deploy.method is defined and install.ceph.deploy.method == 'puppet'))
 
 - block:
       - name: prepare ceph storage template
