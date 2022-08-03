@@ -16,12 +16,6 @@ network_config:
   routes: {{ internal_api_host_routes }}
 - type: vlan
   device: nic1
-  vlan_id: {{ storage_vlan_id }}
-  addresses:
-  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
-  routes: {{ storage_host_routes }}
-- type: vlan
-  device: nic1
   vlan_id: {{ storage_mgmt_vlan_id }}
   addresses:
   - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
@@ -30,4 +24,10 @@ network_config:
   name: nic2
   use_dhcp: false
   defroute: false
+- type: vlan
+  device: nic2
+  vlan_id: {{ storage_vlan_id }}
+  addresses:
+  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+  routes: {{ storage_host_routes }}
 {% endraw %}
