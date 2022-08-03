@@ -85,86 +85,101 @@
   become_user: root
 
 - block:
-      - name: create necessary repos for director using rhos-release
-        rhos_release:
-            state: install
-            release: "{{ release }}"
-            build_date: "{{ build }}"
-            director_build_date: "{{ director_build | default(omit) }}"
-            buildmods: "{{ rr_buildmods|default([]) }}"
-            target_directory: "{{ rr_target_directory }}"
-            distro_version: "{{ rr_distro_version }}"
-            source_hostname: "{{ (selected_mirror|default(omit)).get('stdout', '')|trim }}"
-            discover_build: "{{ rr_discover_build }}"
-            enable_testing_repos: "{{ enable_testing_repos|default(omit) }}"
-            without_ceph: "{{ without_ceph|default(omit) }}"
-        register: command_result
-        until: command_result.stderr.find('Connection reset by peer') == -1
-        retries: 40
-        delay: 5
+      - block:
+            - name: create necessary repos for director using rhos-release
+              rhos_release:
+                  state: install
+                  release: "{{ release }}"
+                  build_date: "{{ build }}"
+                  director_build_date: "{{ director_build | default(omit) }}"
+                  buildmods: "{{ rr_buildmods|default([]) }}"
+                  target_directory: "{{ rr_target_directory }}"
+                  distro_version: "{{ rr_distro_version }}"
+                  source_hostname: "{{ (selected_mirror|default(omit)).get('stdout', '')|trim }}"
+                  discover_build: "{{ rr_discover_build }}"
+                  enable_testing_repos: "{{ enable_testing_repos|default(omit) }}"
+                  without_ceph: "{{ without_ceph|default(omit) }}"
+              register: command_result
+              until: command_result.stderr.find('Connection reset by peer') == -1
+              retries: 40
+              delay: 5
+              become: true
+              become_user: root
+
+            - set_fact:
+                  rhos_release_version: "{{ command_result.releases.core.release }}"
+        rescue:
+            - name: run rhos-release without retries
+              rhos_release:
+                  state: install
+                  release: "{{ release }}"
+                  build_date: "{{ build }}"
+                  director_build_date: "{{ director_build | default(omit) }}"
+                  buildmods: "{{ rr_buildmods|default([]) }}"
+                  target_directory: "{{ rr_target_directory }}"
+                  distro_version: "{{ rr_distro_version }}"
+                  source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
+                  discover_build: "{{ rr_discover_build }}"
+                  without_ceph: "{{ without_ceph|default(omit) }}"
+              register: command_result
+              ignore_errors: yes
+
+            - fail:
+                  msg:
+                      error: "rhos-release failed unexpectedly"
+                      rhos_release_output: "{{ command_result }}"
+
+        # A workaround for an issue described in https://projects.engineering.redhat.com/browse/RHOSINFRA-3802
+      - name: Enable rhelosp-devtools for OSP15 and 16.0
+        command: 'dnf config-manager --set-enabled rhelosp-{{ rhos_release_version|float }}-devtools'
+        args:
+          warn: false
         become: true
         become_user: root
+        when: rhos_release_version == "16" or rhos_release_version == "15"
 
-      - set_fact:
-            rhos_release_version: "{{ command_result.releases.core.release }}"
-  rescue:
-      - name: run rhos-release without retries
-        rhos_release:
-            state: install
-            release: "{{ release }}"
-            build_date: "{{ build }}"
-            director_build_date: "{{ director_build | default(omit) }}"
-            buildmods: "{{ rr_buildmods|default([]) }}"
-            target_directory: "{{ rr_target_directory }}"
-            distro_version: "{{ rr_distro_version }}"
-            source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
-            discover_build: "{{ rr_discover_build }}"
-            without_ceph: "{{ without_ceph|default(omit) }}"
-        register: command_result
-        ignore_errors: yes
+      - block:
+          - name: parse specific number of director puddle used from rhos-release output
+            set_fact:
+                director_puddle_version: "{{ command_result.releases.director.version }}"
 
-      - fail:
-            msg:
-                error: "rhos-release failed unexpectedly"
-                rhos_release_output: "{{ command_result }}"
+          - debug:
+                msg: "Build mark: director_puddle={{ director_puddle_version }}"
+        when: "'director' in command_result.releases"
+        # checking for director is more flexible than specific versions
 
-  # A workaround for an issue described in https://projects.engineering.redhat.com/browse/RHOSINFRA-3802
-- name: Enable rhelosp-devtools for OSP15 and 16.0
-  command: 'dnf config-manager --set-enabled rhelosp-{{ rhos_release_version|float }}-devtools'
-  args:
-    warn: false
+      - name: parse specific number of puddle used from rhos-release output
+        set_fact:
+            core_puddle_version: "{{ command_result.releases.core.version }}"
+
+      - name: "check if specified puddle {{ build }} exists in release {{ release }}"
+        fail:
+            msg: "The specified puddle {{ build }} does not exist in {{ release }}"
+        when: command_result.releases.core.version is not search("\d")
+        # If puddle version is 'undetermined!' (it has no digit), task should fail.
+
+      - name: write version to file
+        copy:
+            content: "{{ core_puddle_version }}"
+            dest: ~/core_puddle_version
+        become: false
+
+      - debug:
+            msg: "Build mark: core_puddle={{ core_puddle_version }}"
+
+  when: not rhos_release_rhel|default(false)
+
+- name: Install rhos-release rhel
+  rhos_release:
+      state: install
+      release: "rhel"
+  register: command_result
+  until: command_result.stderr.find('Connection reset by peer') == -1
+  retries: 40
+  delay: 5
   become: true
   become_user: root
-  when: rhos_release_version == "16" or rhos_release_version == "15"
-
-- block:
-    - name: parse specific number of director puddle used from rhos-release output
-      set_fact:
-          director_puddle_version: "{{ command_result.releases.director.version }}"
-
-    - debug:
-          msg: "Build mark: director_puddle={{ director_puddle_version }}"
-  when: "'director' in command_result.releases"
-  # checking for director is more flexible than specific versions
-
-- name: parse specific number of puddle used from rhos-release output
-  set_fact:
-      core_puddle_version: "{{ command_result.releases.core.version }}"
-
-- name: "check if specified puddle {{ build }} exists in release {{ release }}"
-  fail:
-      msg: "The specified puddle {{ build }} does not exist in {{ release }}"
-  when: command_result.releases.core.version is not search("\d")
-  # If puddle version is 'undetermined!' (it has no digit), task should fail.
-
-- name: write version to file
-  copy:
-      content: "{{ core_puddle_version }}"
-      dest: ~/core_puddle_version
-  become: false
-
-- debug:
-      msg: "Build mark: core_puddle={{ core_puddle_version }}"
+  when: rhos_release_rhel|default(false)
 
 - block:
     - name: copy use-mirror.sh to home

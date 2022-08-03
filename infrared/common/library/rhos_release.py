@@ -32,9 +32,9 @@ options:
             - Whether to install (C(install)) release, remove (C(uninstall)) or update
               (C(update)) repo files.
         choices: ['install', 'uninstall', 'update']
-    version:
+    release:
         description:
-            - the core release name to install.
+            - The release name to install.
     build_date:
         description:
             - specific puddle selection.
@@ -135,32 +135,6 @@ def _parse_output(module, cmd, stdout):
         stdout=standard output of rhos-release,
         )
     """
-    file_lines = [line for line in stdout.splitlines() if
-                  line.startswith("Installed")]
-
-    def installed(line):
-        pattern = re.compile(r'(?P<start>Installed: )(?P<filename>\S+)')
-        match = pattern.search(line)
-        if not match:
-            _fail(module, "Failed to parse line %s" % line, cmd, out=stdout)
-        filename = os.path.abspath(match.group("filename"))
-        return dict(
-            file=os.path.basename(filename),
-            repodir=os.path.dirname(filename)
-        )
-
-    filenames = map(installed, file_lines)
-    dirs = set(f["repodir"] for f in filenames)
-    if len(dirs) > 1:
-        _fail(module, "Found repo files in multiple directories %s" % dirs,
-              cmd, out=stdout)
-    repodir = dirs.pop() if len(dirs) > 0 else ''
-
-    filenames = set(f["file"] for f in filenames)
-
-    release_lines = [line for line in stdout.splitlines() if
-                     line.startswith("# rhos-release ")]
-
     def released(line):
         pattern = re.compile(r'(?P<start># rhos-release )'
                              r'(?P<release>\d+[\.\d+]*)(?P<trunk>(-trunk)?)\s*'
@@ -179,6 +153,32 @@ def _parse_output(module, cmd, stdout):
             channel="director" if match.group("director") else "core",
         )
 
+    def installed(line):
+        pattern = re.compile(r'(?P<start>Installed: )(?P<filename>\S+)')
+        match = pattern.search(line)
+        if not match:
+            _fail(module, "Failed to parse line %s" % line, cmd, out=stdout)
+        filename = os.path.abspath(match.group("filename"))
+        return dict(
+            file=os.path.basename(filename),
+            repodir=os.path.dirname(filename)
+        )
+
+    file_lines = [line for line in stdout.splitlines() if
+                  line.startswith("Installed")]
+
+    filenames = map(installed, file_lines)
+    dirs = set(f["repodir"] for f in filenames)
+    if len(dirs) > 1:
+        _fail(module, "Found repo files in multiple directories %s" % dirs,
+              cmd, out=stdout)
+    repodir = dirs.pop() if len(dirs) > 0 else ''
+
+    filenames = set(f["file"] for f in filenames)
+
+    release_lines = [line for line in stdout.splitlines() if
+                     line.startswith("# rhos-release ")]
+
     installed_releases = map(released, release_lines)
     ret_dict = dict(
         repodir=repodir,
@@ -190,6 +190,14 @@ def _parse_output(module, cmd, stdout):
             release=module.params['release'],
             version='cdn',
             repo_type='cdn',
+            channel='core'
+        )}
+    elif module.params['release'] is not None \
+            and 'rhel' in module.params['release']:
+        ret_dict['releases'] = {"core": dict(
+            release=module.params['release'],
+            version=module.params['distro_version'],
+            repo_type='OS',
             channel='core'
         )}
     else:
@@ -328,7 +336,8 @@ def main():
         if not release:
             _fail(module, "'release' option should be specified.", cmd)
 
-        if "cdn" in buildmods:
+        if buildmods is not None \
+                and "cdn" in buildmods:
             release = str(release) + "-cdn"
 
         releases = [(str(release), puddle)]
@@ -345,7 +354,8 @@ def main():
             else:
                 cmd.extend([base_cmd, release])
 
-            if not(len(buildmods) == 1 and 'none' in buildmods):
+            if buildmods is not None\
+                    and not(len(buildmods) == 1 and 'none' in buildmods):
                 for buildmod in buildmods:
                     cmd.append(mods[buildmod.lower()])
 
