@@ -32,11 +32,6 @@ network_config:
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
 - type: vlan
-  vlan_id: {{ storage_vlan_id }}
-  device: nic1
-  addresses:
-  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
-- type: vlan
   vlan_id: {{ storage_mgmt_vlan_id }}
   device: nic1
   addresses:
@@ -52,6 +47,10 @@ network_config:
     vlan_id: {{ tenant_vlan_id }}
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
+  - type: vlan
+    vlan_id: {{ storage_vlan_id }}
+    addresses:
+    - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
 {% endraw %}
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
 - type: ovs_bridge

@@ -15,13 +15,13 @@ network_config:
   device: nic1
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
-- type: vlan
-  vlan_id: {{ storage_vlan_id }}
-  device: nic1
-  addresses:
-  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
 - type: interface
   name: nic2
   use_dhcp: false
   defroute: false
+- type: vlan
+  vlan_id: {{ storage_vlan_id }}
+  device: nic2
+  addresses:
+  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
 {% endraw %}

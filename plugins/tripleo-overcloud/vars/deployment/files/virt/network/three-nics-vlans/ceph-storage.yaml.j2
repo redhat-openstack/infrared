@@ -214,15 +214,6 @@ resources:
                           type: vlan
                           device: nic1
                           vlan_id:
-                              get_param: StorageNetworkVlanID
-                          addresses:
-                          -
-                            ip_netmask:
-                                get_param: StorageIpSubnet
-                        -
-                          type: vlan
-                          device: nic1
-                          vlan_id:
                               get_param: StorageMgmtNetworkVlanID
                           addresses:
                           -
@@ -233,6 +224,15 @@ resources:
                           name: nic2
                           use_dhcp: false
                           defroute: false
+                        -
+                          type: vlan
+                          device: nic2
+                          vlan_id:
+                              get_param: StorageNetworkVlanID
+                          addresses:
+                          -
+                            ip_netmask:
+                                get_param: StorageIpSubnet
                         -
                           type: interface
                           name: nic3

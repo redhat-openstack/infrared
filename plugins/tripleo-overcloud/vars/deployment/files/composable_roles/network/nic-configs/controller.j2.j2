@@ -43,25 +43,11 @@ network_config:
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
 - type: vlan
-  vlan_id: {{ storage_vlan_id }}
-  device: nic1
-  addresses:
-  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
-- type: vlan
   vlan_id: {{ storage_mgmt_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
 {%- endraw %}
-{%- if install.manila.storage.protocol == 'nfs-ganesha' %}
-{% raw %}
-- type: vlan
-  vlan_id: {{ storage_nfs_vlan_id }}
-  device: nic1
-  addresses:
-  - ip_netmask: {{ storage_nfs_ip }}/{{ storage_nfs_cidr }}
-{%- endraw %}
-{% endif -%}
 {% raw %}
 - type: ovs_bridge
   name: br-tenant
@@ -74,6 +60,18 @@ network_config:
     vlan_id: {{ tenant_vlan_id }}
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
+  - type: vlan
+    vlan_id: {{ storage_vlan_id }}
+    addresses:
+    - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+{%- if install.manila.storage.protocol == 'nfs-ganesha' %}
+{% raw %}
+  - type: vlan
+    vlan_id: {{ storage_nfs_vlan_id }}
+    addresses:
+    - ip_netmask: {{ storage_nfs_ip }}/{{ storage_nfs_cidr }}
+{%- endraw %}
+{% endif -%}
 - type: ovs_bridge
   name: {{ neutron_physical_bridge_name }}
   dns_servers: {{ ctlplane_dns_nameservers }}
