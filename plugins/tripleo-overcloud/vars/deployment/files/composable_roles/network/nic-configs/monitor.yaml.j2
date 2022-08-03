@@ -215,18 +215,18 @@ resources:
                               next_hop:
                                   get_param: EC2MetadataIp
                         -
+                          type: interface
+                          name: nic2
+                          use_dhcp: false
+                        -
                           type: vlan
                           vlan_id:
                               get_param: StorageNetworkVlanID
-                          device: nic1
+                          device: nic2
                           addresses:
                           -
                             ip_netmask:
                                get_param: StorageIpSubnet
-                        -
-                          type: interface
-                          name: nic2
-                          use_dhcp: false
 
 outputs:
   OS::stack_id:

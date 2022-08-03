@@ -245,15 +245,6 @@ resources:
                         -
                           type: vlan
                           vlan_id:
-                              get_param: StorageNetworkVlanID
-                          device: nic1
-                          addresses:
-                          -
-                            ip_netmask:
-                                get_param: StorageIpSubnet
-                        -
-                          type: vlan
-                          vlan_id:
                               get_param: StorageMgmtNetworkVlanID
                           device: nic1
                           addresses:
@@ -277,6 +268,14 @@ resources:
                               -
                                 ip_netmask:
                                     get_param: TenantIpSubnet
+                            -
+                              type: vlan
+                              vlan_id:
+                                  get_param: StorageNetworkVlanID
+                              addresses:
+                              -
+                                ip_netmask:
+                                    get_param: StorageIpSubnet
                         -
                           type: ovs_bridge
                           # This will default to br-ex, anything else requires specific
