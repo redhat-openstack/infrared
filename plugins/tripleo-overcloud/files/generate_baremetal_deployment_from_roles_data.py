@@ -85,7 +85,6 @@ class BaremetalRoleData():
                  enable_profiles: bool = False) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
-        self._hostname_format = role_data.get('HostnameFormatDefault')
         self._default_network = role_data.get('default_route_networks', [])
         self._networks = self._parse_networks(role_data.get('networks', {}),
                                               networks_data)
@@ -97,8 +96,13 @@ class BaremetalRoleData():
         out = {}
         out['name'] = self.name
         out['count'] = self.roles_count
-        if self._hostname_format:
-            out['hostname_format'] = self._hostname_format
+
+        instances_list = []
+        for instance in range(self.roles_count):
+            hostname = 'overcloud-' + self.name.lower() + '-' + str(instance)
+            instances_list.append({'hostname': hostname, 'name': hostname})
+        out['instances'] = instances_list
+
         defaults = {}
         if self._enable_profiles:
             defaults['profile'] = self.profile
