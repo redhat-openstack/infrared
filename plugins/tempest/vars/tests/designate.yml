@@ -1,13 +1,13 @@
 ---
 test_dict:
     test_regex:
-        default: '^(designate_tempest_plugin|neutron_tempest_plugin.scenario.(test_dns_integration|test_internal_dns))'
+        default: ''
+    whitelist:
+        - "^designate_tempest_plugin.*"
+    blacklist:
+        - "^designate_tempest_plugin.tests.api.admin.*"
     plugins:
         designate-tempest-plugin:
             repo: "https://opendev.org/openstack/designate-tempest-plugin"
             package:
                 default: "python3-designate-tests-tempest"
-        neutron-tempest-plugin:
-            repo: "https://opendev.org/openstack/neutron-tempest-plugin"
-            package:
-                default: "python3-neutron-tests-tempest"
