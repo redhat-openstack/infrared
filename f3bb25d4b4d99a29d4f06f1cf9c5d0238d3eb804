@@ -16,6 +16,29 @@
       "message": "(This follows the guide at https://access.redhat.com/solutions/6970061)",
       "revId": "f3bb25d4b4d99a29d4f06f1cf9c5d0238d3eb804",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "75fb9e15_a71c2231",
+        "filename": "plugins/tripleo-overcloud/docker_after_workaround.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1016970
+      },
+      "writtenOn": "2022-08-05T16:51:55Z",
+      "side": 1,
+      "message": "It doesn\u0027t work like this, because the cephadm shell cmd will fail on the xargs pipe.\nWe should split this task on \u003e1, and have something like the following:\n\n```\n---\n- hosts: localhost\n  tasks:\n    - name: get rgw instances\n      shell: cephadm shell -- ceph orch ps | awk \u0027/rgw/ {print $1}\u0027\n      register: out\n    - name: DEBUG\n      debug:\n        msg: \"{{ item }}\"\n      with_items:\n        - \"{{ out.stdout_lines }}\"\n    - name: redeploy rgw instance\n      shell: cephadm shell -- ceph orch daemon redeploy {{ item }} --image undercloud-0.ctlplane.redhat.local:8787/rhceph/rhceph:5-235\n      with_items:\n        - \"{{ out.stdout_lines }}\"\n\n```",
+      "range": {
+        "startLine": 41,
+        "startChar": 1,
+        "endLine": 41,
+        "endChar": 180
+      },
+      "revId": "f3bb25d4b4d99a29d4f06f1cf9c5d0238d3eb804",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
