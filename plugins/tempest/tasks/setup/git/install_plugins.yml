@@ -28,7 +28,8 @@
   git:
       repo: "{{ item.value.repo }}"
       dest: "{{ plugins_dir }}/{{ item.key }}"
-      version: "{{ item.value.version | default(omit) }}"
+      version: >-
+          {{ plugin_dict.value.version[test.openstack.version|default(overcloud_version)|int]|default(plugin_dict.value.version.default)|default(omit) -}}
       refspec: "{{ item.value.refspec | default('') }}"
   with_dict: "{{ plugins }}"
 
