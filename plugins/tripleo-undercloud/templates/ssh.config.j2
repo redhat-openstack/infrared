@@ -1,8 +1,10 @@
 Host *
 {% if install.splitstack|default(False) %}
   User {{ install.user.name }}
-{% else %}
+{% elif undercloud_version is version('17.0', '<=') %}
   User heat-admin
+{% else %}
+  User tripleo-admin
 {% endif %}
   StrictHostkeyChecking no
   UserKnownHostsFile /dev/null
