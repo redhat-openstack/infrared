@@ -4,19 +4,20 @@
   gather_facts: yes
   any_errors_fatal: true
   vars:
-      user: "{{ install.overcloud.ssh.user | default('heat-admin', true) }}"
+      default_user: "{{if (install.version|default(undercloud_version)|openstack_release < 17 or install.version == '17' or install.version == '17.0') and install.version != 'wallaby' | ternary('heat-admin', 'tripleo-admin') }}"
+      user: "{{ install.overcloud.ssh.user | default(default_user, true) }}"
       # The var "private_key" is used outside this scope and cannot be overridden
       overcloud_pkey: "{{ inventory_dir }}/id_rsa_overcloud"
   tasks:
       - name: Update ssh config if a custom user specified
         replace:
             path: "~/.ssh/config"
-            regexp: 'heat-admin'
+            regexp: "{{ default_user }}"
             replace: "{{ install.overcloud.ssh.user }}"
             mode: 0600
         when:
             - install.overcloud.ssh.user | length > 0
-            - install.overcloud.ssh.user != 'heat-admin'
+            - install.overcloud.ssh.user != default_user
 
       - name: fetch the private key file from the undercloud
         fetch:
