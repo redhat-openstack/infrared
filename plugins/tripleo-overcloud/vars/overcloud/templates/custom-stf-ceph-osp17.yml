@@ -1,0 +1,48 @@
+custom_templates:
+  parameter_defaults:
+      CephClusterFSID: 7fe0a655-696a-5faa-aca2-c7120f53cff1
+      CeilometerQdrPublishEvents: true
+      CeilometerQdrPublishMetrics: true
+      CephStorageExtraConfig:
+          tripleo::profile::base::metrics::collectd::amqp_host: '%{hiera(''storage'')}'
+          tripleo::profile::base::metrics::qdr::listener_addr: '%{hiera(''storage'')}'
+      CollectdAmqpInterval: 5
+      CollectdConnectionType: amqp1
+      CollectdDefaultPollingInterval: 5
+      EnableSTF: true
+      CollectdEnableLibpodstats: true
+      CollectdExtraPlugins:
+      - vmem
+      ExtraConfig:
+          ceilometer::agent::polling::polling_interval: 30
+          ceilometer::agent::polling::polling_meters:
+          - cpu
+          - disk.*
+          - ip.*
+          - image.*
+          - memory
+          - memory.*
+          - network.*
+          - perf.*
+          - port
+          - port.*
+          - switch
+          - switch.*
+          - storage.*
+          - volume.*
+          collectd::plugin::amqp1::send_queue_limit: 50
+          collectd::plugin::ceph::daemons:
+          - 7fe0a655-696a-5faa-aca2-c7120f53cff1/ceph-osd.0
+          - 7fe0a655-696a-5faa-aca2-c7120f53cff1/ceph-osd.1
+          - 7fe0a655-696a-5faa-aca2-c7120f53cff1/ceph-osd.2
+          - 7fe0a655-696a-5faa-aca2-c7120f53cff1/ceph-osd.3
+          - 7fe0a655-696a-5faa-aca2-c7120f53cff1/ceph-osd.4
+          collectd::plugin::cpu::reportbycpu: true
+          collectd::plugin::virt::extra_stats: "cpu_util vcpu disk"
+          collectd::plugin::virt::hostname_format: "metadata uuid hostname"
+          collectd::plugin::virt::plugin_instance_format: metadata
+          collectd::plugin::vmem::verbose: true
+          collectd::plugin::memcached::instances:
+            local:
+              host: "%{hiera('fqdn_canonical')}"
+              port: 11211
