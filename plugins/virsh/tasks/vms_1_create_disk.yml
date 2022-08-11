@@ -96,7 +96,7 @@
             root_part=${root_part:-/dev/sda1}
             virt-resize --expand $root_part {{ base_image_path }}/{{ image_name }} {{ disk_pool }}/{{ node_image }}
             # We need to regenerate a new machine-id due to DHCP IPv6 not working otherwise
-            virt-sysprep -a {{ disk_pool }}/{{ node_image }} \
+            virt-sysprep --selinux-relabel -a {{ disk_pool }}/{{ node_image }} \
                 --operations machine-id
             # inject DEFROUTE for IPv6 and IPv6 to file and set it on for external network only
             NIC_DEFAULT="DEVICE=\"eth0\"\nBOOTPROTO=\"dhcp\"\nBOOTPROTOv6=\"dhcp\"\nONBOOT=\"yes\"\nTYPE=\"Ethernet\"\nUSERCTL=\"yes\"\nPEERDNS=\"yes\"\nIPV6INIT=\"yes\"\nPERSISTENT_DHCLIENT=\"1\"\n"
