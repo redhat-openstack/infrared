@@ -78,7 +78,7 @@
         environment:
             LIBGUESTFS_BACKEND: direct
         command: >
-            virt-sysprep -a {{ undercloud_disk_path }}
+            virt-sysprep --selinux-relabel -a {{ undercloud_disk_path }}
                 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
       # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
