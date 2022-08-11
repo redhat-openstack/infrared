@@ -86,7 +86,8 @@ class BaremetalRoleData():
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
         self._hostname_format = role_data.get('HostnameFormatDefault')
-        self._default_network = role_data.get('default_route_networks', [])
+        self._default_network = [networks_data[x] for x in role_data.get(
+            'default_route_networks', [])]
         self._networks = self._parse_networks(role_data.get('networks', {}),
                                               networks_data)
         self._tags = role_data.get('tags', [])

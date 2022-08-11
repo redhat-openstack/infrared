@@ -21,14 +21,13 @@ network_config:
   dns_servers: {{ ctlplane_dns_nameservers }}
   addresses:
   - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
-  routes:
-  - next_hop: {{ ctlplane_gateway_ip }}
-    default: true
+  routes: {{ ctlplane_host_routes }}
 - type: vlan
   vlan_id: {{ internal_api_vlan_id }}
   device: nic1
   addresses:
   - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+  routes: {{ internal_api_host_routes }}
 - type: ovs_bridge
   name: br-tenant
   use_dhcp: false
@@ -40,6 +39,7 @@ network_config:
     vlan_id: {{ tenant_vlan_id }}
     addresses:
     - ip_netmask: {{ tenant_ip }}/{{ tenant_cidr }}
+    routes: {{ tenant_host_routes }}
 - type: ovs_bridge
   name: {{ neutron_physical_bridge_name }}
   use_dhcp: false
