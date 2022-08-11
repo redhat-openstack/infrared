@@ -108,7 +108,7 @@
     - name: Install yum-plugin-priorities package inside overcloud image
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-      command: "virt-customize -a {{ overcloud_image_file }} --install yum-plugin-priorities"
+      command: "virt-customize --selinux-relabel -a {{ overcloud_image_file }} --install yum-plugin-priorities"
       when: ansible_distribution_major_version < '8'
 
     - name: Do package update inside of overcloud image with custom repository disabled
@@ -203,6 +203,6 @@
 - name: remove machine-id from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-sysprep --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
+  command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
   when:
       - image_repos is changed or image_packages is changed or image_remove_packages is changed or image_update is changed or image_selinux is changed
