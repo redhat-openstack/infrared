@@ -111,7 +111,7 @@
             no_log: true
 
           - name: Inject fetchfiles into overcloud image
-            shell: LIBGUESTFS_BACKEND=direct virt-customize -a /tmp/fetchfiles_overcloud_image/overcloud-full.qcow2 \
+            shell: LIBGUESTFS_BACKEND=direct virt-customize --selinux-relabel -a /tmp/fetchfiles_overcloud_image/overcloud-full.qcow2 \
                 {{ paths_to_upload }}
             become: true
             tags: skip_ansible_lint

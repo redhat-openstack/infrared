@@ -43,7 +43,7 @@
         PREP_IMG_FILE={{ item.dest }}
         PREP_IMG_FILE=${PREP_IMG_FILE%.original}
         cp {{ item.dest }} ${PREP_IMG_FILE}
-        virt-sysprep -a ${PREP_IMG_FILE} \
+        virt-sysprep --selinux-relabel -a ${PREP_IMG_FILE} \
             --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
         virt-customize -a ${PREP_IMG_FILE} \
         {% if not item.item.value.image_url|default('') %}
