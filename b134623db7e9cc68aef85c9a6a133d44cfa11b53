@@ -68,6 +68,46 @@
       "message": "There is also this previous merged fix patch [1], in which Cedric and Bernard suggested in comments to take care of all other occurrences of virt-sysprep, and virt-customize commands, to add selinux relabeling option where it is missed, as a short term solution (that is this patch\u0027s purpose).\n\n[1] https://review.gerrithub.io/c/redhat-openstack/infrared/+/542107",
       "revId": "b134623db7e9cc68aef85c9a6a133d44cfa11b53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "aa6ce3bf_44fba8ae",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1014775
+      },
+      "writtenOn": "2022-08-16T06:23:02Z",
+      "side": 1,
+      "message": "Looks good to me. This should prevent further issues with wrong labels. I think we may be able to optimize a bit some tasks to cover multiple actions in one task only, so that ansible will be a bit faster, but that\u0027s another topic.",
+      "revId": "b134623db7e9cc68aef85c9a6a133d44cfa11b53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0599502e_1943bc83",
+        "filename": "plugins/tempest/tasks/image/main.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1014775
+      },
+      "writtenOn": "2022-08-16T06:23:02Z",
+      "side": 1,
+      "message": "Note that this one can be merged with the one just bellow:\nvirt-customize -a ~/tempest_image --copy-in /etc/yum.repos.d:/etc/ --run-command .... --selinux-relabel\n\nOne less step, meaning \"faster\" :).",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 67
+      },
+      "revId": "b134623db7e9cc68aef85c9a6a133d44cfa11b53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
