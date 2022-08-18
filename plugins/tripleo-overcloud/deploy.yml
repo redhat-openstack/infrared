@@ -140,6 +140,10 @@
         register: pre_overcloud_install_action
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: fail before overcloud deploy
+        fail:
+          msg: "time to check the status of the overcloud nodes that were previously provisioned, but not deployed yet"
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
