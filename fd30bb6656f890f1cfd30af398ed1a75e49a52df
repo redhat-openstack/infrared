@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5eb1ec1a_f44bd717",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "I found an extra unhanded call at:\n./plugins/tempest/tasks/image/main.yml:20:  command: \"virt-copy-in -a ~/tempest_image /etc/yum.repos.d /etc/\"\n\nPlease change this as well.",
+      "range": {
+        "startLine": 12,
+        "startChar": 15,
+        "endLine": 12,
+        "endChar": 30
+      },
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f4b158cf_4bce5955",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "Generally looks good to me, just a few concerns in comments.\n\nI think these fixes should be merged, but as a long-term solution we should use the newer \u0027guestfs-tools-1.48.1-1.el9\u0027 or above, since new package version seems to use selinux relabeling by default without needing to mention the option, as shown here:\nhttps://bugzilla.redhat.com/show_bug.cgi?id\u003d2075718#c11",
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "29ec066e_deaf9b33",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "Enclosing {{ uri }} text with certain quotation marks may prevent failure due to spaces in filenames, more robust.\nOther similar occurrences in this patch (mostly look like -\u003e \u0027--copy-in {{ some_variable_name }}\u0027) may encounter such problem.",
+      "range": {
+        "startLine": 65,
+        "startChar": 16,
+        "endLine": 65,
+        "endChar": 25
+      },
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "41cf829e_dc55254f",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "nit: Missing space character.",
+      "range": {
+        "startLine": 83,
+        "startChar": 40,
+        "endLine": 83,
+        "endChar": 46
+      },
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c578af20_6f3830d9",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "From man page of virt-customize it seems a single mention of --copy-in option doesn\u0027t support multiple LOCALPATH:REMOTEDIR occurrences.\nI think its best to use --copy-in for every LOCALPATH:REMOTEDIR occurrence.",
+      "range": {
+        "startLine": 86,
+        "startChar": 97,
+        "endLine": 86,
+        "endChar": 98
+      },
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a55b4477_039d3465",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "Unresolved merge conflict here.",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 57
+      },
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "4595a8ef_b878483a",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1019772
+      },
+      "writtenOn": "2022-08-21T11:10:34Z",
+      "side": 1,
+      "message": "Are spaces wrapping \u0027uri\u0027 word needed?\nAlso please notice the suggestion to use certain quotation marks as mentioned before.",
+      "range": {
+        "startLine": 137,
+        "startChar": 16,
+        "endLine": 137,
+        "endChar": 23
+      },
+      "revId": "fd30bb6656f890f1cfd30af398ed1a75e49a52df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
