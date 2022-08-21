@@ -17,7 +17,7 @@
 - name: Push repos to guest image tempest will use for testing
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-copy-in -a ~/tempest_image /etc/yum.repos.d /etc/"
+  command: "virt-customize -a ~/tempest_image --copy-in /etc/yum.repos.d:/etc/ --selinux-relabel"
 
 - name: Disable 'patched-rpms' yum repository in guest image
   environment:
