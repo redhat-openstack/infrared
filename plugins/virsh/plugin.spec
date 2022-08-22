@@ -336,3 +336,10 @@ subparsers:
                           correct state. This action must be done independently of the import process
                           because infrared will need to use the newly imported inventory.
                       default: False
+            - title: BGP
+              options:
+                  bgp-topology-mode:
+                      type: Value
+                      help: |
+                          BGP topology can be deployed with different modes
+                          process.

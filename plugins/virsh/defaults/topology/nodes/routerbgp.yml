@@ -1,0 +1,28 @@
+name: routerbgp
+prefix: null
+cpu: "1"
+cpumodel: "host-passthrough"
+memory: "1024"
+swap: "0"
+os:
+    type: "linux"
+    variant: "rhel9.0"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "12G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - router
+
+# basic bgp topology includes a router
+interfaces:
+  basic:
+    - ["r-s1", "r-s2", "r-extvm", "uc-external", "outofband"]
+
+ips:
+  basic:
+    - 31

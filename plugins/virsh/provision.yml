@@ -25,7 +25,6 @@
          (not provision.virsh.snapshot.create | bool) and
          (not provision.virsh.snapshot.export | bool) }}
   tags: hypervisor
-
 - name: Create Networks
   import_playbook: "{{ provision_networks | default('provision_networks.yml') }}"
   vars:
@@ -84,6 +83,7 @@
   tags: always
   tasks:
     - include_role:
-        name: inventory-update
+        #name: "{{ provision.bgp.topology.mode is defined | ternary('inventory-update-bgp', 'inventory-update') }}"
+        name: 'inventory-update'
       vars:
         inventory_file_name: 'hosts-prov'

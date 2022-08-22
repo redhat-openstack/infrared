@@ -1,0 +1,60 @@
+---
+- name: Create networks for bgp setup
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Load bgp network var
+      include_vars: "{{ playbook_dir }}/defaults/topology/network/bgp_networks.yml"
+    - name: create the networks for the topology
+      virt_net:
+        command: "define"
+        name: "{{ item.key }}"
+        xml: "{{ lookup('template', 'templates/network-bgp.xml.j2') }}"
+      with_dict: "{{ networks }}"
+    
+    - name: set autostart to the created networks
+      virt_net:
+        autostart: "yes"
+        name: "{{ item.key }}"
+      with_dict: "{{ networks }}"
+    
+    - name: check if network is active
+      virt_net:
+        name: "{{ item.key }}"
+        state: active
+      with_dict: "{{ networks }}"
+
+    - name: set IPv4 forwarding
+      become: true
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        sysctl_file: /etc/sysctl.d/90-network.conf
+        state: present
+        reload: yes
+
+    - name: disable reverse path forwarding validation
+      become: true
+      sysctl:
+        name: net.ipv4.conf.all.rp_filter
+        value: '0'
+        sysctl_set: yes
+        sysctl_file: /etc/sysctl.d/90-network.conf
+        state: present
+        reload: yes
+
+    - name: Fixup networking on the hypervisor for bgp
+      shell: |
+        for i in 10.0.0.0/8 172.16.0.0/12 100.0.0.0/8 192.168.14.0/24; do
+          if ! iptables -nvL FORWARD |grep -e "ACCEPT.*$i"; then
+            iptables -I FORWARD -s $i -m comment --comment "bgp_playground_rule" -j ACCEPT
+            iptables -I FORWARD -d $i -m comment --comment "bgp_playground_rule" -j ACCEPT
+          fi
+          if ! iptables -t nat -nvL POSTROUTING | grep -e "MASQUERADE.*$i"; then
+            iptables -t nat -A POSTROUTING --source $i -m comment --comment "bgp_playground_rule" -j MASQUERADE
+          fi
+        done
+        if ! ip r | grep -q 172.16.0.0/12; then ip r a 172.16.0.0/12 via 10.0.0.3; fi
+        if ! ip r | grep -q 100.0.0.0/8; then ip r a 100.0.0.0/8 via 10.0.0.3; fi
