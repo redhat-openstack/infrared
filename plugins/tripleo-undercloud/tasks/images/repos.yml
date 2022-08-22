@@ -169,6 +169,13 @@
   register: image_packages
   when: install.images.packages|default(None) != None
 
+- name: Run commands in overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --run-command '{{ item }}' --selinux-relabel"
+  with_items: "{{ install.images.run.command }}"
+  when: install.images.run.command is defined
+
 - name: update packages on repos
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
