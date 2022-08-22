@@ -1,0 +1,8 @@
+<network>
+  <name>{{ item.key }}</name>
+  <bridge name="{{ item.key }}" stp='on' delay='0'/>
+  {% if item.key in ['uc-external', 'outofband', 'external', 'ctlplane', 'management'] and item.value.hypervisor | default('') | length > 0 %}
+    <ip address="{{ item.value.hypervisor }}" prefix="{{ item.value.prefix }}"/>
+  {% endif %}
+</network>
+

@@ -1,0 +1,15 @@
+- name: Load bgp nodes vars
+  include_vars: "{{ playbook_dir }}/defaults/topology/nodes/bgp_nodes.yml"
+- name: Load bgp network var
+  include_vars: "{{ playbook_dir }}/defaults/topology/network/bgp_networks.yml"
+- name: create bgp inventory
+  vars:
+    ssh_common_proxy_args: '-o GSSAPIAuthentication=no -o BatchMode=yes -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p root@{{ provision.host.address[0] }}"'
+  template:
+    src: inventory-bgp.yml.j2
+    dest: "{{ inventory_dir }}/{{ inventory_file_name }}"
+- name: update bgp inventory file symlink
+  file:
+    dest: "{{ inventory_dir }}/hosts"
+    state: link
+    src: "{{ inventory_dir }}/{{ inventory_file_name }}"
