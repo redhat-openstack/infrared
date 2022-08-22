@@ -1,0 +1,45 @@
+name: leaf
+prefix: null
+cpu: "2"
+cpumodel: "host-passthrough"
+memory: "2048"
+swap: "0"
+deploy_os: false
+os:
+    type: "linux"
+    variant: "rhel9.0"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "20G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - leafs
+
+# basic bgp topology includes 8 leafs (two per rack)
+interfaces:
+  basic:
+    - ["external", "red-l11-s1", "gren-l11-s2", "l11-host-1", "l11-host-2", "l11-host-3", "l11-host-4", "l11-provis"]
+    - ["external", "red-l12-s1", "gren-l12-s2", "l12-host-1", "l12-host-2", "l12-host-3", "l12-host-4"]
+    - ["external", "red-l21-s1", "gren-l21-s2", "l21-host-1", "l21-host-2", "l21-host-3", "l21-host-4", "l21-provis"]
+    - ["external", "red-l22-s1", "gren-l22-s2", "l22-host-1", "l22-host-2", "l22-host-3", "l22-host-4"]
+    - ["external", "red-l31-s1", "gren-l31-s2", "l31-host-1", "l31-host-2", "l31-host-3", "l31-host-4", "l31-provis"]
+    - ["external", "red-l32-s1", "gren-l32-s2", "l32-host-1", "l32-host-2", "l32-host-3", "l32-host-4"]
+    - ["external", "red-l41-s1", "gren-l41-s2", "l41-host-1", "l41-host-2", "l41-provis"]
+    - ["external", "red-l42-s1", "gren-l42-s2", "l42-host-1", "l42-host-2"]
+
+ips:
+  basic:
+    - 5
+    - 6
+    - 10
+    - 11
+    - 15
+    - 16
+    - 20
+    - 21
+
+rpms: dhcp-relay,iptables
