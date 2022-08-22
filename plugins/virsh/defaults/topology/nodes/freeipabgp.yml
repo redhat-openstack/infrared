@@ -1,0 +1,33 @@
+name: freeipabgp
+prefix: null
+cpu: "4"
+cpumodel: "host-passthrough"
+memory: "4096"
+swap: "0"
+deploy_os: true
+os:
+    type: "linux"
+    variant: "rhel9.0"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "20G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - freeipa
+
+# basic bgp topology includes a freeipa, deployed on the fourth rack
+interfaces:
+  basic:
+    - ["l41-host-2", "l42-host-2", "outofband", "l41-provis"]
+
+ips:
+  basic:
+    - 32
+
+gws:
+  basic:
+    - 192.168.14.1

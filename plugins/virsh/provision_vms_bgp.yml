@@ -1,0 +1,44 @@
+---
+- name: Provision VMs
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    tmp_virt_dir: /tmp/virt-customize/
+    tmp_ifcfg_dir: /tmp/ifcfg_files/
+    base_image_path: /var/lib/libvirt/images
+    url: "{{ provision.image.url }}"
+  tasks:
+    - name: load nodes topology configuration
+      include_tasks: tasks/load_topology.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+    - name: provision image for each node
+      include_tasks: tasks/download_images.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+          loop_var: node
+      when: node.value.node_indexes|length > 0
+      tags: images
+
+    - name: Load bgp networks
+      include_vars: "{{ playbook_dir }}/defaults/topology/network/bgp_networks.yml"
+
+    - name: create disks for each BGP VM
+      include_tasks: tasks/vms_1_create_disk_bgp.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
+
+
+
+    #- name: copy repo file into the hypervisor
+    #  copy:
+    #      src: "rhel-9.0.repo"
+    #      dest: "{{ tmp_virt_dir }}/rhel-9.0.repo"
+    #      mode: "0644"
+
+
+
