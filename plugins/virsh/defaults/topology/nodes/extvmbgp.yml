@@ -1,0 +1,30 @@
+name: extvmbgp
+prefix: null
+cpu: "2"
+cpumodel: "host-passthrough"
+memory: "8192"
+swap: "0"
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - extvm
+
+# basic bgp topology includes an extvm
+interfaces:
+  basic:
+    - ["r-extvm", "external"]
+
+ips:
+  basic:
+    - 30
+
+rpms: pcp-zeroconf
