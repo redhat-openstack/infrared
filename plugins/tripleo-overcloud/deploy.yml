@@ -140,6 +140,9 @@
         register: pre_overcloud_install_action
         when: install.get('overcloud', {}).get('predeploy', {}).get('action', {})
 
+      - name: Configure Enable TLS to false
+        command: "sudo sed -i 's/EnableInternalTLS: True/EnableInternalTLS: False/g' /usr/share/openstack-tripleo-heat-templates/environments/ssl/*"
+
       - name: Execute the overcloud deploy script
         shell: |
             source ~/stackrc
