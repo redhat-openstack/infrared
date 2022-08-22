@@ -210,6 +210,12 @@ subparsers:
                           Undercloud external network interface
                       default: 'eth2'
 
+                  freeipa-external-interface:
+                      type: Value
+                      help: |
+                          FreeIPA external network interface
+                      default: 'eth2'
+
                   tls-everywhere:
                       type: Bool
                       help: |
@@ -474,6 +480,18 @@ subparsers:
                       help: |
                           Removes all the downloaded images when images-task is in 'rpm' or 'import'
                       default: yes
+
+                  images-run-command:
+                      type: Value
+                      action: append
+                      help: |
+                          List of commands that have to be executed on the images
+                          Example: openvswitch,python-openvswitch
+                          More than one --images-run-command option can be provided.
+                          Examples:
+                            --images-run-command 'curl http://<url>'
+                            --images-run-command 'echo <text> > <file>'
+
 
                   disk-pool:
                       type: Value
