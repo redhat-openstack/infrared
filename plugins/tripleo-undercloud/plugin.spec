@@ -210,6 +210,12 @@ subparsers:
                           Undercloud external network interface
                       default: 'eth2'
 
+                  freeipa-external-interface:
+                      type: Value
+                      help: |
+                          FreeIPA external network interface
+                      default: 'eth2'
+
                   tls-everywhere:
                       type: Bool
                       help: |

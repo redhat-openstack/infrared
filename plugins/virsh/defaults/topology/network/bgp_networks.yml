@@ -1,0 +1,88 @@
+---
+networks:
+  # uc-external is special because the hypervisor configures
+  # an ip address on itself for this network
+  uc-external:
+    net: 10.0.0.0
+    prefix: 24
+    hypervisor: 10.0.0.1
+    gw: 10.0.0.1
+  #uc-internal-s1:
+  #  net: 10.1.0.0
+  #  prefix: 24
+  #uc-internal-s2:
+  #  net: 10.2.0.0
+  #  prefix: 24
+  external:
+    net: 192.168.14.0
+    hypervisor: 192.168.14.1
+    prefix: 24
+
+  # L2 networks from router to extvm, spine1, spine2
+  r-extvm:
+  r-s1:
+  r-s2:
+
+  # L2 networks from spines to leafs
+  red-l11-s1:
+  red-l12-s1:
+  red-l21-s1:
+  red-l22-s1:
+  red-l31-s1:
+  red-l32-s1:
+  red-l41-s1:
+  red-l42-s1:
+
+  gren-l11-s2:
+  gren-l12-s2:
+  gren-l21-s2:
+  gren-l22-s2:
+  gren-l31-s2:
+  gren-l32-s2:
+  gren-l41-s2:
+  gren-l42-s2:
+
+  # L2 networks from leafs to hosts
+  l11-host-1:
+  l11-host-2:
+  l11-host-3:
+  l11-host-4:
+  l12-host-1:
+  l12-host-2:
+  l12-host-3:
+  l12-host-4:
+  l11-provis:
+
+  l21-host-1:
+  l21-host-2:
+  l21-host-3:
+  l21-host-4:
+  l22-host-1:
+  l22-host-2:
+  l22-host-3:
+  l22-host-4:
+  l21-provis:
+
+  l31-host-1:
+  l31-host-2:
+  l31-host-3:
+  l31-host-4:
+  l32-host-1:
+  l32-host-2:
+  l32-host-3:
+  l32-host-4:
+  l31-provis:
+
+  l41-host-1:
+  l42-host-1:
+  l41-host-2:
+  l42-host-2:
+  l41-provis:
+
+dns1: 10.19.42.41
+dns2: 10.11.5.19
+
+nodes:
+  default:
+    external_network:
+        network: "external"
