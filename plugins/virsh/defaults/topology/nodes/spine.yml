@@ -1,0 +1,33 @@
+name: spine
+prefix: null
+cpu: "2"
+cpumodel: "host-passthrough"
+memory: "2048"
+swap: "0"
+deploy_os: false
+os:
+    type: "linux"
+    variant: "rhel9.0"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "20G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - spines
+
+# basic bgp topology includes two spines
+interfaces:
+  basic:
+    - ["external", "uc-external", "red-l11-s1", "red-l12-s1", "red-l21-s1", "red-l22-s1", "red-l31-s1", "red-l32-s1", "red-l41-s1", "red-l42-s1", "r-s1"]
+    - ["external", "uc-external", "gren-l11-s2", "gren-l12-s2", "gren-l21-s2", "gren-l22-s2", "gren-l31-s2", "gren-l32-s2", "gren-l41-s2", "gren-l42-s2", "r-s2"]
+
+ips:
+  basic:
+    - 3
+    - 4
+
+rpms: iptables

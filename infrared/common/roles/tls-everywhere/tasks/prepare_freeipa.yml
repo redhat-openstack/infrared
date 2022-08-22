@@ -302,13 +302,13 @@
     - name: Set default IPv6 gateway on FreeIPA server
       become: yes
       shell: |
-          nmcli connection modify "System eth2" ipv6.never-default no
-          nmcli connection modify "System eth2" ipv6.addresses "{{ freeipa_node_ipaddress }}/64"
-          nmcli connection modify "System eth2" ipv6.gateway "2620:52:0:13b8::fe"
+          nmcli connection modify "System {{ freeipa_external_interface }}" ipv6.never-default no
+          nmcli connection modify "System {{ freeipa_external_interface }}" ipv6.addresses "{{ freeipa_node_ipaddress }}/64"
+          nmcli connection modify "System {{ freeipa_external_interface }}" ipv6.gateway "2620:52:0:13b8::fe"
 
     - name: Restart interface eth2
       become: yes
-      shell: nmcli connection up "System eth2"
+      shell: nmcli connection up "System {{ freeipa_external_interface }}"
     when: freeipa_network_protocol != 'ipv4'
   delegate_to: "{{ freeipa_node }}"
 
