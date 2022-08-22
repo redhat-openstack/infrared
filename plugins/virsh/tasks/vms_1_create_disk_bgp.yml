@@ -1,0 +1,59 @@
+---
+- name: set BGP facts topology_node and node_name
+  set_fact:
+    topology_node: "{{ node.value }}"
+    node_name: "{{ node.key }}"
+
+- name: Create disks
+  environment:
+      LIBGUESTFS_DEBUG: 1
+  shell: |
+    set -ex
+    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    qemu-img create -f qcow2 -o preallocation={{ topology_node.disks.disk1.preallocation }} {{ base_image_path }}/{{ node_fullname }}.qcow2 {{ topology_node.disks.disk1.size }}
+    mkdir -p {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}
+    echo -e "NETWORKING=yes\nNOZEROCONF=yes" > {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/network
+    {% if 'gws' in topology_node %}
+      echo -e "GATEWAY={{ topology_node.gws[provision.bgp.topology.mode][item] }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/network
+    {% endif %}
+    
+    {% for n in topology_node.interfaces[provision.bgp.topology.mode][item] %}
+      echo -e "ONBOOT=yes\nHOTPLUG=no\nNM_CONTROLLED=no\nBOOTPROTO=static" > {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% if networks.get(n) is mapping and 'net' in networks.get(n) %}
+      echo -e "PREFIX={{ networks.get(n).get('prefix') }}\nIPADDR={{ networks.get(n).get('net')[:-2] }}.{{ topology_node.ips[provision.bgp.topology.mode][item] }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% endif %}
+      echo -e "DEVICE=eth{{ loop.index0 }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% if 'gw' in n %}
+      echo -e "GATEWAY={{ n.get('gw') }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% elif networks.get(n) is mapping and 'gw' in networks.get(n) %}
+      echo -e "GATEWAY={{ networks.get(n).get('gw') }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% endif %}
+      echo -e "PEERDNS=yes" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      echo -e "DNS1={{ dns1 }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      echo -e "DNS2={{ dns2 }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+    {% endfor %}
+  loop: '{{ topology_node.node_indexes }}'
+
+- name: Resize disks from vm base images
+  environment:
+      LIBGUESTFS_DEBUG: 1
+  shell: |
+    set -ex
+    {% set image_name = provision.image.url | basename %}
+    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    # Try to find the "root" partition or a first xfs partition. Defaults to /dev/sda1 else.
+    partitions=`virt-filesystems --csv --long --no-title -a {{ base_image_path }}/{{ image_name }}`
+    root_part=`awk -F "," '{ if ($4 == "root") {print $1; exit;} }' <<<"${partitions}"`
+    if [[ -z "$root_part" ]]; then
+        root_part=`awk -F "," '{ if ($3 == "xfs") {print $1; exit;} }' <<<"${partitions}"`
+    fi
+    root_part=${root_part:-/dev/sda1}
+    virt-resize --expand $root_part {{ base_image_path }}/{{ image_name }} {{ base_image_path }}/{{ node_fullname }}.qcow2
+  register: vms_jobs0
+  async: 7200
+  poll: 0
+  loop: '{{ topology_node.node_indexes }}'
+
+- name: append value to vms_jobs dictionary
+  set_fact:
+    vms_jobs: "{{ vms_jobs | combine({node_name: vms_jobs0}) }}"

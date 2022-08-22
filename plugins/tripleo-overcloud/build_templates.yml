@@ -212,6 +212,7 @@
                 set -o pipefail
                 openstack overcloud network vip provision --stack {{ install.overcloud.stack }} {{ template_base }}/network/vip_data.yaml -o /home/stack/templates/overcloud-vip-deployed.yaml 2>&1 | \
                 tee -a /home/stack/overcloud_provision_02_vip.log
+            when: not (install.bgp|default(False)|bool)
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
 

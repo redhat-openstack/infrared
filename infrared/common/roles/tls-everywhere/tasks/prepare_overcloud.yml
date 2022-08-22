@@ -61,6 +61,8 @@
     when: not (freeipa_enable_novajoin|bool)
 
   - name: Generate ipaservices-baremetal-ansible.yaml
+    vars:
+        dns_servers: "{{ (install.bgp|default(False)|bool) | ternary([freeipa_node_ipaddress, '10.19.42.41'], [freeipa_node_ipaddress]) | list }}"
     template:
         src: ipaservices-baremetal-ansible.yaml.j2
         dest: "{{ freeipa_templates_basedir }}/ipaservices-baremetal-ansible.yaml"
