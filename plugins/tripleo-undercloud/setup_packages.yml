@@ -204,3 +204,13 @@
           test_command: >-
               systemctl is-system-running | grep -e running -e degraded
         when: update is changed
+
+      - name: Update BGP routes after undercloud reboot
+        become: true
+        service:
+          name: frr
+          enabled: yes
+          state: restarted
+        when:
+          - update is changed
+          - install.bgp|default(False)|bool
