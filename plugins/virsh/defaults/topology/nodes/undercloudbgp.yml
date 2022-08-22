@@ -1,0 +1,30 @@
+name: undercloudbgp
+prefix: null
+cpu: "8"
+cpumodel: "host-passthrough"
+memory: "24576"
+swap: "0"
+deploy_os: true
+os:
+    type: "linux"
+    variant: "rhel9.0"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "55G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - undercloud
+    - openstack_nodes
+
+# basic bgp topology includes an undercloud, deployed on the fourth rack
+interfaces:
+  basic:
+    - ["l41-provis", "l41-host-1", "l42-host-1", "outofband"]
+
+ips:
+  basic:
+    - 2

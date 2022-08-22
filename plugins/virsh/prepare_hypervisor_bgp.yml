@@ -1,0 +1,57 @@
+---
+- name: Prepare the hypervisor - BGP setup
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+  - name: Prepare the hypervisor for provisioning
+    import_playbook: "prepare_hypervisor.yml"
+    vars:
+      _run_condition: {{ _run_condition }}
+    tags: hypervisor
+  - name: set IPv4 forwarding
+    become: true
+    sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      sysctl_set: yes
+      sysctl_file: /etc/sysctl.d/90-network.conf
+      state: present
+      reload: yes
+
+  - name: disable reverse path forwarding validation
+    become: true
+    sysctl:
+      name: net.ipv4.conf.all.rp_filter
+      value: '0'
+      sysctl_set: yes
+      sysctl_file: /etc/sysctl.d/90-network.conf
+      state: present
+      reload: yes
+
+  #- name: Fixup /etc/hosts on the hypervisor
+  #  lineinfile:
+  #    path: /etc/hosts
+  #    line: "192.168.14.{{ item.value.ip }} {{ item.key }}"
+  #  with_dict: "{{ vms }}"
+  #
+  ## (bandini) Add a useful alias
+  #- name: Add uc bashrc alias
+  #  lineinfile:
+  #    path: /root/.bashrc
+  #    line: alias uc='ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null stack@undercloud-0'
+  #    regexp: '^alias uc'
+
+  - name: Fixup networking on the hypervisor for bgp
+    shell: |
+      for i in 10.0.0.0/8 172.16.0.0/12 100.0.0.0/8 192.168.14.0/24; do
+        if ! iptables -nvL FORWARD |grep -e "ACCEPT.*$i"; then
+          iptables -I FORWARD -s $i -m comment --comment "bgp_playground_rule" -j ACCEPT
+          iptables -I FORWARD -d $i -m comment --comment "bgp_playground_rule" -j ACCEPT
+        fi
+        if ! iptables -t nat -nvL POSTROUTING | grep -e "MASQUERADE.*$i"; then
+          iptables -t nat -A POSTROUTING --source $i -m comment --comment "bgp_playground_rule" -j MASQUERADE
+        fi
+      done
+      if ! ip r | grep -q 172.16.0.0/12; then ip r a 172.16.0.0/12 via 10.0.0.3; fi
+      if ! ip r | grep -q 100.0.0.0/8; then ip r a 100.0.0.0/8 via 10.0.0.3; fi

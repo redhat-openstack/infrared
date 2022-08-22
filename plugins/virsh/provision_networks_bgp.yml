@@ -1,0 +1,26 @@
+---
+- name: Create networks for bgp setup
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Load bgp network var
+      include_vars: "{{ playbook_dir }}/defaults/topology/network/bgp_networks.yml"
+    - name: create the networks for the topology
+      virt_net:
+        command: "define"
+        name: "{{ item.key }}"
+        xml: "{{ lookup('template', 'templates/network-bgp.xml.j2') }}"
+      with_dict: "{{ networks }}"
+    
+    - name: set autostart to the created networks
+      virt_net:
+        autostart: "yes"
+        name: "{{ item.key }}"
+      with_dict: "{{ networks }}"
+    
+    - name: check if network is active
+      virt_net:
+        name: "{{ item.key }}"
+        state: active
+      with_dict: "{{ networks }}"
