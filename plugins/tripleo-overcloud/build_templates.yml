@@ -206,12 +206,14 @@
                 source ~/stackrc
                 set -o pipefail
                 openstack overcloud network provision {{ template_base }}/network/network_data_v2.yaml -o /home/stack/templates/overcloud-networks-deployed.yaml 2>&1 | tee -a /home/stack/overcloud_provision_01_net.log
+            when: not install.allow.deprecated.templates|default(False)|bool
           - name: reserve VIPs
             shell: |
                 source ~/stackrc
                 set -o pipefail
                 openstack overcloud network vip provision --stack {{ install.overcloud.stack }} {{ template_base }}/network/vip_data.yaml -o /home/stack/templates/overcloud-vip-deployed.yaml 2>&1 | \
                 tee -a /home/stack/overcloud_provision_02_vip.log
+            when: not install.allow.deprecated.templates|default(False)|bool
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
 
@@ -266,7 +268,9 @@
 
       - include_tasks: tasks/generate_baremetal_deployment.yml
         tags: deploy
-        when: install.version|default(undercloud_version)|openstack_release >= 17
+        when:
+            - install.version|default(undercloud_version)|openstack_release >= 17
+            - not install.allow.deprecated.templates|default(False)|bool
 
       - name: set overcloud_deploy script
         set_fact:

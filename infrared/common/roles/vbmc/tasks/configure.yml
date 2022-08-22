@@ -38,7 +38,7 @@
 
   - name: Set management bmc address
     set_fact:
-        vbmc_management_address: "{{ ansible_default_ipv4.address }}"
+        vbmc_management_address: "{{ ansible_host }}"
     when: vbmc_host == 'undercloud'
 
   # If the undercloud is a baremetal and user chooses hypervisor for vbmc_host, then
@@ -61,7 +61,7 @@
 
   - name: Add nodes to vbmc
     command: "{{ vbmc_bin }} add {{ item.key }} --port {{ item.value }} --username {{ install.vbmc.username }} --password {{ install.vbmc.password }} --address ::ffff:{{ vbmc_management_address }} \
-              --libvirt-uri \"qemu+ssh://{{ hostvars[vbmc_hypervisor].ansible_user_id }}@{{ hostvars[vbmc_hypervisor][management_net].ipv4.address }}/system?no_verify=1&no_tty=1\""
+              --libvirt-uri \"qemu+ssh://{{ hostvars[vbmc_hypervisor].ansible_user_id }}@{{ hostvars[vbmc_hypervisor][management_net].ipv4.address|default(hostvars[vbmc_hypervisor][ansible_external_name].ipv4.address) }}/system?no_verify=1&no_tty=1\""
     with_dict: "{{ vbmc_ports }}"
     when: vbmc_host == 'undercloud'
 

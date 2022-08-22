@@ -70,6 +70,16 @@
             tee -a /home/stack/overcloud_provision_nodes.log
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
+      - name: Tweak overcloud-bm-deployed due to LP#1913701
+        blockinfile:
+          block: |
+            parameter_merge_strategies:
+              DeployedServerPortMap: deep_merge
+          path: /home/stack/templates/overcloud-baremetal-deployed.yaml
+        when:
+            - (install.version|default(undercloud_version) | openstack_release >= 17)
+            - install.bgp.workarounds|default(False)|bool
+
 
 # For <17, the inventory can't be updated at this point because the nodes
 # don't exist here yet and they would end up in the "unused" group.
