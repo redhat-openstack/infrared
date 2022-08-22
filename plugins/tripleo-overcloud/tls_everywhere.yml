@@ -11,6 +11,4 @@
       - include_role:
             name: tls-everywhere
         vars:
-            stages:
-                - set_overcloud_dns
-                - prepare_overcloud
+            stages: "{{ ((install.allow.deprecated.templates|default(False)|bool) | ternary([], ['set_overcloud_dns']) + ['prepare_overcloud']) | list}}"

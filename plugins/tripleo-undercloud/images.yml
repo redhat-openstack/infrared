@@ -177,7 +177,7 @@
       - name: modify images - update to core build and install packages
         include_tasks: tasks/images/repos.yml
         # update is a func name (dict.update) so it must be used as str explicitly
-        when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
+        when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('') or install.images.run.command is defined
 
       # Trigger only when update kernel flag is specified and new packages installed inside overcloud image
       - name: update default overcloud kernel from modified overcloud image
