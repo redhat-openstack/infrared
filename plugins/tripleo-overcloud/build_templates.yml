@@ -174,6 +174,17 @@
           - install.version|default(undercloud_version) | openstack_release >= 17
           - install.storage.backend|default('') == 'ceph'
 
+      - name: copy OSD spec file to undercloud
+        template:
+          src: "{{ install.ceph.osd.spec.file }}"
+          dest: "{{ ansible_user_dir }}/osd-spec.yml"
+          mode: 0644
+          force: yes
+        when:
+          - install.ceph.osd.spec.file|default('')
+          - install.version|default(undercloud_version) | openstack_release >= 17
+          - install.storage.backend|default('') == 'ceph'
+
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
         tags:
