@@ -98,8 +98,16 @@ class BaremetalRoleData():
         out = {}
         out['name'] = self.name
         out['count'] = self.roles_count
+
         if self._hostname_format:
             out['hostname_format'] = self._hostname_format
+
+        instances_list = []
+        for instance in range(self.roles_count):
+            hostname = self._hostname_format.replace('%index%', str(instance))
+            instances_list.append({'hostname': hostname, 'name': hostname})
+        out['instances'] = instances_list
+
         defaults = {}
         if self._enable_profiles:
             defaults['profile'] = self.profile
