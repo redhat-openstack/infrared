@@ -47,7 +47,7 @@
 - block:
     - name: containers_images_env facts
       vars:
-          cont_img_yml: "{{ (target_install_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
+          cont_img_yml: "{{ 'overcloud_container_image_prepare.yaml' }}"
       set_fact:
           containers_images_env_template_download_basename: "{{ cont_img_yml }}"
           containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
@@ -225,21 +225,9 @@
     # Complex processing of container_image_prepare.yaml folows as the format
     # of the file slightly changed for OSP17, see RHOSINFRA-4180 for details
     - set_fact:
-        ceph_namespace_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-namespace'] }}\
-            {% else %}\
-            {{ container_env['container-image-prepare']['ceph_namespace'] }}\
-            {% endif %}"
-        ceph_image_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-image'] }}\
-            {% else %}\
-            {{ container_env['container-image-prepare']['ceph_image'] }}\
-            {% endif %}"
-        ceph_tag_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-tag'] }}\
-            {% else %}\
-            {{ container_env['container-image-prepare']['ceph_tag'] }}\
-            {% endif %}"
+        ceph_namespace_fromfile: "{{ container_env['container-image-prepare']['ceph_namespace'] }}"
+        ceph_image_fromfile: "{{ container_env['container-image-prepare']['ceph_image'] }}"
+        ceph_tag_fromfile: "{{ container_env['container-image-prepare']['ceph_tag'] }}"
 
     - set_fact:
         ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |

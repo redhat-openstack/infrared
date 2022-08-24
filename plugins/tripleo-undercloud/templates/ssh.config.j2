@@ -1,8 +1,6 @@
 Host *
 {% if install.splitstack|default(False) %}
   User {{ install.user.name }}
-{% elif ( install.version == '17' or install.version == '17.0' or install.version == '17-trunk' or install.version|openstack_release < 17 ) and install.version != 'wallaby' %}
-  User heat-admin
 {% else %}
   User tripleo-admin
 {% endif %}

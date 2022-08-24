@@ -54,8 +54,6 @@
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
-        # when:
-        #     - install.version|default(undercloud_version)|openstack_distribution == 'OSP'
         tags: rhos-release
 
       - role: rdo-release
@@ -107,17 +105,10 @@
             user: "{{ install.user.name }}"
             key: "{{ uc_publickey }}"
 
-      - name: Install heat-agent package
-        package:
-            name: 'python-heat-agent'
-            state: latest
-        when: "install.version|openstack_release < 15"
-
       - name: Install python3-heat-agent package
         package:
             name: 'python3-heat-agent'
             state: latest
-        when: "install.version|openstack_release >= 15"
 
       - name: Install openssl-perl package
         package:

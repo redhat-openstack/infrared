@@ -7,29 +7,6 @@
         command: bash ~/pre_undercloud_deploy_workarounds.sh
         when: install.workarounds != ''
 
-      - name: apply workaround for BZ#1428608
-        lineinfile:
-            line: 'exclude=docker-distribution'
-            insertafter: EOF
-            dest: /etc/yum.conf
-        become: true
-        become_user: root
-        when:
-          - install.version|openstack_release == 10
-          - install.build|default('') == 'ga'
-        register: apply_workaround_bz1428608
-
-      - name: apply workaround for BZ#1671406
-        seboolean:
-            name: authlogin_nsswitch_use_ldap
-            state: yes
-            persistent: yes
-        become: true
-        become_user: root
-        when:
-          - install.version|openstack_distribution == 'OSP'
-          - install.version|openstack_release <= 10
-
       - name: install the undercloud
         command: bash ~/undercloud_deploy.sh
         register: undercloud_deployment
@@ -49,28 +26,6 @@
         command: bash ~/post_undercloud_deploy_workarounds.sh
         when: install.workarounds != ''
 
-      - name: remove workaround for BZ#1428608
-        lineinfile:
-            line: 'exclude=docker-distribution'
-            state: absent
-            dest: /etc/yum.conf
-        become: true
-        become_user: root
-        when: not apply_workaround_bz1428608 is skipped
-
-      # even though bug is fixed this is still required for older OSP10 z streams
-      - name: "Workaround BZ#1553849 - iptables FORWARD DROP"
-        shell: |
-           set -ex
-           iptables -P FORWARD ACCEPT
-           sed -i "s/FORWARD DROP/FORWARD ACCEPT/" /etc/sysconfig/iptables
-           sed -i "s/FORWARD DROP/FORWARD ACCEPT/" /etc/sysconfig/iptables.save
-        become: true
-        become_user: root
-        when:
-            - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release == 10
-
       # rhosp-release provides /etc/rhosp-release, which is used in upgrade for version discovery.
       - name: install rhosp-release
         become: true
@@ -79,7 +34,6 @@
             name: rhosp-release
         when:
             - install.version|openstack_distribution == 'OSP'
-            - install.version|openstack_release >= 10
 
       - name: fetch the stackrc file
         tags:
@@ -90,22 +44,5 @@
             flat: yes
             fail_on_missing: yes
 
-      - name: update clouds.yaml file
-        include_tasks: clouds.yml
-        vars:
-            auth_file_path: "/home/stack/stackrc"
-            cloudname: "{{ (auth_file_path|basename == 'stackrc') |ternary('undercloud','overcloud') }}"
-        when:
-          - install.version|default(undercloud_version) | openstack_release < 17
-
       - name: gathering new facts about the undercloud
         setup:
-
-      - name: configure ironic direct deploy
-        shell: |
-          source ~/stackrc
-          openstack role add --user admin --project service ResellerAdmin
-          openstack --os-project-name service object store account set --property Temp-URL-Key=$(uuidgen | sha1sum | awk '{print $1}')
-        when:
-          - install.deploy_interface_default != 'iscsi'
-          - install.version|default(undercloud_version) | openstack_release == 13

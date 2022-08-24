@@ -47,7 +47,7 @@
 - block:
     - name: containers_images_env facts
       vars:
-          cont_img_yml: "{{ (target_install_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
+          cont_img_yml: "{{ 'overcloud_container_image_prepare.yaml' }}"
       set_fact:
           containers_images_env_template_download_basename: "{{ cont_img_yml }}"
           containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
@@ -124,7 +124,6 @@
         - install.get('registry', {}).get('ceph', {}).get('namespace', '')
 
     - name: Configure container registries for Ceph Dashboard
-      when: (target_install_version|openstack_release) >= 16
       vars:
         ceph_dashboard_deps:
             - ceph_alertmanager

@@ -1,7 +1,4 @@
 [DEFAULT]
-{% if install.version|openstack_release < 15 and install.get('bip', {}).get('address', {}) %}
-docker_bip = '--bip={{ install.bip.address }}'
-{% endif %}
 # Network interface on the Undercloud that will be handling the PXE
 # boots and DHCP for Overcloud instances. (string value)
 {% if 'bmc' in groups %}
@@ -15,50 +12,23 @@ local_ip = {{ ansible_host|default(ansible_ssh_host) }}/24
 {% else %}
 local_ip = 192.168.24.1/24
 {% endif %}
-{% if install.version|openstack_release <= 12 %}
-network_gateway = 192.168.24.1
-undercloud_public_vip = 192.168.24.2
-undercloud_admin_vip = 192.168.24.3
-network_cidr = 192.168.24.0/24
-masquerade_network = 192.168.24.0/24
-dhcp_start = 192.168.24.5
-dhcp_end = 192.168.24.55
-{% else %}
 undercloud_public_host = 192.168.24.2
 undercloud_admin_host = 192.168.24.3
-{% endif %}
-{% if install.version|openstack_release > 10 and undercloud_nameservers is defined and not install.tls.everywhere|default(False) %}
+{% if undercloud_nameservers is defined and not install.tls.everywhere|default(False) %}
 undercloud_nameservers = {{ undercloud_nameservers }}
 {% endif %}
-{# OSPd7 doesn't support "inspection_iprange" option.
-If we use "inspection_iprange" there, range won't
-be propagated to ironic-dnsmasq config and introspection
-will fail. #}
-{% if install.version == '7' or install.version == 'kilo' %}
-discovery_iprange = 192.168.24.100,192.168.24.120
-{% elif install.version|openstack_release <= 12 %}
-inspection_iprange = 192.168.24.100,192.168.24.120
-{% endif %}
-#TODO: use release >= 10 when RHBZ#1633193 is resolved
-{% if install.version|openstack_release > 10 and not (install.ntp.pool|default(False) and install.version|openstack_release >= 15) %}
+{% if not (install.ntp.pool|default(False) %}
 undercloud_ntp_servers={{ install.ntp.server }}
 {% endif %}
-{% if install.version|openstack_release >= 12 and install.overcloud.domain != '' %}
+{% if install.overcloud.domain != '' %}
 overcloud_domain_name={{ install.overcloud.domain }}
 {% endif %}
-{% if install.version|openstack_release >= 13 %}
-{% if install.version|openstack_release > 13 %}
 {% if install.version|default(undercloud_version)|openstack_distribution == 'OSP' %}
 container_images_file={{ working_dir }}/containers-prepare-parameter.yaml
 {% endif %}
 {% if install.cdn is not defined %}
-{% if install.version|openstack_release < 15 %}
-docker_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
-{% else %}
 container_insecure_registries={{ insecure_registry_hosts|unique|join(',') }}
 {% endif %}
-{% endif %}{# endif install.cdn is undefined #}
-{% endif %}{# endIf release > 13 #}
 {% if install.selinux|default('enforcing') != 'enforcing' %}undercloud_enable_selinux=false{% endif %}
 
 [ctlplane-subnet]
@@ -70,7 +40,7 @@ gateway = 192.168.24.1
 inspection_iprange = 192.168.24.100,192.168.24.120
 masquerade = true
 #TODO(skatlapa): add param to override masq
-{% endif %}{# endIf release >= 13 #}
+{% endif %}
 
 {% if install.boot.mode == 'uefi' %}
 ipxe_enabled = True

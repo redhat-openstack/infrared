@@ -167,13 +167,7 @@
         vars:
           _package_list: >-
             {%- set package_list = [] %}
-            {%- if install.version | openstack_release == 7 %}
-            {%-   set _ = package_list.append('python-rdomanager-oscplugin') %}
-            {%- elif install.version|openstack_release < 15 %}
-            {%-   set _ = package_list.append('python-tripleoclient') %}
-            {%- else %}
-            {%-   set _ = package_list.append('python3-tripleoclient') %}
-            {%- endif %}
+            {%- set _ = package_list.append('python3-tripleoclient') %}
             {%- if install.packages is defined %}
             {%-   set _ = package_list.extend(install.packages.split() | reject('equalto', '')) %}
             {%- endif %}

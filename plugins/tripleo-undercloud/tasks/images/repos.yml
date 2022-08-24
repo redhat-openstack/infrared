@@ -193,14 +193,6 @@
       - install.selinux is defined
       - install.selinux == 'permissive' or install.selinux =='disabled'
 
-# mcornea: remove once we have a resolution for BZ#1559151
-- name: implement workaround for BZ#1559151
-  environment:
-      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --delete /usr/libexec/os-apply-config/templates/etc/os-net-config/config.json"
-  when:
-      - undercloud_version|openstack_release == 11
-
 - name: remove machine-id from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
