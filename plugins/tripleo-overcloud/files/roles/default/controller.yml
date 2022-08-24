@@ -23,6 +23,7 @@ controller_role:
         - StorageMgmt
         - Tenant
     host_name_format: 'controller-%index%'
+    default_route_networks: "{% if 'ipv6' in install.network.protocol %}[ControlPlane, External]{% else %}[External]{% endif %}"
 
     # condition can be used to include or disable services. For example:
     #  - "{% if install.version|default(undercloud_version) |openstack_release < 11 %}OS::TripleO::Services::VipHosts{% endif %}"
