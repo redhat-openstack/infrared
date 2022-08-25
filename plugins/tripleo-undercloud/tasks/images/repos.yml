@@ -70,6 +70,7 @@
 - name: Push repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
   command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
 
 - name: Patch amphora image
@@ -138,6 +139,7 @@
 - name: Push repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
   command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
 
 - name: Do package update inside of overcloud image with custom repository enabled
@@ -204,6 +206,7 @@
 - name: remove machine-id from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
   command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
   when:
       - image_repos is changed or image_packages is changed or image_remove_packages is changed or image_update is changed or image_selinux is changed
