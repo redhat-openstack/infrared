@@ -16,7 +16,9 @@
 - name: Set RealTime kernel as default kernel
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'grubby --set-default /boot/vmlinuz*rt*' --selinux-relabel"
+  shell: >
+      virt-customize -a "{{ overcloud_image_file }}" --run-command 'grubby --set-default /boot/vmlinuz*rt*' --selinux-relabel
+      && sync
   when:
     - overcloud_RealTime_kernel | default(False)
 
@@ -27,12 +29,14 @@
 - name: Copy /boot from overcloud image to temp directory
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-copy-out -a {{ overcloud_image_file }} /boot /tmp/"
+  command: virt-copy-out -a "{{ overcloud_image_file }}" /boot /tmp/
 
 - name: Remove machine-id from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
+  shell: >
+      virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a "{{ overcloud_image_file }}"
+      && sync
 
 - name: Find kernel files
   find:

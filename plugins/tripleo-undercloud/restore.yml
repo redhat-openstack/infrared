@@ -77,14 +77,15 @@
       - name: resets undercloud image configurations
         environment:
             LIBGUESTFS_BACKEND: direct
-        command: >
-            virt-sysprep --selinux-relabel -a {{ undercloud_disk_path }}
+        shell: >
+            virt-sysprep --selinux-relabel -a "{{ undercloud_disk_path }}"
                 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
+            && sync
       # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
       - name: inject our key into the undercloud image
-        command: >
-            virt-customize -a {{ undercloud_disk_path }}
+        shell: >
+            virt-customize -a "{{ undercloud_disk_path }}"
                --root-password password:redhat
                --mkdir /root/.ssh
                --chmod 0700:/root/.ssh
@@ -93,9 +94,10 @@
                --chmod 0700:/home/{{ undercloud_user }}/.ssh
                --run-command "chown {{ undercloud_user }}:{{ undercloud_user }} /home/{{ undercloud_user }}/.ssh/authorized_keys"
                --selinux-relabel
+            && sync
 
       - name: create Undercloud VM from snapshot
-        command: >
+        shell: >
             virt-install --name {{ undercloud_node.name }}
                --disk path={{ undercloud_disk_path }},device=disk,bus=virtio,format=qcow2,cache={{ undercloud_node.disks.disk1.cache }}
                --network network:data
@@ -111,7 +113,7 @@
                --autostart
                --vnc
                --rng /dev/urandom
-               --dry-run --print-xml
+               --dry-run --print-xml && sync
         register: virt_xml
 
       - name: define the undercloud VM

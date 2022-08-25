@@ -30,7 +30,9 @@
             delay: 10
 
           - name: copy and shrink undercloud image
-            command: "virt-sparsify --compress {{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2 {{ undercloud_image_file }}"
+            shell: >
+                virt-sparsify --compress "{{ install.disk.pool }}/{{ undercloud }}-disk1.qcow2" "{{ undercloud_image_file }}"
+                && sync
 
           - name: Use sha256 to calculate checksum
             stat:

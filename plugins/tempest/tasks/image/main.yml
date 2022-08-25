@@ -17,23 +17,31 @@
 - name: Push repos to guest image tempest will use for testing
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a ~/tempest_image --copy-in /etc/yum.repos.d:/etc/ --selinux-relabel"
+  shell: >
+      virt-customize -a ~/tempest_image --copy-in /etc/yum.repos.d:/etc/ --selinux-relabel
+      && sync
 
 - name: Disable 'patched-rpms' yum repository in guest image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize --selinux-relabel -a ~/tempest_image --run-command \"yum-config-manager --disable patched-rpms\""
+  shell: >
+      virt-customize --selinux-relabel -a ~/tempest_image --run-command "yum-config-manager --disable patched-rpms"
+      && sync
   failed_when: false
 
 - name: Install packages in guest image tempest will use for testing
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a ~/tempest_image --install {{ test.images.packages }} --selinux-relabel"
+  shell: >
+      virt-customize -a ~/tempest_image --install "{{ test.images.packages }}" --selinux-relabel
+      && sync
   when: test.images.packages is defined
 
 - name: Run a command inside tempest guest image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize --selinux-relabel -a ~/tempest_image --run-command \"{{ test.images.command }}\""
+  shell: >
+      virt-customize --selinux-relabel -a ~/tempest_image --run-command "{{ test.images.command }}"
+      && sync
   failed_when: false
   when: test.images.command is defined
