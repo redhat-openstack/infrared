@@ -58,19 +58,22 @@
 - name: Upload yum config with enabled custom repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
   register: image_repos
   shell: >-
       virt-customize -a {{ overcloud_image_file }} --selinux-relabel
       {% for uri in merge_base_url %}
       --copy-in "{{ uri }}:/"
       {% endfor %}
+      && sync
   when: merge_base_url is defined and merge_base_url | length>0
   tags: skip_ansible_lint
 
 - name: Push repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel && sync"
 
 - name: Patch amphora image
   become: yes
@@ -83,11 +86,13 @@
     - name: Push repository and patched RPMs to amphora image
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-      command: "virt-customize -a {{ amphora_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --copy-in /patched_rpms:/ --selinux-relabel"
+          LIBGUESTFS_DEBUG: 1
+      shell: "virt-customize -a {{ amphora_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --copy-in /patched_rpms:/ --selinux-relabel && sync"
 
     - name: Do package update inside of amphora image with custom repository enabled
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+          LIBGUESTFS_DEBUG: 1
       command: |
         virt-customize -a {{ amphora_image_file }} \
           --run-command "sed -i 's|enabled=0|enabled=1|' /etc/yum.repos.d/patched_rpms.repo" \
@@ -97,7 +102,7 @@
           --run-command "mv /etc/nsswitch.conf.bak /etc/nsswitch.conf" \
           --run-command "sed -i 's|enabled=0|enabled=1|' /etc/yum/pluginconf.d/subscription-manager.conf" \
           --run-command "rm -f /etc/yum.repos.d/patched_rpms.repo" \
-          --selinux-relabel
+          --selinux-relabel && sync
   when:
       - "'octavia' in ls_result.stdout|default('')"
       - patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
@@ -106,13 +111,15 @@
     - name: Install yum-plugin-priorities package inside overcloud image
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-      command: "virt-customize --selinux-relabel -a {{ overcloud_image_file }} --install yum-plugin-priorities"
+          LIBGUESTFS_DEBUG: 1
+      shell: "virt-customize --selinux-relabel -a {{ overcloud_image_file }} --install yum-plugin-priorities && sync"
       when: ansible_distribution_major_version < '8'
 
     - name: Do package update inside of overcloud image with custom repository disabled
       environment:
           LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-      command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
+          LIBGUESTFS_DEBUG: 1
+      shell: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }} && sync"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Enable custom repository after first update
@@ -126,30 +133,35 @@
 - name: Upload yum config with enabled custom repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
   register: image_repos
   shell: >-
       virt-customize -a {{ overcloud_image_file }} --selinux-relabel
       {% for uri in merge_base_url %}
       --copy-in "{{ uri }}:/"
       {% endfor %}
+      && sync
   when: merge_base_url is defined and merge_base_url | length>0
   tags: skip_ansible_lint
 
 - name: Push repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel && sync"
 
 - name: Do package update inside of overcloud image with custom repository enabled
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }} && sync"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Uninstall packages from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --uninstall {{ install.images.remove.packages }} --selinux-relabel"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --uninstall {{ install.images.remove.packages }} --selinux-relabel && sync"
   register: image_remove_packages
   when: install.images.remove|default(None) != None
 
@@ -158,14 +170,16 @@
 - name: Force uninstall packages from overcloud image using 'rpm -e --nodeps' command
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -e --nodeps {{ images_remove_no_deps_packages | replace(',', ' ') }}' --selinux-relabel"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --run-command 'rpm -e --nodeps {{ images_remove_no_deps_packages | replace(',', ' ') }}' --selinux-relabel && sync"
   register: image_force_no_deps_remove_packages
   when: images_remove_no_deps_packages is defined
 
 - name: Install packages in overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel && sync"
   register: image_packages
   when: install.images.packages|default(None) != None
 
@@ -174,7 +188,7 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
       LIBGUESTFS_DEBUG: 1
       LIBGUESTFS_TRACE: 1
-  command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }} --selinux-relabel"
+  shell: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }} --selinux-relabel && sync"
   register: image_update
   vars:
       available_mem: "{{ [ansible_memory_mb.nocache.free, (ansible_memtotal_mb/2)|round|int] | min }}"
@@ -187,7 +201,8 @@
 - name: Set selinux state
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config'"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --run-command 'sed -i s/SELINUX=.*/SELINUX={{ install.selinux }}/g /etc/selinux/config' && sync"
   register: image_selinux
   when:
       - install.selinux is defined
@@ -197,13 +212,15 @@
 - name: implement workaround for BZ#1559151
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --delete /usr/libexec/os-apply-config/templates/etc/os-net-config/config.json"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-customize -a {{ overcloud_image_file }} --selinux-relabel --delete /usr/libexec/os-apply-config/templates/etc/os-net-config/config.json && sync"
   when:
       - undercloud_version|openstack_release == 11
 
 - name: remove machine-id from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
+      LIBGUESTFS_DEBUG: 1
+  shell: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }} && sync"
   when:
       - image_repos is changed or image_packages is changed or image_remove_packages is changed or image_update is changed or image_selinux is changed

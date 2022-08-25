@@ -79,9 +79,9 @@
             state: present
 
       - name: resets undercloud image configurations
-        command: >
+        shell: >
             virt-sysprep --selinux-relabel -a {{ undercloud_disk_path }}
-                --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
+                --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys && sync
       # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
       - name: inject our key into the undercloud image

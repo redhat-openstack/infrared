@@ -56,6 +56,7 @@
             --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
             --delete /etc/dhcp/dhclient.conf \
             --selinux-relabel
+        sync
     with_items: "{{ download_image_result.results }}"
     when: topology_node.supports_libguestfs | default(true)
   when: topology_node.deploy_os | default(true) | bool
