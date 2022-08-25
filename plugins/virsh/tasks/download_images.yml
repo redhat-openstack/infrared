@@ -43,9 +43,9 @@
         PREP_IMG_FILE={{ item.dest }}
         PREP_IMG_FILE=${PREP_IMG_FILE%.original}
         cp {{ item.dest }} ${PREP_IMG_FILE}
-        virt-sysprep --selinux-relabel -a ${PREP_IMG_FILE} \
+        virt-sysprep --selinux-relabel -a "${PREP_IMG_FILE}" \
             --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net
-        virt-customize -a ${PREP_IMG_FILE} \
+        virt-customize -a "${PREP_IMG_FILE}" \
         {% if not item.item.value.image_url|default('') %}
             --run-command 'yum remove -y cloud-init*' \
         {% endif %}
@@ -56,6 +56,7 @@
             --upload /root/.ssh/id_rsa.pub:/root/.ssh/authorized_keys \
             --delete /etc/dhcp/dhclient.conf \
             --selinux-relabel
+        sync
     with_items: "{{ download_image_result.results }}"
     when: topology_node.supports_libguestfs | default(true)
   when: topology_node.deploy_os | default(true) | bool
