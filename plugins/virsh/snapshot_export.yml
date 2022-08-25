@@ -79,6 +79,8 @@
               done
             done
             parallel --will-cite --use-cores-instead-of-threads --jobs 50% 'virt-sparsify --in-place {}; qemu-img convert -O qcow2 -c {} {{ provision.virsh.snapshot.path }}/$(basename {})' ::: $DISK_LIST
+            wait
+            sync
           args:
             executable: /bin/bash
 
