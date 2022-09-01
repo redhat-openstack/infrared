@@ -70,6 +70,14 @@
             bash "{{ template_base }}/roles/tripleo_roles.sh" &> roles_data.log
         register: roles_data
 
+      - name: Set up 'default_route_networks' in roles data
+        when:
+          - install.network.protocol == 'ipv6'
+        set_default_route_networks:
+          roles_file: "{{ template_base }}/roles/roles_data.yaml"
+          value: ControlPlane
+          backup: true
+
       - name: generate node_names_mapping from role_names_mapping
         set_fact:
             node_names_mapping: "{{ node_names_mapping|default({}) | combine({ item.value: item.key}) }}"

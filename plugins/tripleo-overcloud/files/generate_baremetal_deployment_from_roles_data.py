@@ -21,7 +21,7 @@ import yaml
 
 
 def parse_networks_names(networks_data: List[Dict]) -> Dict:
-    parsed_names = {}
+    parsed_names = {'ControlPlane': 'ctlplane'}
     for network in networks_data:
         name = network.get('name')
         name_lower = network.get('name_lower')
@@ -206,11 +206,15 @@ def main():
                 ansible_playbook_dict[role_name] = yaml.safe_load(apf)
 
     # get the names of the networks
-    networks_data = {}
     if opts.networks_file:
         with open(opts.networks_file, 'r') as ndf:
             networks_data_file = yaml.safe_load(ndf)
-        networks_data = parse_networks_names(networks_data_file)
+    else:
+        # If not network data file was provided,
+        # assume no networks i.e empty list.
+        networks_data_file = []
+
+    networks_data = parse_networks_names(networks_data_file)
     convert_role_data(roles_data, networks_data, opts.network_templates,
                       roles_count, ansible_playbook_dict, opts.enable_profiles)
 
