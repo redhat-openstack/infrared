@@ -16,6 +16,69 @@
       "message": "In fact roles/Controller.yaml contains:\n\n  # For systems with both IPv4 and IPv6, you may specify a gateway network for\n  # each, such as [\u0027ControlPlane\u0027, \u0027External\u0027]\n  default_route_networks: [\u0027External\u0027]\n\nI guess (question for tripleo experts) that means we can\u0027t simply use the roles provided by THT as they are for such \"simple\" case?",
       "revId": "5dbdb191a42c99344c29822ea9f60ff5d0f70059",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "097b388a_6e7cfedd",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-09-01T12:09:40Z",
+      "side": 1,
+      "message": "I think we should set \u0027default_route_networks\u0027 in roles_data.\nThe script modified in this change currently derive the \u0027default_route_networks\u0027 for baremetal_deployment.yaml from roles_data. It should continue to do so.",
+      "revId": "5dbdb191a42c99344c29822ea9f60ff5d0f70059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2c2989ee_4e41a073",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-09-01T12:09:40Z",
+      "side": 1,
+      "message": "self._default_network is derived from \u0027default_route_networks\u0027 in roles_data.\nWe should change how roles_data is generated, so that both networks are added there in the first place. This script should use roles_data as the source.",
+      "range": {
+        "startLine": 95,
+        "startChar": 59,
+        "endLine": 96,
+        "endChar": 42
+      },
+      "revId": "5dbdb191a42c99344c29822ea9f60ff5d0f70059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "33c5459b_4d2241dd",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-09-01T12:09:40Z",
+      "side": 1,
+      "message": "Is only the role named \u0027Controller\u0027 affected?\nWhat if a custom role_data with a different role name was used? Or if some other role also have some IPv6 network set up in role_data \u0027default_route_networks\u0027?",
+      "range": {
+        "startLine": 116,
+        "startChar": 16,
+        "endLine": 116,
+        "endChar": 26
+      },
+      "revId": "5dbdb191a42c99344c29822ea9f60ff5d0f70059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
