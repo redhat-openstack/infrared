@@ -5,7 +5,7 @@ from __future__ import print_function
 __registry_port_map = {
     'docker-registry.engineering.redhat.com': '{mirror}:5000',
     'brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888': '{mirror}:5001',
-    'registry-proxy.engineering.redhat.com': '{mirror}:5002',
+    # 'registry-proxy.engineering.redhat.com': '{mirror}:5002', ## NOTE(psedlak): like can be removed since reg-proxy/quay cdn performs well in all sites
     'docker-registry.upshift.redhat.com': '{mirror}:5003',
 }
 
