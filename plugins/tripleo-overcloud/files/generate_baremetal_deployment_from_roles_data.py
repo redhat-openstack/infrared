@@ -31,6 +31,12 @@ def parse_networks_names(networks_data: List[Dict]) -> Dict:
         parsed_names[name] = name_lower
     return parsed_names
 
+def is_ipv6_network(networks_data: List[Dict]) -> bool:
+    for network in networks_data:
+        if network.get('name') == 'External':
+            if network.get('ipv6'):
+                return True
+    return False
 
 class BaremetalRoleData():
 
@@ -94,7 +100,7 @@ class BaremetalRoleData():
         self._enable_profiles = enable_profiles
         self.ansible_playbook_dict = ansible_playbook_dict
 
-    def to_baremetal_format(self, network_templates_dir: Path):
+    def to_baremetal_format(self, network_templates_dir: Path, ipv6_network: bool):
         out = {}
         out['name'] = self.name
         out['count'] = self.roles_count
@@ -107,6 +113,8 @@ class BaremetalRoleData():
         network_config = {}
         if self._default_network:
             network_config['default_route_network'] = self._default_network
+            if 'Controller' in self.name and ipv6_network:
+                network_config['default_route_network'].append('ctlplane')
         if network_templates_dir:
             candidate_net_template = Path(network_templates_dir,
                                           '{}.j2'.format(self.generic_type))
@@ -140,7 +148,8 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
                       ansible_playbook_dict: Dict,
-                      enable_profiles: bool = False) -> None:
+                      enable_profiles: bool = False,
+                      ipv6_network: bool = False) -> None:
     all_roles = []
     for role_data in roles_data:
         role_obj = BaremetalRoleData(role_data, networks_data,
@@ -155,7 +164,7 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
             pass
 
         role_obj.roles_count = nc
-        all_roles.append(role_obj.to_baremetal_format(network_templates_dir))
+        all_roles.append(role_obj.to_baremetal_format(network_templates_dir, ipv6_network))
     print(yaml.dump(all_roles, sort_keys=False))
 
 
@@ -211,8 +220,10 @@ def main():
         with open(opts.networks_file, 'r') as ndf:
             networks_data_file = yaml.safe_load(ndf)
         networks_data = parse_networks_names(networks_data_file)
+        ipv6_network = is_ipv6_network(networks_data_file)
     convert_role_data(roles_data, networks_data, opts.network_templates,
-                      roles_count, ansible_playbook_dict, opts.enable_profiles)
+                      roles_count, ansible_playbook_dict, opts.enable_profiles,
+                      ipv6_network)
 
 
 if __name__ == '__main__':
