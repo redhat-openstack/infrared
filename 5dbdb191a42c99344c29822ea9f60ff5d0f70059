@@ -35,6 +35,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "90ac2d33_4002223a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-09-01T12:38:58Z",
+      "side": 1,
+      "message": "^^ This is exactly where we should change the default_route_networks, in roles data.\n\nIt is possible yedit can help us do that? Something like below (I did not test it ...)\n\n  diff --git a/plugins/tripleo-overcloud/tripleo_roles.yml b/plugins/tripleo-overcloud/tripleo_roles.yml\n  index ef6066ff..35efd247 100644\n  --- a/plugins/tripleo-overcloud/tripleo_roles.yml\n  +++ b/plugins/tripleo-overcloud/tripleo_roles.yml\n  @@ -70,6 +70,18 @@\n               bash \"{{ template_base }}/roles/tripleo_roles.sh\" \u0026\u003e roles_data.log\n           register: roles_data\n\n  +      - name: Set up \u0027default_route_networks\u0027 in roles data\n  +        when:\n  +          - \u0027ipv6\u0027 in install.network.protocol\n  +        yedit:\n  +          state: present\n  +          src: \"{{ template_base }}/roles/roles_data.yaml\"\n  +          append: true\n  +          key: default_route_networks\n  +          value: ControlPlane\n  +          value_type: string\n  +          backup: true\n  +",
+      "parentUuid": "47af6950_e80c1ac0",
+      "revId": "5dbdb191a42c99344c29822ea9f60ff5d0f70059",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "2c2989ee_4e41a073",
