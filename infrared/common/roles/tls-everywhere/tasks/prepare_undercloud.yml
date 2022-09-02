@@ -122,4 +122,10 @@
         - { section: "DEFAULT", option: "undercloud_nameservers", value: "{{ freeipa_node_ipv4_address }} " }
         - { section: "DEFAULT", option: "overcloud_domain_name", value: "{{ freeipa_cloud_domain }}" }
     when: not (freeipa_enable_novajoin|bool)
+
+  - name: Store IPA admin password on undercloud
+    copy:
+      dest: ~/.ipa/.admin_password
+      content: |
+        {{ freeipa_admin_password }}
   delegate_to: "{{ freeipa_undercloud_node }}"
