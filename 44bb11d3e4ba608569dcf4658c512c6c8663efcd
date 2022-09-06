@@ -51,6 +51,24 @@
       "parentUuid": "41eec3b3_85c9d943",
       "revId": "44bb11d3e4ba608569dcf4658c512c6c8663efcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6647f618_a9d00d85",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-09-06T13:47:50Z",
+      "side": 1,
+      "message": "The name of the provisioning network is hardcoded \"ctlplane\" in TripleO, it cannot be changed. So is the \"ControlPlane\" alias used in THT.\n\nIf someone does something custom it makes sense to use the IR options to completely override roles_data and the deployment files instead. We already do that in the job that does \"custom network name\", and other jobs... Following is an example of the files we keep static copies of, basically all the files in the \"VarDir\". By using the \u0027deployment-files\u0027[1] option in infrareds tripleo-overcloud plug-in we can customize our hearts out without making IR infinitely complex by adding support for very special customization that only one or two jobs need.\n\n  ├── osp-17-custom-network-name\n  │   └── virt\n  │       ├── extraconfig.yaml.j2\n  │       ├── network\n  │       │   ├── baremetal_deployment.yaml.j2\n  │       │   ├── network_data_v2.yaml.j2\n  │       │   ├── network-environment_v2.yaml.j2\n  │       │   ├── three-nics-vlans\n  │       │   │   ├── ceph-storage.j2.j2\n  │       │   │   ├── compute.j2.j2\n  │       │   │   └── controller.j2.j2\n  │       │   └── vip_data.yaml.j2\n  │       └── roles\n  │           └── roles_data.yaml\n\n[1] https://github.com/redhat-openstack/infrared/blob/master/plugins/tripleo-overcloud/plugin.spec#L211",
+      "parentUuid": "41eec3b3_85c9d943",
+      "revId": "44bb11d3e4ba608569dcf4658c512c6c8663efcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
