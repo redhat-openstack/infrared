@@ -25,16 +25,29 @@
 
     - name: Find out the number of nodes per role
       roles_node_count:
-        tht_roles: "{{ install.role.files }}"
+        tht_roles: "{{ install.role.files | default('auto')}}"
         overcloud_nodes: "{{ groups.overcloud_nodes }}"
       register: roles_count
 
+    - name: "get the stat of {{ template_base }}/roles/roles_data.yaml file"
+      stat:
+        path: "{{ template_base }}/roles/roles_data.yaml"
+      register: roles_data_yaml_file
+
+    - name: Copy roles_data_extra/
+      copy:
+        src: "files/roles_data_extra/"
+        dest: "roles_data_extra/"
+
     - name: Create the baremetal_deployment input file used by the deploy script
+      vars:
+        _roles_yaml:
       shell: |
         ./generate_baremetal_deployment_from_roles_data.py \
-        -t {{ template_base }}/network/nic-configs/ \
+        -t {{ template_base }}/network/{{ deployment_files_defaults.nic_configs_dir }}/ \
         -n {{ template_base }}/network/network_data_v2.yaml \
-        {{ template_base }}/roles/roles_data.yaml \
+        {{ roles_data_yaml_file.stat.exists | ternary(template_base + '/roles/roles_data.yaml', '/usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+        -r roles_data_extra/ \
         -p \
         {% for name, count in roles_count.nodes_count.items() %}
         -c {{ name }} {{ count }} \

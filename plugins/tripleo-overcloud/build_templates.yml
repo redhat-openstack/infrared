@@ -33,6 +33,7 @@
   any_errors_fatal: true
   vars:
       source_dir: "{{ install.deployment.files }}"
+      deployment_files_defaults: "{{ lookup('file', source_dir + '/defaults.json', errors='crit' ) | from_json }}"
       # FIXME(yfried): use '~/' once https://github.com/ansible/ansible/issues/19869 is resolved
       template_base: "{{ ansible_user_dir }}/{{ source_dir | basename }}"
       network_environment_file: "network-environment{{ ((install.version|default(undercloud_version)|openstack_release >= 17)) | ternary('_v2' ,\
@@ -265,7 +266,9 @@
         when: not overcloud_deploy_script|default('')
 
       - include_tasks: tasks/generate_baremetal_deployment.yml
-        tags: deploy
+        tags:
+            - deploy
+            - generate_baremetal_deployment
         when: install.version|default(undercloud_version)|openstack_release >= 17
 
       - name: set overcloud_deploy script

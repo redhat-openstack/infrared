@@ -85,6 +85,7 @@ class BaremetalRoleData():
                  enable_profiles: bool = False) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
+        self.defaults = role_data.get('defaults', {})
         self._hostname_format = role_data.get('HostnameFormatDefault')
         self._default_network = [networks_data[x] for x in role_data.get(
             'default_route_networks', [])]
@@ -100,7 +101,7 @@ class BaremetalRoleData():
         out['count'] = self.roles_count
         if self._hostname_format:
             out['hostname_format'] = self._hostname_format
-        defaults = {}
+        defaults = self.defaults
         if self._enable_profiles:
             defaults['profile'] = self.profile
 
@@ -136,13 +137,16 @@ class BaremetalRoleData():
         return out
 
 
-def convert_role_data(roles_data: Dict, networks_data: Dict,
+def convert_role_data(roles_data: Dict, roles_data_extra_dict: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
                       ansible_playbook_dict: Dict,
                       enable_profiles: bool = False) -> None:
     all_roles = []
     for role_data in roles_data:
+        role_name = role_data.get('name')
+        if roles_data_extra_dict.get(role_name, None):
+            role_data = {**role_data, **roles_data_extra_dict[role_name]}
         role_obj = BaremetalRoleData(role_data, networks_data,
                                      ansible_playbook_dict, enable_profiles)
         nc = 0
@@ -166,6 +170,11 @@ def parse_opts(argv):
                         metavar='ROLES_DATA',
                         help='Path of the roles_data.yaml file',
                         default='roles_data.yaml')
+    parser.add_argument('-r', '--roles-data-extra',
+                        metavar='ROLES_DATA_EXTRA', default="roles_data_extra/",
+                        help='Path to a directory with yaml files containing'
+                             'extra data which will be appended to (or overwrite) data from roles_data.yaml.'
+                             'One file per role, i.e.: Controller.yaml')
     parser.add_argument('-n', '--networks-file',
                         metavar='NETWORK_FILES',
                         help='Path of the file with network definitions')
@@ -196,6 +205,14 @@ def main():
     with open(opts.roles_data, 'r') as rdf:
         roles_data = yaml.safe_load(rdf)
 
+    roles_data_extra_dict = {}
+    if opts.roles_data_extra:
+        roles_data_extra_files = Path(opts.roles_data_extra).glob('*')
+        for roles_data_extra_file in roles_data_extra_files:
+            role_name = roles_data_extra_file.name.split('.')[0]
+            with open(roles_data_extra_file, 'r') as rdef:
+                roles_data_extra_dict[role_name] = yaml.safe_load(rdef)
+
     ansible_playbook_dict = {}
     if opts.ansible_playbook:
         ansible_playbook_files = Path(opts.ansible_playbook).glob('*')
@@ -215,7 +232,7 @@ def main():
         networks_data_file = []
 
     networks_data = parse_networks_names(networks_data_file)
-    convert_role_data(roles_data, networks_data, opts.network_templates,
+    convert_role_data(roles_data, roles_data_extra_dict, networks_data, opts.network_templates,
                       roles_count, ansible_playbook_dict, opts.enable_profiles)
 
 

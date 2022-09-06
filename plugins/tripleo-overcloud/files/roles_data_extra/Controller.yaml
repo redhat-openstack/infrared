@@ -1,0 +1,8 @@
+defaults:
+  config_drive:
+    cloud_config:
+      # unique NFS ID
+      bootcmd:
+        - 'host_specific_id="$(hostname)-5907c927-1a20-5c08-8828-22c447e1ccf2"'
+        - 'echo "options nfs nfs4_unique_id=${host_specific_id}" >/etc/modprobe.d/nfsv4_id.conf'
+        - '[ -e /sys/module/nfs/parameters/nfs4_unique_id ] && echo -n ${host_specific_id} >/sys/module/nfs/parameters/nfs4_unique_id'
