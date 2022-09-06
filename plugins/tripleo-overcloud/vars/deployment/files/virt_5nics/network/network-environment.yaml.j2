@@ -12,11 +12,11 @@
 # environment files we should think about using it here to automatically
 # include network-isolation.yaml.
 resource_registry:
-  OS::TripleO::BlockStorage::Net::SoftwareConfig: five-nics-vlans/{{ nics_subfolder }}/cinder-storage.yaml
-  OS::TripleO::Compute::Net::SoftwareConfig: five-nics-vlans/{{ nics_subfolder }}/compute.yaml
-  OS::TripleO::Controller::Net::SoftwareConfig: five-nics-vlans/{{ nics_subfolder }}/controller.yaml
-  OS::TripleO::ObjectStorage::Net::SoftwareConfig: five-nics-vlans/{{ nics_subfolder }}/swift-storage.yaml
-  OS::TripleO::CephStorage::Net::SoftwareConfig: five-nics-vlans/{{ nics_subfolder }}/ceph-storage.yaml
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/controller.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/ceph-storage.yaml
 
 parameter_defaults:
     ExternalNetCidr: '172.16.0.0/24'
