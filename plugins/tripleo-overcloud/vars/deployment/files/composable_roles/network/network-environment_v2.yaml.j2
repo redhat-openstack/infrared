@@ -2,11 +2,11 @@
 # v2 config
 
 parameter_defaults:
-    ControllerNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/controller.j2'
-    ComputeNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/compute.j2'
-    BlockStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/cinder-storage.j2'
-    ObjectStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/swift-storage.j2'
-    CephStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/nic-configs/ceph-storage.j2'
+    ControllerNetworkConfigTemplate: '/home/stack/composable_roles/network/{{ deployment_files_defaults.nic_configs_dir }}/controller.j2'
+    ComputeNetworkConfigTemplate: '/home/stack/composable_roles/network/{{ deployment_files_defaults.nic_configs_dir }}/compute.j2'
+    BlockStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/{{ deployment_files_defaults.nic_configs_dir }}/cinder-storage.j2'
+    ObjectStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/{{ deployment_files_defaults.nic_configs_dir }}/swift-storage.j2'
+    CephStorageNetworkConfigTemplate: '/home/stack/composable_roles/network/{{ deployment_files_defaults.nic_configs_dir }}/ceph-storage.j2'
 {% if install.network.dvr %}
     NeutronExternalNetworkBridge: "br-ex"
 {% else %}

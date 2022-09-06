@@ -12,8 +12,8 @@
 # environment files we should think about using it here to automatically
 # include network-isolation.yaml.
 resource_registry:
-  OS::TripleO::Compute::Net::SoftwareConfig: four-nics-vlans/{{ nics_subfolder }}/compute.yaml
-  OS::TripleO::Controller::Net::SoftwareConfig: four-nics-vlans/{{ nics_subfolder }}/controller.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/controller.yaml
 
 parameter_defaults:
     ExternalNetCidr: '10.0.0.0/24'
