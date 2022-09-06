@@ -8,11 +8,12 @@ resource_registry:
     OS::TripleO::ObjectStorage::Net::SoftwareConfig: OS::Heat::None
     OS::TripleO::CephStorage::Net::SoftwareConfig: OS::Heat::None
 parameter_defaults:
-    ControllerNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/controller.j2'
-    ComputeNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/compute.j2'
-    BlockStorageNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/cinder-storage.j2'
-    ObjectStorageNetworkConfigTemplate: '/home/stack/virt/network/templates/three-nics-vlans/swift-storage.j2'
-    CephStorageNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/ceph-storage.j2'
+    ControllerNetworkConfigTemplate: '/home/stack/virt/network/{{ deployment_files_defaults.nic_configs_dir }}/controller.j2'
+    ComputeNetworkConfigTemplate: '/home/stack/virt/network/{{ deployment_files_defaults.nic_configs_dir }}/compute.j2'
+    BlockStorageNetworkConfigTemplate: '/home/stack/virt/network/{{ deployment_files_defaults.nic_configs_dir }}/cinder-storage.j2'
+    # TODO: is the fact that below ObjectStorageNetworkConfigTemplate looking at network/templates/* instead of network/* correct?
+    ObjectStorageNetworkConfigTemplate: '/home/stack/virt/network/templates/{{ deployment_files_defaults.nic_configs_dir }}/swift-storage.j2'
+    CephStorageNetworkConfigTemplate: '/home/stack/virt/network/{{ deployment_files_defaults.nic_configs_dir }}/ceph-storage.j2'
 {% if install.network.dvr %}
     NeutronExternalNetworkBridge: "br-ex"
 {% else %}

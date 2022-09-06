@@ -12,11 +12,11 @@
 # environment files we should think about using it here to automatically
 # include network-isolation.yaml.
 resource_registry:
-  OS::TripleO::BlockStorage::Net::SoftwareConfig: three-nics-vlans/{{ nics_subfolder }}/cinder-storage.yaml
-  OS::TripleO::Compute::Net::SoftwareConfig: three-nics-vlans/{{ nics_subfolder }}/compute.yaml
-  OS::TripleO::Controller::Net::SoftwareConfig: three-nics-vlans/{{ nics_subfolder }}/controller-v6.yaml
-  OS::TripleO::ObjectStorage::Net::SoftwareConfig: three-nics-vlans/{{ nics_subfolder }}/swift-storage.yaml
-  OS::TripleO::CephStorage::Net::SoftwareConfig: three-nics-vlans/{{ nics_subfolder }}/ceph-storage.yaml
+  OS::TripleO::BlockStorage::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/cinder-storage.yaml
+  OS::TripleO::Compute::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/compute.yaml
+  OS::TripleO::Controller::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/controller-v6.yaml
+  OS::TripleO::ObjectStorage::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/swift-storage.yaml
+  OS::TripleO::CephStorage::Net::SoftwareConfig: {{ deployment_files_defaults.nic_configs_dir }}/{{ nics_subfolder }}/ceph-storage.yaml
 
 parameter_defaults:
 {% if not use_network_data|bool %}
