@@ -80,7 +80,7 @@
 
       - name: resets undercloud image configurations
         command: >
-            virt-sysprep --selinux-relabel -a {{ undercloud_disk_path }}
+            virt-sysprep -a {{ undercloud_disk_path }}
                 --operations dhcp-client-state,dhcp-server-state,net-hostname,net-hwaddr,udev-persistent-net,ssh-hostkeys
       # Copy hypervisor's key into UC root and also for "undercloud_user" as we need this user since next hosts task update inventory
       # This is necesarry for muffin because we need to refresh the auhtortized_keys with new hypervisor's pubkey
@@ -94,8 +94,6 @@
                --upload /root/.ssh/id_rsa.pub:/home/{{ undercloud_user }}/.ssh/authorized_keys
                --chmod 0700:/home/{{ undercloud_user }}/.ssh
                --run-command "chown {{ undercloud_user }}:{{ undercloud_user }} /home/{{ undercloud_user }}/.ssh/authorized_keys"
-               --selinux-relabel
-
 
       - name: create Undercloud VM from snapshot
         command: >
