@@ -39,7 +39,13 @@
                 openstack hypervisor list -f value -c 'Hypervisor Hostname' | grep {{ inventory_hostname }}
             register: compute_fqdn
 
-          - name: Register instances running on compute node
+          - name: Register instances running on all compute nodes and their statuses
+            shell: |
+                source {{ overcloud_rc }}
+                openstack server list -c ID -c Status --all -f value
+            register: all_compute_instances
+
+          - name: Register instances running on the compute node
             shell: |
                 source {{ overcloud_rc }}
                 openstack server list --all --host {{ compute_fqdn.stdout }} -f json | jq -r -c '.[] | select(.Status | contains("ACTIVE") or contains("PAUSED")) | .ID'
@@ -61,6 +67,16 @@
             delay: 5
             when:
               - compute_instances.stdout | length > 0
+
+          - name: Fail if there are vms in error state left after compute node got quiesced
+            shell: |
+                source {{ overcloud_rc }}
+                openstack server list --all --host {{ compute_fqdn.stdout }} -f json | jq -r -c '[.[] | select(.Status | contains("ERROR"))] | length'
+            register: compute_node_error_instances
+            failed_when: compute_node_error_instances.stdout.find("0") == -1
+            when:
+              - compute_instances.stdout | length > 0
+
         delegate_to: "{{ groups['undercloud']|first }}"
         when:
           - "'compute' in group_names"
@@ -548,3 +564,19 @@
           - groups.compute|difference(groups.unused|default([]))|length > 1
           - install.postreboot_evacuate|default(False)
           - compute_instances.stdout | length > 0
+
+      - name: Fail if status of any vm is diffrent after reboot of machine
+        shell: |
+          source {{ overcloud_rc }}
+          openstack server show {{ item.ID }} -f value -c status
+        register: instance_status
+        failed_when: instance_status.stdout != "{{ item.Status }}"
+        retries: 30
+        delay: 5
+        with_items: "{{ all_compute_instances.stdout|from_json }}"
+        delegate_to: "{{ groups['undercloud']|first }}"
+        when:
+          - "'compute' in group_names"
+          - groups.compute|difference(groups.unused|default([]))|length > 1
+          - install.postreboot_evacuate|default(False)
+          - all_compute_instances.stdout | length > 0
