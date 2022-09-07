@@ -85,14 +85,32 @@
     - install.version|default(undercloud_version)|openstack_release < 12
 
 - block:
+      - name: Check if storage-config contains a valid path
+        stat:
+            path: "{{ install.storage.config }}"
+        register: storage_config_file
+
+      # Support both the oldest, not flexible, way (a string which contains the name of a file,
+      # without its extension, under vars/storage/config/) and the cleaner one (the full path
+      # to the configuration files one). When the latter becomes the only way, the code which
+      # copies the template should be moved to a shared file, as it applies regardless of
+      # the storage backend.
+      - set_fact:
+            source_storage_config_file: >-
+                {{ (storage_config_file.stat.exists) |
+                    ternary(install.storage.config, "vars/storage/config/{{ install.storage.config }}.yml") }}
+            storage_config_file_basename: >-
+                {{ (storage_config_file.stat.exists) |
+                    ternary(storage_config_file.stat.path|default("")|basename, "{{ install.storage.config }}.yml") }}
+
       - name: Copy storage configuration file to the remote
         copy:
-            src: "vars/storage/config/{{ install.storage.config }}.yml"
-            dest: "{{ template_base }}/{{ install.storage.config }}.yaml"
+            src: "{{ source_storage_config_file }}"
+            dest: "{{ template_base }}/{{ storage_config_file_basename }}"
 
       - name: Append the storage configuration line to the base overcloud deploy script
         lineinfile:
             dest: "~/overcloud_deploy.sh"
-            line: '-e {{ template_base }}/{{ install.storage.config }}.yaml \'
+            line: '-e {{ template_base }}/{{ storage_config_file_basename }}'
 
   when: install.storage.config != 'internal'
