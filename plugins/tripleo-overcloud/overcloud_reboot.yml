@@ -535,6 +535,7 @@
       - name: migrate instance back to {{ compute_fqdn.stdout }}
         shell: |
           source {{ overcloud_rc }}
+          set -e
           nova live-migration {% if 'ceph' not in storage_backend.stdout %}--block-migrate{% endif %} {{ item }} {{ compute_fqdn.stdout }}
           openstack server show {{ item }}  -f json | jq -r -c '. | .["OS-EXT-SRV-ATTR:host"]'
         register: instance_host
