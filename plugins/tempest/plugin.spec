@@ -115,6 +115,9 @@ subparsers:
                            - "17.0"
                            - "17.1"
                            - "17-trunk"
+                           - "18"
+                           - "18.0"
+                           - "18.1"
                            - liberty
                            - kilo
                            - liberty
@@ -126,6 +129,8 @@ subparsers:
                            - rocky
                            - stein
                            - train
+                           - wallaby
+                           - zed
                   openstack-installer:
                        type: Value
                        help: |

@@ -3,8 +3,15 @@ import re
 
 
 def _calc_version_from_release(release):
-    GRIZZLY = ord("G".lower())
+    GRIZZLY = ord("g")
     GRIZZLY_NUMERIC = 3
+    if release[0].lower() > 'w':
+        return 18
+    if release[0].lower() > 't':
+        return 17
+    # alphabet reseted, consider it 19 for now
+    if release[0].lower() < 'g':
+        return 19
     return GRIZZLY_NUMERIC - GRIZZLY + ord(release[0].lower())
 
 
