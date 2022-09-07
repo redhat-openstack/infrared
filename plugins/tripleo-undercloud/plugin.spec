@@ -268,6 +268,9 @@ subparsers:
                         - "16.1-trunk"
                         - "16.2"
                         - "16.2-trunk"
+                        - "18"
+                        - "18.0"
+                        - "18.1"
                         - kilo
                         - liberty
                         - mitaka
@@ -278,6 +281,8 @@ subparsers:
                         - rocky
                         - stein
                         - train
+                        - wallaby
+                        - zed
                   build:
                       help: |
                           String represents a timestamp of the OSP puddle.
