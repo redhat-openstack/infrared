@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ce8d2c6d_a4377fa4",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/ceph.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2022-09-09T15:36:28Z",
+      "side": 1,
+      "message": "Makes sense, though I can\u0027t stop wondering about some extreme cases where smth like ansible_search_path combined with relative *yaml path might actually produce the file to be found even when referenced the \"old ,relative, way\"(https://docs.ansible.com/ansible/latest/user_guide/playbook_pathing.html#resolving-local-relative-paths).\n\nWhat about rather testing the filename for presense of \u0027/\u0027 or introducing additional boolean param switching the flow explicitely?",
+      "range": {
+        "startLine": 100,
+        "startChar": 20,
+        "endLine": 100,
+        "endChar": 51
+      },
+      "revId": "1e46d0fc25c6fb670009e74868731c03429d21ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5e053be6_6c8c6f89",
+        "filename": "plugins/tripleo-overcloud/tasks/storage/ceph.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2022-09-09T15:36:28Z",
+      "side": 1,
+      "message": "Can the path really be undefined here in this case? Is the \"\" default really needed here? storage_config_file_basename could be then \"\" which could pose problems for tasks below, right? I mean if there is really possibility that path is in this case undefined, shouldn\u0027t the task rather fail here?",
+      "range": {
+        "startLine": 104,
+        "startChar": 58,
+        "endLine": 104,
+        "endChar": 69
+      },
+      "revId": "1e46d0fc25c6fb670009e74868731c03429d21ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
