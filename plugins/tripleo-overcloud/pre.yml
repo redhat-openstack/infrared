@@ -5,7 +5,8 @@
   any_errors_fatal: true
   tasks:
        - name: Install pre-defined Undercloud packages for OSP 12 and beyond
-         package:
+         dnf:
              name: "{{ install.undercloud.packages }}"
              state: present
+             disable_gpg_check: yes
          become: true
