@@ -224,7 +224,7 @@ subparsers:
                   threads:
                       type: Value
                       help: The number of concurrent threads to run tests
-                      default: 8
+                      default: 1
                   dir:
                       type: Value
                       help: The tempest working directory on the tester node
