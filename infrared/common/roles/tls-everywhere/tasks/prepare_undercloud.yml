@@ -57,6 +57,17 @@
         - ansible_distribution_major_version == '8'
         - not (freeipa_enable_novajoin|bool)
 
+  - name: Install ipaserver
+    become: yes
+    pip:
+      name: ipaserver
+      state: present
+    when:
+        - ansible_distribution in ['CentOS', 'RedHat']
+        - ansible_distribution_major_version == '8'
+        - not (freeipa_enable_novajoin|bool)
+        - install.version|openstack_release >= 17.1"
+
   - name: Prepare novajoin to work
     become: yes
     command: >
