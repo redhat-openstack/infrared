@@ -87,6 +87,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "87e87536_c8779582",
+        "filename": "plugins/tempest/tasks/configure/method/pip.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-09-22T12:57:14Z",
+      "side": 1,
+      "message": "Right, but this is unrelated to this CDN issue - it would be useful to test this change separately.",
+      "parentUuid": "fc7f59b2_4cb12005",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "54c5f3b2_4ecbdce8",
@@ -174,6 +192,24 @@
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "163b7822_39182e8e",
+        "filename": "plugins/tempest/tasks/setup/pip/main.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-09-22T12:57:14Z",
+      "side": 1,
+      "message": "I\u0027m not sure those packages are available through the CDN. The reason for those special unittest repositories is that the packages they include are not shipped with OSP. I still think something else can break.",
+      "parentUuid": "15f64f35_53ab1e07",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "f3903339_562c83b1",
@@ -205,6 +241,24 @@
       "side": 1,
       "message": "test.rpm.package is a URI to tempest RPM. Hence they are differen.",
       "parentUuid": "f3903339_562c83b1",
+      "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "488b6d56_2789940b",
+        "filename": "plugins/tempest/tasks/setup/rpm/main.yml",
+        "patchSetId": 38
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2022-09-22T12:57:14Z",
+      "side": 1,
+      "message": "Yes, but my point is different. I\u0027m saying that the logic could be something along the line of (not correct code):\n\n- set_fact:\n     tempest_package: {{ test.rpm.package is undefined or test.rpm.package|length \u003d\u003d 0? \"openstack-tempest\" : test.rpm.package }}\n     \n- name: Install tempest from rpm\n  become: yes\n  package:\n      name: {{ tempest_package }}\n      state: present\n  register: tempest_rpm\n  \nso that you don\u0027t need to duplicate the \"package\" task.",
+      "parentUuid": "3b3ecaaa_5ccfcfc7",
       "revId": "ccb9c016046dc3bfdb15c43c284bf04827048e23",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
