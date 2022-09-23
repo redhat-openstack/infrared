@@ -1,0 +1,33 @@
+{% raw -%}
+---
+network_config:
+- type: interface
+  name: nic1
+  use_dhcp: false
+  dns_servers: {{ ctlplane_dns_nameservers }}
+  addresses:
+  - ip_netmask: {{ ctlplane_ip }}/{{ ctlplane_subnet_cidr }}
+  routes: {{ ctlplane_host_routes }}
+- type: vlan
+  vlan_id: {{ internal_api_vlan_id }}
+  device: nic1
+  addresses:
+  - ip_netmask: {{ internal_api_ip }}/{{ internal_api_cidr }}
+  routes: {{ internal_api_host_routes }}
+- type: vlan
+  vlan_id: {{ storage_mgmt_vlan_id }}
+  device: nic1
+  addresses:
+  - ip_netmask: {{ storage_mgmt_ip }}/{{ storage_mgmt_cidr }}
+  routes: {{ storage_mgmt_host_routes }}
+- type: interface
+  name: nic2
+  use_dhcp: false
+  defroute: false
+- type: vlan
+  vlan_id: {{ storage_vlan_id }}
+  device: nic2
+  addresses:
+  - ip_netmask: {{ storage_ip }}/{{ storage_cidr }}
+  routes: {{ storage_host_routes }}
+{% endraw %}
