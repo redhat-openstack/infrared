@@ -1099,3 +1099,10 @@ subparsers:
                       type: Bool
                       help: Save ansible facts as json file(s)
                       default: False
+
+            - title: workarounds
+              options:
+                  sssd-selinux-workaround:
+                      type: Bool
+                      help: Apply the sssd selinux workaround to the templates
+                      default: False
