@@ -59,9 +59,11 @@
   tags: container-images-urls
 
 - name: append containers-prepare-parameter.yaml to the overcloud deploy script
+  vars:
+      cpp_file: "{{ install_container_extra_repos is defined | ternary('containers-prepare-parameter-copy.yaml', 'containers-prepare-parameter.yaml') }}"
   lineinfile:
       dest: "~/overcloud_deploy.sh"
-      line: '-e ~/containers-prepare-parameter.yaml \'
+      line: '-e ~/{{ cpp_file }} \'
       insertbefore: "^--log-file.*"
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
