@@ -1,0 +1,12 @@
+{% raw %}
+# SELinux sssd_selinux workaround until BZ #2121504, #2116901, #2121504 are closed
+---
+- name: SELinux sssd_selinux woraround BZ
+  hosts: allovercloud
+  gather_facts: false
+  tasks:
+    - name: Make process type sssd_t permissive
+      become: true
+      shell: |-
+        semanage permissive -a sssd_t
+{% endraw %}

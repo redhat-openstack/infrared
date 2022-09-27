@@ -95,6 +95,19 @@
         with_filetree: '{{ source_dir }}'
         when: item.state == 'file'
 
+      - block:
+        - name: Create playbooks directory
+          file:
+            state: directory
+            path: '{{ template_base }}/playbooks'
+
+        - name: Copy sssd_selinux_workaround.yaml.j2 to overcloud
+          template:
+            src: templates/sssd_selinux_workaround.yaml.j2
+            dest: '{{ template_base }}/playbooks/sssd_selinux_workaround.yaml'
+        when: install.sssd.selinux.workaround|default(false)
+
+
       - name: Create the network_data.yaml
         template:
             src: 'templates/network_data{{ (install.network.protocol == "ipv6") | ternary("-v6","") }}.yaml.j2'
