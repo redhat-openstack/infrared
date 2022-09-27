@@ -23,6 +23,13 @@
         mode: 0644
       when: (install.storage|default({})).backend != 'ceph'
 
+    - name: Copy sssd_selinux Ansible playbook Controller file
+      template:
+        src: "files/ansible_playbook/Controller.sssd_selinux.yaml"
+        dest: "ansible_playbook/Controller.sssd_selinux.yaml"
+        mode: 0644
+      when: install.container.extra.repos is defined
+
     - name: Find out the number of nodes per role
       roles_node_count:
         tht_roles: "{{ install.role.files }}"

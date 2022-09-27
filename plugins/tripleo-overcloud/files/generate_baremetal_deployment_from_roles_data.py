@@ -203,7 +203,11 @@ def main():
         for ansible_playbook_file in ansible_playbook_files:
             role_name = ansible_playbook_file.name.split('.')[0]
             with open(ansible_playbook_file, 'r') as apf:
-                ansible_playbook_dict[role_name] = yaml.safe_load(apf)
+                role_playbooks = yaml.safe_load(apf)
+                if type(ansible_playbook_dict.get(role_name)) == list:
+                    ansible_playbook_dict[role_name] += role_playbooks
+                else:
+                    ansible_playbook_dict[role_name] = role_playbooks
 
     # get the names of the networks
     if opts.networks_file:
