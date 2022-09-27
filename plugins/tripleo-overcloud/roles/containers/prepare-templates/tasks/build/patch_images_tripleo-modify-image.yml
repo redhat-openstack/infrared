@@ -56,30 +56,46 @@
               update_repo: "{{ install.update_repo|default('patched-rpms') }}"
             excludes: [ceph, node-exporter, prom, alertmanager, grafana]
 
-- name: Get roles data file if exists
-  shell: |
-      if [ -f "{{ template_base }}/roles/roles_data.yaml" ];then
-         echo -n "{{ template_base }}/roles/roles_data.yaml"
-      else
-         roles_file=$(grep '\-r\ ' /home/stack/overcloud_deploy.sh | sed 's/.*-r\ \(.*\)\ .*/\1/')
-         [ "$roles_file" == "" ] && roles_file=$(grep '\-\-roles\-file\ ' /home/stack/overcloud_deploy.sh | sed 's/.*--roles-file\ \(.*\)\ .*/\1/')
-         echo -n $roles_file
-      fi
-  register: found_roles_data
+- block:
+  - name: append containers-prepare-parameter-copy.yaml to the overcloud deploy script
+    lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e ~/containers-prepare-parameter-copy.yaml \'
+      insertbefore: "^--log-file.*"
+  - name: remove containers-prepare-parameter.yaml from the overcloud deploy script
+    lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      regexp: 'containers-prepare-parameter.yaml'
+      state: absent
+    ignore_errors: yes
+  when: install.version|default(undercloud_version)|openstack_release >= 17
 
-- name: Set roles data parameter
-  set_fact:
-      roles_data_parameter: "-r {{ found_roles_data.stdout }}"
-  when: found_roles_data.stdout != ""
+- block:
+  - name: Get roles data file if exists
+    shell: |
+        if [ -f "{{ template_base }}/roles/roles_data.yaml" ];then
+           echo -n "{{ template_base }}/roles/roles_data.yaml"
+        else
+           roles_file=$(grep '\-r\ ' /home/stack/overcloud_deploy.sh | sed 's/.*-r\ \(.*\)\ .*/\1/')
+           [ "$roles_file" == "" ] && roles_file=$(grep '\-\-roles\-file\ ' /home/stack/overcloud_deploy.sh | sed 's/.*--roles-file\ \(.*\)\ .*/\1/')
+           echo -n $roles_file
+        fi
+    register: found_roles_data
 
-- name: Run images modification
-  shell: |
-      source /home/stack/stackrc
-      {% if install.version|default(undercloud_version)|openstack_release > 14 %}
-      sudo \
-      {% endif %}
-      openstack tripleo container image prepare \
-        -e {{ containers_home_dir }}/containers-prepare-parameter-copy.yaml \
-        {{ roles_data_parameter | default('') }} \
-        --output-env-file {{ template_base }}/docker-images.yaml \
-        --cleanup none
+  - name: Set roles data parameter
+    set_fact:
+        roles_data_parameter: "-r {{ found_roles_data.stdout }}"
+    when: found_roles_data.stdout != ""
+
+  - name: Run images modification
+    shell: |
+        source /home/stack/stackrc
+        {% if install.version|default(undercloud_version)|openstack_release > 14 %}
+        sudo \
+        {% endif %}
+        openstack tripleo container image prepare \
+          -e {{ containers_home_dir }}/containers-prepare-parameter-copy.yaml \
+          {{ roles_data_parameter | default('') }} \
+          --output-env-file {{ template_base }}/docker-images.yaml \
+          --cleanup none
+  when: install.version|default(undercloud_version)|openstack_release < 17
