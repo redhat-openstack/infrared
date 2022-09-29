@@ -94,8 +94,8 @@
           name: Upgrade pip if it is old
           shell: |
             source bin/activate
-            if [ "$(pip --version | cut -d' ' -f2 | cut -d'.' -f1)" -lt "19" ]; then
-              pip install --upgrade 'pip<20'
+            if [ "$(pip --version | cut -d' ' -f2 | cut -d'.' -f1)" -le "19" ]; then
+              pip install --upgrade 'pip<=21.3.1'
             fi
           args:
             executable: /bin/bash
