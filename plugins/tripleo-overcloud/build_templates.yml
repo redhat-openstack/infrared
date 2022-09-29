@@ -158,8 +158,9 @@
             path: "{{ template_base }}/overcloud_deploy.sh"
         register: deploy_script
 
+      # consider the overcloud deploy script as a template
       - name: copy overcloud deployment script if provided by the user at the command line
-        copy:
+        template:
             src: "{{ install.overcloud.script }}"
             dest: "~/{{ install.overcloud.script | basename }}"
             mode: 0755
