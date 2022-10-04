@@ -54,6 +54,7 @@
           virtualenv: "{{ virtualenvs.tempest }}"
           chdir: "~/{{ setup.clone_dir }}"
           requirements: "{{ item }}"
+          extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ virtualenvs.tempest ~ '/constraints.txt', omit) }}"
       with_items: "{{ plugins_reqs.results|selectattr('stat.exists')|map(attribute='stat.path')|list }}"
 
 - name: Install plugin packages
