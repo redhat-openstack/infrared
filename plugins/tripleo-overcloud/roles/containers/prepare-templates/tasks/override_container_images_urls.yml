@@ -17,15 +17,21 @@
   no_log: true # each {{ item }} iteration displays the whole install_container_images_overrides content - unnecessarily
   tags: container-images-urls
 
-- name: "read {{ template_base }}/docker-images.yaml"
+- name: "read {{ template_base }}/docker-images.yaml (OSP<17)"
   command: cat {{ template_base }}/docker-images.yaml
-  register: docker_images_yaml
+  register: openstack_tripleo_container_image_prepare_output
+  when: install.version|default(undercloud_version)|openstack_release < 17
+
+- name: "read {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_ (OSP>=17)"
+  command: cat {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_
+  register: openstack_tripleo_container_image_prepare_output
+  when: install.version|default(undercloud_version)|openstack_release >= 17
 
 - name: convert output of previous command into Ansible dict
   set_fact:
-    original_heat_docker_images: "{{ docker_images_yaml.stdout | from_yaml }}"
+    original_heat_docker_images: "{{ openstack_tripleo_container_image_prepare_output.stdout | from_yaml }}"
 
-- name: "print original heat docker images which were read from {{ template_base }}/docker-images.yaml file (before we added overrides)"
+- name: "print original heat docker images (before we add container image url overrides)"
   debug:
     var: original_heat_docker_images
 
@@ -33,7 +39,7 @@
   debug:
     var: install_container_images_overrides
 
-- name: "merge install_container_images_overrides into content of {{ template_base }}/docker-images.yaml"
+- name: "merge install_container_images_overrides into content original heat docker images "
   vars:
     install_container_images_output: {}
     install_container_images_registries: {}
@@ -85,10 +91,14 @@
   debug:
     var: install_container_images_output
 
-- name: "save new {{ template_base }}/docker-images.yaml file (including image urls and insecure registries overrides)"
+# # TODO
+# - name: check if overrides were properly applied
+#   # diff original_heat_docker_images and install_container_images_output and if they're the same then fail the playbook with an error that something didn't work as the overrides were not applied (original url list is the same as the one with overrides)
+
+- name: "save {{ template_base }}/openstack_tripleo_container_image_prepare_output_with_overrides.yaml file (including image urls and insecure registries overrides)"
   copy:
     content: "{{ install_container_images_output | to_nice_yaml(indent=2) }}"
-    dest: "{{ template_base }}/docker-images.yaml"
+    dest: "{{ template_base }}/openstack_tripleo_container_image_prepare_output_with_overrides.yaml"
     backup: yes
 
 - debug:
