@@ -17,6 +17,11 @@
   no_log: true # each {{ item }} iteration displays the whole install_container_images_overrides content - unnecessarily
   tags: container-images-urls
 
+
+# # TODO
+# add support for osp17 which doesn't have docker_images_yaml file
+
+
 - name: "read {{ template_base }}/docker-images.yaml"
   command: cat {{ template_base }}/docker-images.yaml
   register: docker_images_yaml
@@ -84,6 +89,10 @@
 - name: print container images (including overrides)
   debug:
     var: install_container_images_output
+
+# # TODO
+# - name: check if overrides were properly applied
+#   # diff original_heat_docker_images and install_container_images_output and if they're the same then fail the playbook with an error that something didn't work as the overrides were not applied (original url list is the same as the one with overrides)
 
 - name: "save new {{ template_base }}/docker-images.yaml file (including image urls and insecure registries overrides)"
   copy:
