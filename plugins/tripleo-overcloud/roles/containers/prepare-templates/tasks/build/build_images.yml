@@ -123,6 +123,8 @@
             {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}
             --output-env-file {{ template_base }}/docker-images.yaml
+            {% elif install_container_images_urls is defined %}
+             --output-env-file {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_
             {% endif -%}
       when: install.version|default(undercloud_version)|openstack_release >= 14 and
             ( install.network.ovn|default(False) or
