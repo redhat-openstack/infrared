@@ -29,10 +29,10 @@
   shell: |
       set -o errexit
 
-      ORIG_USER="$( docker run --rm {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
+      ORIG_USER="$( podman run --rm {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} /usr/bin/bash -c "echo -n \$(id -u --name)" )"
 
       # tag the original container image with 'before_packages_install'
-      docker tag {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
+      podman tag {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}-before_packages_install
 
       # install requested package(s) in the image
@@ -48,7 +48,7 @@
       USER $ORIG_USER
       " > {{ container_images_packages_dir }}/Dockerfile
 
-      docker build --network=host -t {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
+      podman build --network=host -t {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }} \
       {{ container_images_packages_dir }} \
       --build-arg ORIG_USER=$ORIG_USER \
       > {{ container_images_packages_logdir }}/docker_build_{{ item.key }}.log
@@ -59,6 +59,6 @@
       fi
 
       # push the patched container image in place of the original
-      docker push {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
+      podman push {{ docker_registry_undercloud }}/{{ container_image['basereg_relative'] }}/{{ item.key }}:{{ container_env['container-image-prepare']['tag'] }}
   with_dict: "{{ install_container_images_packages }}"
   tags: container-images-packages
