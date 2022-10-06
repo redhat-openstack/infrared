@@ -43,6 +43,30 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "27b1e6de_80a98d74",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/compute.j2.j2",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1017127
+      },
+      "writtenOn": "2022-10-06T15:01:20Z",
+      "side": 1,
+      "message": "To enable DVR this is the current approach used for the compute dvr deployments [1] for standard deployments. Checking Neutron as well that is how they set up their jinja2 templates downstream for 17 when they provide their own to overwrite IR\u0027s default nic-configs when doing DVR.  Maybe instead of using the standard compute template here for adding this configuration, I can add a dedicated compute-dvr.j2 to the composable_roles directory much like [1] and update the logic to reference that when applicable?\n\n[1] https://github.com/redhat-openstack/infrared/blob/master/plugins/tripleo-overcloud/vars/deployment/files/virt/network/three-nics-vlans/compute-dvr.j2.j2#L41",
+      "parentUuid": "ef3b00c1_dff59fbc",
+      "range": {
+        "startLine": 58,
+        "startChar": 4,
+        "endLine": 58,
+        "endChar": 14
+      },
+      "revId": "ec9d70525d987229b8e5124b51f1cd01f90a1d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "ed4e0570_183db064",
         "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/compute.j2.j2",
         "patchSetId": 13
@@ -54,6 +78,30 @@
       "writtenOn": "2022-10-06T08:54:49Z",
       "side": 1,
       "message": "Please change this to:\n  routes: {{ external_host_routes }}\n  \nThe external_host_routes will have the default route since you are setting up the default_route_networks to include external elsewhere. Doing it this way breaks the capability to add additional routes, both via network_data.yaml and the ones created internally when deploying spine-and-leaf.",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 39
+      },
+      "revId": "ec9d70525d987229b8e5124b51f1cd01f90a1d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6e00aa7a_bc42976d",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/compute.j2.j2",
+        "patchSetId": 13
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1017127
+      },
+      "writtenOn": "2022-10-06T15:01:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ed4e0570_183db064",
       "range": {
         "startLine": 59,
         "startChar": 0,
