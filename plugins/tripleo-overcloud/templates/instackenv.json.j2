@@ -56,6 +56,12 @@
           {% endif %}
           "boot_option":"local"
         }
+      {% elif install.boot.mode == 'bios' %}
+      , "capabilities":
+        {
+          "boot_mode":"bios",
+          "profile":"control",
+        }
       {% elif install.version|default(undercloud_version)|openstack_release >= 17 %}
        , "capabilities":
         {
