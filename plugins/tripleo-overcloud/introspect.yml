@@ -50,6 +50,32 @@
             - ironic
             - skip_ansible_lint
 
+      - block:
+        - name: Get flavor list for UEFI updating
+          shell: |
+              set -eo pipefail
+              source ~/stackrc
+
+              openstack flavor list -c Name -f value
+          register: flavor_list
+
+        - name: Update flavors when BIOS boot mode is used
+          shell: |
+              set -eo pipefail
+              source ~/stackrc
+
+              openstack flavor set {{ item }} \
+                    --property capabilities:boot_option='local' \
+                    --property capabilities:profile='{{ item }}' \
+                    --property capabilities:boot_mode=bios
+          with_items: "{{ flavor_list.stdout_lines }}"
+        when:
+            - install.boot.mode == 'bios'
+            - install.version|default(undercloud_version) |openstack_release > 9
+        tags:
+            - ironic
+            - skip_ansible_lint
+
       - name: inject instackenv file if provided by the user
         tags: ironic
         copy:
