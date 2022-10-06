@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6a9c332f_2af5d552",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 13
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-10-06T08:54:49Z",
+      "side": 1,
+      "message": "-1 because of the hard-coding of routes.\n\nAlso, I don\u0027t think you need an address allocated on the external interface for DVR to work. You just need the bridge and the bridge mapping in neutron?\ni.e I don\u0027t think this change is required. Please talk to DFG:Neutron before merging this.",
+      "revId": "ec9d70525d987229b8e5124b51f1cd01f90a1d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ef3b00c1_dff59fbc",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/compute.j2.j2",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-10-06T08:54:49Z",
+      "side": 1,
+      "message": "Do we really need an address for this DVR to work?",
+      "range": {
+        "startLine": 58,
+        "startChar": 4,
+        "endLine": 58,
+        "endChar": 14
+      },
+      "revId": "ec9d70525d987229b8e5124b51f1cd01f90a1d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ed4e0570_183db064",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/composable_roles/network/nic-configs/compute.j2.j2",
+        "patchSetId": 13
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1015563
+      },
+      "writtenOn": "2022-10-06T08:54:49Z",
+      "side": 1,
+      "message": "Please change this to:\n  routes: {{ external_host_routes }}\n  \nThe external_host_routes will have the default route since you are setting up the default_route_networks to include external elsewhere. Doing it this way breaks the capability to add additional routes, both via network_data.yaml and the ones created internally when deploying spine-and-leaf.",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 39
+      },
+      "revId": "ec9d70525d987229b8e5124b51f1cd01f90a1d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
