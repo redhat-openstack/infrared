@@ -58,6 +58,14 @@
           for i in $(pgrep dhcrelay); do kill -9 ${i}; done
       failed_when: False
 
+    #Should be cleaned after a BGP deployment
+    - name: Remove routes through the BGP spines
+      shell: |
+          ip r | grep "via 10.0.0.3" | while read -r bgp_route
+          do
+              ip r del ${bgp_route}
+          done
+
 - name: Remove vbmc and nodes
   hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes

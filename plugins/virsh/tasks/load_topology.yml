@@ -27,7 +27,7 @@
 - name: update node network info if needed
   set_fact:
       topology_node: "{{ topology_node | combine(network_info.nodes[topology_node.name]|default(network_info.nodes.default), recursive=True) }}"
-  when: not topology_node.interfaces
+  when: not topology_node.interfaces or provision.bgp.topology.mode is defined
 
 - name: Set default start_index
   set_fact:
