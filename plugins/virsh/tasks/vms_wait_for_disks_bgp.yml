@@ -1,0 +1,10 @@
+---
+- name: wait for bgp vms base images
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: vm_tasks
+  until: vm_tasks.finished
+  retries: 300
+  with_items: "{{ vms_jobs[node.key]['results'] }}"
+
+

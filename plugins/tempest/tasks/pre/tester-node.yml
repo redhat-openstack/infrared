@@ -1,0 +1,43 @@
+---
+- set_fact:
+    hosts_file: "/etc/hosts"
+    pem_file: "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem"
+    crt_file: "/etc/pki/ca-trust/extracted/openssl/ca-bundle.trust.crt"
+
+- name: read files from the undercloud
+  block:
+  - shell: "cat {{ hosts_file }}"
+    register: etc_hosts
+    delegate_to: "{{ groups.undercloud|first }}"
+  - shell: "cat {{ pem_file }}"
+    register: pem_file_content
+    delegate_to: "{{ groups.undercloud|first }}"
+  - shell: "cat {{ crt_file }}"
+    register: crt_file_content
+    delegate_to: "{{ groups.undercloud|first }}"
+
+- name: copy files to the tester node
+  become: yes
+  vars:
+    tester_files_dict:
+    - key: "{{ hosts_file }}"
+      value: "{{ etc_hosts.stdout }}"
+    - key: "{{ pem_file }}"
+      value: "{{ pem_file_content.stdout }}"
+    - key: "{{ crt_file }}"
+      value: "{{ crt_file_content.stdout }}"
+  copy:
+    content: "{{ item.value }}"
+    dest: "{{ item.key }}"
+    force: yes
+    owner: root
+    group: root
+    mode: '0644'
+  with_dict: '{{ tester_files_dict|items2dict }}'
+
+- name: ensure 127.0.0.1 is not in the tester /etc/hosts file
+  become: yes
+  lineinfile:
+    path: "{{ hosts_file }}"
+    regexp: '^127.0.0.1 undercloud'
+    state: absent
