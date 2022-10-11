@@ -56,6 +56,13 @@
           {% endif %}
           "boot_option":"local"
         }
+      {% elif install.boot.mode == 'bios' %}
+      ,
+        {% if host_data.name.split('-')|length > 2 %}
+          "capabilities": "profile:{{ host_data.name.split('-')[1] }},boot_mode:bios"
+        {% else %}
+          "capabilities": "profile:{{ host_data.name.split('-')[0] }},boot_mode:bios"
+        {% endif %}
       {% elif install.version|default(undercloud_version)|openstack_release >= 17 %}
        , "capabilities":
         {
