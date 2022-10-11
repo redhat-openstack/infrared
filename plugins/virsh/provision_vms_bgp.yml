@@ -1,0 +1,85 @@
+---
+- name: Provision VMs
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  vars:
+    base_image_path: /var/lib/libvirt/images
+    url: "{{ provision.image.url }}"
+  tasks:
+    - name: load nodes topology configuration
+      include_tasks: tasks/load_topology.yml
+      with_dict: "{{ provision.topology.nodes }}"
+      loop_control:
+          loop_var: node
+
+    - name: provision image for each node
+      include_tasks: tasks/download_images.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+          loop_var: node
+      when: node.value.node_indexes|length > 0
+      tags: images
+
+    - name: Load bgp networks
+      include_vars: "{{ playbook_dir }}/defaults/topology/network/bgp_networks.yml"
+
+    - name: Create tmp bgp-ifcfg-files directory
+      tempfile:
+        state: directory
+        prefix: bgp-ifcfg-files-
+      register: tmp_bgp_ifcfg_dir
+
+    - name: initialize dictionary for results
+      set_fact:
+        vms_jobs: {}
+
+    - name: create disks for each bgp vm
+      vars:
+        tmp_ifcfg_dir: tmp_bgp_ifcfg_dir.path
+      include_tasks: tasks/vms_1_create_disk_bgp.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
+
+    - name: wait for bgp vms base images
+      include_tasks: tasks/vms_wait_for_disks_bgp.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
+
+    - name: initialize dictionary for results
+      set_fact:
+        vms_jobs: {}
+
+    - name: customize disks
+      vars:
+        tmp_ifcfg_dir: tmp_bgp_ifcfg_dir.path
+      include_tasks: tasks/vms_2_customize_disks_bgp.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
+
+    - name: wait for bgp vms base images
+      include_tasks: tasks/vms_wait_for_disks_bgp.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
+
+    - name: start up bgm vms
+      include_tasks: tasks/vms_3_start_up_bgp_vms.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
+
+    - name: get VMs hardware adresses
+      include_tasks: tasks/vms_4_hwaddr_bgp.yml
+      with_dict: "{{ topology_nodes }}"
+      loop_control:
+        loop_var: node
+      when: node.value.node_indexes|length > 0
