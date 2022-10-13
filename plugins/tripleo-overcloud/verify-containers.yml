@@ -52,6 +52,7 @@
     - when:
         - patched_rpms_dir_stat.exists
         - patched_rpms_dir_stat.isdir
+        - not patched_rpms_dir_stat.exists
         - patched_packages_names | length > 0
       block:
         - name: Discover the running containers
