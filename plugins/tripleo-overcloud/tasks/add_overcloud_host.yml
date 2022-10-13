@@ -60,14 +60,33 @@
   when: "(node_info.name != baremetal_name) and ((hostvars[node_info.name].ansible_ssh_common_args is defined) and (hostvars[item].ansible_host in hostvars[node_info.name].ansible_ssh_common_args))"
   with_items: "{{ hypervisor_group }}"
 
-- name: add ssh common args for hypervisor
-  add_host:
-      name: "{{ node_info.name|lower }}"
-      ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
-                                 -o BatchMode=yes \
-                                 -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-                                 -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
-                                 {{ hostvars[hypervisor_group|first].ansible_user }}@{{ hypervisor_ip|default(hostvars[hypervisor_group|first].ansible_host) }}\""
+- block:
+  - name: add ssh common args for hypervisor
+    add_host:
+        name: "{{ node_info.name|lower }}"
+        ansible_ssh_common_args: " -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no \
+                                   -o BatchMode=yes \
+                                   -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+                                   -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
+                                   {{ hostvars[hypervisor_group|first].ansible_user }}@{{ hypervisor_ip|default(hostvars[hypervisor_group|first].ansible_host) }}\""
+    when: not (install.bgp|default(False)|bool)
+  - name: add ssh common args for hypervisor (bgp)
+    vars:
+        proxy1_username: '{{ hostvars[hypervisor_group|first].ansible_user }}'
+        proxy1_host: '{{ hypervisor_ip|default(hostvars[hypervisor_group|first].ansible_host) }}'
+        proxy1_keyfile: '{{ hostvars[hypervisor_group|first].ansible_ssh_private_key_file }}'
+        proxy2_username: '{{ hostvars[groups.undercloud|first].ansible_user }}'
+        proxy2_host: '{{ hostvars[groups.undercloud|first].ansible_host }}'
+        proxy2_keyfile: '{{ hostvars[groups.undercloud|first].ansible_ssh_private_key_file }}'
+    add_host:
+        name: "{{ node_info.name|lower }}"
+        ansible_ssh_common_args: >-
+                -o ForwardAgent=yes -o ServerAliveInterval=30 -o ControlMaster=auto -o ControlPersist=30m -o StrictHostKeyChecking=no
+                -o BatchMode=yes
+                -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"
+                ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W {{ proxy2_host }}:22 -i {{ proxy1_keyfile }} {{ proxy1_username }}@{{ proxy1_host }}\"
+                -W %h:%p -i {{ proxy2_keyfile }} {{ proxy2_username }}@{{ proxy2_host }}"
+    when: install.bgp|default(False)|bool
   when:
       - node_info.name != baremetal_name
       - "'hypervisor' in groups"
