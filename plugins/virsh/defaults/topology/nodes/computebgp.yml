@@ -1,0 +1,60 @@
+name: computebgp
+prefix: null
+cpu: "2"
+cpumodel: "host-passthrough"
+memory: "8192"
+swap: "0"
+deploy_os: false
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "40G"
+        cache: "unsafe"
+        preallocation: "metadata"
+groups:
+    - compute
+    - openstack_nodes
+    - overcloud_nodes
+
+# basic bgp topology includes 6 computes (in 3 different racks)
+interfaces:
+  basic:
+    - ["l11-provis", "l11-host-2", "l12-host-2", "external"]
+    - ["l11-provis", "l11-host-3", "l12-host-3", "external"]
+    - ["l21-provis", "l21-host-2", "l22-host-2", "external"]
+    - ["l21-provis", "l21-host-3", "l22-host-3", "external"]
+    - ["l31-provis", "l31-host-2", "l32-host-2", "external"]
+    - ["l31-provis", "l31-host-3", "l32-host-3", "external"]
+
+introspection_macs:
+  basic:
+    - 52:54:00:76:c7:08
+    - 52:54:00:76:c7:09
+    - 52:54:00:76:c7:13
+    - 52:54:00:76:c7:14
+    - 52:54:00:76:c7:18
+    - 52:54:00:76:c7:19
+introspection_nets:
+  basic:
+    - l11-provis
+    - l11-provis
+    - l21-provis
+    - l21-provis
+    - l31-provis
+    - l31-provis
+
+ips:
+  basic:
+    - 8
+    - 9
+    - 13
+    - 14
+    - 18
+    - 19
+
+rpms: pcp-zeroconf,patch
