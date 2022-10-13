@@ -1,0 +1,39 @@
+---
+- name: Set facts for images patching
+  set_fact:
+      rpm_patch_dir: "/tmp/{{ container_name }}"
+
+- name: Create dir rpms
+  file:
+      path: "{{ rpm_patch_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - directory
+
+- name: Downloading extra repositories
+  become: yes
+  get_url:
+    url: "{{ rpm_url }}"
+    dest: "{{ rpm_patch_dir }}"
+
+- name: Configure containers-prepare-parameter-copy.yaml for image modification
+  blockinfile:
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      block: |2
+            excludes:
+            - {{ container_name }}
+          - push_destination: true
+            set:
+              name_prefix: rhosp17-openstack-
+              name_suffix: ''
+              namespace: rhos-qe-mirror-tlv.usersys.redhat.com:5002/rh-osbs
+              neutron_driver: ovn
+              rhel_containers: false
+              tag: 17.0_20220908.1
+            includes:
+            - {{ container_name }}
+            modify_role: tripleo-modify-image
+            modify_append_tag: '-patched'
+            modify_vars:
+              tasks_from: rpm_install.yml
+              rpms_path: {{ rpm_patch_dir }}
