@@ -1,0 +1,30 @@
+---
+- name: Set facts for images patching
+  set_fact:
+      rpm_patch_dir: "/tmp/{{ container_name }}"
+
+- name: Create dir rpms
+  file:
+      path: "{{ rpm_patch_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - directory
+
+- name: Downloading extra repositories
+  become: yes
+  get_url:
+    url: "{{ rpm_url }}"
+    dest: "{{ rpm_patch_dir }}"
+    validate_certs: false
+
+- name: Configure containers-prepare-paramete.yaml for image modification
+  blockinfile:
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      block: |2
+            includes:
+            - {{ container_name }}
+            modify_role: tripleo-modify-image
+            modify_append_tag: '-patched-rpm'
+            modify_vars:
+              tasks_from: rpm_install.yml
+              rpms_path: {{ rpm_patch_dir }}

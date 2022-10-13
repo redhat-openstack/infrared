@@ -58,7 +58,7 @@
   when: install_container_images_urls is defined
   tags: container-images-urls
 
-- name: append containers-prepare-parameter.yaml to the overcloud deploy script
+- name: append containers-prepare-parameter.yaml to the overcloud deploy script OSP 14-16
   vars:
       cpp_file: "containers-prepare-parameter.yaml"
   lineinfile:
@@ -67,10 +67,25 @@
       insertbefore: "^--log-file.*"
   when:
       - install.version|default(undercloud_version)|openstack_release >= 14
+      - install.version|default(undercloud_version)|openstack_release < 17
       - not install.ocupdate|default(false)
       - not install_container_images_packages is defined
       - not install_container_images_patch is defined
       - install.overcloud.script is not defined
+      - not multirhel_enabled
+
+- name: append containers-prepare-parameter.yaml to the overcloud deploy script OSP > 16
+  vars:
+      cpp_file: "containers-prepare-parameter.yaml"
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e ~/{{ cpp_file }} \'
+      insertbefore: "^--log-file.*"
+  when:
+      - install.version|default(undercloud_version)|openstack_release >= 17
+      - not install.ocupdate|default(false)
+      - install_container_images_packages is defined
+      - install_container_images_patch is defined
       - not multirhel_enabled
 
 - name: "append -e ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }} to the overcloud deploy script"
