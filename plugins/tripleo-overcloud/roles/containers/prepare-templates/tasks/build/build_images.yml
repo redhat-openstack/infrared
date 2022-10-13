@@ -217,9 +217,22 @@
         - name: (multirhel) remove ComputeContainerImagePrepare from container image prepare parameter file
           shell: sed -i '/ComputeContainerImagePrepare/d' {{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
 
-    - name: install packages in container images
+    - name: install packages in container images OSP <= 16
       include_tasks: container_images_packages.yml
-      when: install_container_images_packages is defined
+      when:
+        - install.version|default(undercloud_version)|openstack_release <= 16
+        - install_container_images_packages is defined
+      tags: container-images-packages
+
+    - name: install packages in container images OSP >= 17
+      include_tasks: patch_images_rpm_tripleo-modify-image.yml
+      vars:
+          container_name: "{{ item.key }}"
+          rpm_url: "{{ item.value.split(',') | join(' ') }}"
+      with_dict: "{{ install_container_images_packages }}"
+      when:
+        - install.version|default(undercloud_version)|openstack_release >= 17
+        - install_container_images_packages is defined
       tags: container-images-packages
 
     - name: patch images
