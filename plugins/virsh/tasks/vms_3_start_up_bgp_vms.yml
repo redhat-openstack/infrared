@@ -1,0 +1,45 @@
+---
+- name: set BGP facts topology_node and node_name
+  set_fact:
+    topology_node: "{{ node.value }}"
+    node_name: "{{ node.key }}"
+
+- name: Start up VMs
+  environment:
+      LIBGUESTFS_DEBUG: 1
+  shell: |
+    set -ex
+    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    virt-install --name "{{ node_fullname }}" \
+      --disk path="{{ base_image_path }}/{{ node_fullname }}.qcow2,device=disk,bus=virtio,format=qcow2,cache=unsafe" \
+    {% if provision.bootmode == 'uefi' %}
+      --boot {{ 'hd' if topology_node.deploy_os|default(True) else 'uefi' }} \
+    {% else %}
+      --boot {{ 'hd' if provision.bootmode == 'bios' else provision.bootmode }} \
+    {% endif %}
+    {% if 'ceph_additional_disks_count' in topology_node %}
+      {% for n in range(topology_node.ceph_additional_disks_count | int) %}
+      --disk path="{{ base_image_path }}/{{ node_fullname }}-ceph-{{ n + 1 }}.qcow2,device=disk,bus=virtio,format=qcow2,cache=unsafe" \
+      {% endfor %}
+    {% endif %}
+    {% for n in topology_node.interfaces[provision.bgp.topology.mode][item] %}
+      {% if 'introspection_macs' in topology_node and topology_node.introspection_nets[provision.bgp.topology.mode][item] == n %}
+      --network network={{ n }},model=virtio,mac={{ topology_node.introspection_macs[provision.bgp.topology.mode][item] }} \
+      {% else %}
+      --network network={{ n }},model=virtio \
+      {% endif %}
+    {% endfor %}
+      --virt-type kvm \
+      --cpu {{ topology_node.cpumodel|default('host-passthrough') }} \
+      --ram "{{ topology_node.memory }}" \
+      --vcpus "{{ topology_node.cpu }}" \
+      {% if topology_node.machine_type is defined and topology_node.machine_type %}
+      --machine {{ topology_node.machine_type }} \
+      {% endif %}
+      --os-variant "{{ topology_node.os.variant }}" \
+      --import \
+      --graphics vnc,listen={{ provision.vnc.external | ternary('0.0.0.0','127.0.0.1') }},password={{ provision.vnc.password if provision.vnc.password is defined else '' }} \
+      --noautoconsole \
+      --autostart \
+      --rng /dev/urandom {{ provision.get('virtopts', '') }}
+  loop: '{{ topology_node.node_indexes }}'
