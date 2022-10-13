@@ -46,7 +46,7 @@
         shell: |
             source ~/stackrc ; metalsmith list | awk 'BEGIN { first="true"; print "[" }\
             /ctlplane=/ { if (first!="true") print ",";  \
-            print "{\"name\": \"" $4 "\", \"addresses\": {\"ctlplane\":[{\"addr\":\"" \
+            print "{\"name\": \"" $8 "\", \"addresses\": {\"ctlplane\":[{\"addr\":\"" \
             gensub("ctlplane=([^ ]*)", "\\1", "g", $12)  "\"}]}, \"status\" : \"OKOK\", \"hypervisor_hostname\": \"" $2 "\"}" ; first="false"}\
             END { print "]" }'
         when: install.version|default(undercloud_version) | openstack_release >= 17
