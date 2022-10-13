@@ -295,6 +295,11 @@ subparsers:
                       help: Specifies if ppc64le nodes are being utilized in this overcloud deployment
                       default: false
 
+                  bgp:
+                      type: Bool
+                      help: Specifies if OSP setup includes BGP configuration
+                      default: false
+
             - title: Overcloud Options
               options:
                   overcloud-predeploy-action:
