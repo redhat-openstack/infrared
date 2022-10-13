@@ -1,11 +1,23 @@
 ---
-- name: copy openstackrc file
+- name: copy openstackrc file to tester node
   vars:
       file_src: "{{ test.openstackrc|default(inventory_dir + '/keystonerc') }}"
   copy:
       src: "{{ file_src }}"
       dest: "~/keystonerc"
       force: yes
+
+- name: copy openstackrc file to undercloud node
+  vars:
+      file_src: "{{ test.openstackrc|default(inventory_dir + '/keystonerc') }}"
+  copy:
+      src: "{{ file_src }}"
+      dest: "~/keystonerc"
+      force: yes
+  delegate_to: "{{ groups.undercloud|first }}"
+  when:
+    - test.tester.node is defined
+    - "'undercloud' not in test.tester.node"
 
 - name: find deployer-input file
   find:
@@ -60,3 +72,9 @@
 
 - name: run configuration tasks for installer '{{ test.openstack.installer }}'
   include_tasks: "{{ test.openstack.installer }}.yml"
+
+- name: run configuration tasks needed when tester is not undercloud
+  include_tasks: "tester-node.yml"
+  when:
+    - test.tester.node is defined
+    - "'undercloud' not in test.tester.node"
