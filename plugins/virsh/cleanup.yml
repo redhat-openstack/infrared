@@ -58,6 +58,23 @@
           for i in $(pgrep dhcrelay); do kill -9 ${i}; done
       failed_when: False
 
+    # Routes that should be cleaned after a BGP deployment
+    - name: does cleanup_bgp_routes.sh exist?
+      stat:
+        path: /tmp/cleanup_bgp_routes/cleanup_bgp_routes.sh
+      register: bgp_cleanup_file
+
+    - block:
+      - name: execute BGP cleanup script
+        become: true
+        shell: /tmp/cleanup_bgp_routes/cleanup_bgp_routes.sh
+
+      - name: delete BGP cleanup script
+        file:
+          state: absent
+          path: /tmp/cleanup_bgp_routes/cleanup_bgp_routes.sh
+      when: bgp_cleanup_file.exists
+
 - name: Remove vbmc and nodes
   hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
   gather_facts: yes
