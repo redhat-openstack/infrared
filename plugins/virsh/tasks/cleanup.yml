@@ -83,6 +83,12 @@
       marker: "### {mark} Overcloud Entries"
       state: absent
 
+- name: Cleanup BGP nodes from /etc/hosts on the hypervisor
+  lineinfile:
+    path: /etc/hosts
+    regexp: ' # BGP node$'
+    state: absent
+
 # ignoring errors in the known-hosts tasks
 # because this module validates known_hosts files
 # and we cannot ensure that this file is always
