@@ -48,7 +48,18 @@
 - name: Configure containers-prepare-parameter.yaml for image modification
   blockinfile:
       path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      marker: "# {mark} ANSIBLE MANAGED Patch"
       block: |2
+          - push_destination: true
+            includes:
+            - neutron-server
+            set:
+              name_prefix: rhosp17-openstack-
+              name_suffix: ''
+              namespace: undercloud-0.ctlplane.redhat.local:8787/rh-osbs
+              neutron_driver: ovn
+              rhel_containers: false
+              tag: 17.1_20240118.1-rpm
             modify_role: tripleo-modify-image
             modify_append_tag: '-patched'
             modify_vars:

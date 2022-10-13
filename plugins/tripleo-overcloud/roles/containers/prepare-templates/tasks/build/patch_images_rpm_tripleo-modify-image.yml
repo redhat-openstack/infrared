@@ -1,0 +1,39 @@
+---
+- name: Set facts for images patching
+  set_fact:
+      rpm_patch_dir: "/tmp/{{ container_name }}"
+
+- name: Create dir rpms
+  file:
+      path: "{{ rpm_patch_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - directory
+
+- name: Downloading extra repositories
+  become: yes
+  get_url:
+    url: "{{ rpm_url }}"
+    dest: "{{ rpm_patch_dir }}"
+    validate_certs: false
+
+- name: Configure containers-prepare-paramete.yaml for image modification
+  blockinfile:
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      marker: "# {mark} ANSIBLE MANAGED install RPM"
+      block: |2
+          - push_destination: true
+            includes:
+            - {{ container_name }}
+            set:
+              name_prefix: rhosp17-openstack-
+              name_suffix: ''
+              namespace: undercloud-0.ctlplane.redhat.local:8787/rh-osbs
+              neutron_driver: ovn
+              rhel_containers: false
+              tag: 17.1_20240118.1
+            modify_role: tripleo-modify-image
+            modify_append_tag: '-rpm'
+            modify_vars:
+              tasks_from: rpm_install.yml
+              rpms_path: {{ rpm_patch_dir }}
