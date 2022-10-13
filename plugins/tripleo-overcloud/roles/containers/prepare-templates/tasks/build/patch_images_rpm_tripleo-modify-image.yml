@@ -1,0 +1,46 @@
+---
+- name: Set facts for images patching
+  set_fact:
+      rpm_patch_dir: "/tmp/{{ container_name }}"
+
+- name: Create dir rpms
+  file:
+      path: "{{ rpm_patch_dir }}"
+      state: "{{ item }}"
+  with_items:
+      - directory
+
+- name: Downloading extra repositories
+  become: yes
+  get_url:
+    url: "{{ rpm_url }}"
+    dest: "{{ rpm_patch_dir }}"
+
+- name: Load variables from container environment file
+  include_vars:
+      file: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      name: container_env
+
+- debug: var=container_env
+
+- name: Configure containers-prepare-parameter-copy.yaml for image modification
+  blockinfile:
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      block: |2
+            excludes:
+            - {{ container_name }}
+          - push_destination: true
+            set:
+              name_prefix: "{{ container_env['container-image-prepare'].name_prefix }}"
+              name_suffix: "{{ container_env['container-image-prepare'].name_suffix }}"
+              namespace: "{{ container_env['container-image-prepare'].namespace }}"
+              neutron_driver: "{{ container_env['container-image-prepare'].neutron_driver }}"
+              rhel_containers: "{{ container_env['container-image-prepare'].rhel_containers }}"
+              tag: "{{ container_env['container-image-prepare'].tag }}"
+            includes:
+            - {{ container_name }}
+            modify_role: tripleo-modify-image
+            modify_append_tag: '-patched'
+            modify_vars:
+              tasks_from: rpm_install.yml
+              rpms_path: {{ rpm_patch_dir }}
