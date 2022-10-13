@@ -1,0 +1,43 @@
+---
+- name: set BGP facts topology_node and node_name
+  set_fact:
+    topology_node: "{{ node.value }}"
+    node_name: "{{ node.key }}"
+
+- name: Customize disks from base images (virt-customize)
+  vars:
+    net_scripts: /etc/sysconfig/network-scripts
+  environment:
+      LIBGUESTFS_DEBUG: 1
+  shell: |
+    set -ex
+    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    {% set default_bgp_packages = 'network-scripts,vim,frr,mtr,tcpdump,bind-utils' %}
+    virt-sysprep --selinux-relabel -a {{ base_image_path }}/{{ node_fullname }}.qcow2 --operations machine-id
+    virt-customize -v -a {{ base_image_path }}/{{ node_fullname }}.qcow2 \
+      --hostname "{{ node_fullname }}" \
+      --run-command "rm -f /etc/sysconfig/network-scripts/ifcfg-e*" \
+      --run-command "dnf remove -y cloud-init" \
+      --run-command "rpm -Uvh http://download.eng.bos.redhat.com/rcm-guest/puddles/OpenStack/rhos-release/rhos-release-latest.noarch.rpm" \
+      --run-command "rhos-release -x; rhos-release {{ provision.version }} -p {{ provision.build }}" \
+      --copy-in {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/network:/etc/sysconfig \
+    {% for n in topology_node.interfaces[provision.bgp.topology.mode][item] %}
+      --copy-in {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}:{{ net_scripts }} \
+    {% endfor %}
+      --timezone 'UTC' \
+    {% if 'rpms' in topology_node %}
+      --install {{ default_bgp_packages }},{{ topology_node.rpms }} \
+    {% else %}
+      --install {{ default_bgp_packages }} \
+    {% endif %}
+      --run-command 'systemctl enable network' \
+      --run-command 'systemctl enable NetworkManager' \
+      --selinux-relabel
+  loop: '{{ topology_node.node_indexes }}'
+  register: vms_jobs1
+  async: 7200
+  poll: 0
+
+- name: append value to vms_jobs dictionary
+  set_fact:
+    vms_jobs: "{{ vms_jobs | combine({node_name: vms_jobs1}) }}"
