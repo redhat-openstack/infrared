@@ -210,6 +210,12 @@ subparsers:
                           Undercloud external network interface
                       default: 'eth2'
 
+                  freeipa-external-interface:
+                      type: Value
+                      help: |
+                          FreeIPA external network interface
+                      default: 'eth2'
+
                   tls-everywhere:
                       type: Bool
                       help: |
@@ -618,3 +624,8 @@ subparsers:
                       help: Change the selinux state.
                       choices: ["enforcing", "permissive", "disabled"]
                       default: "enforcing"
+                  bgp:
+                      type: Bool
+                      help: |
+                          This flag determines whether OSP is installed with BGP functionality enabled
+                      default: False
