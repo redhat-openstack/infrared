@@ -210,7 +210,7 @@ PLUGINS_REGISTRY = {
         'type': 'test'
     },
     'tobiko': {
-        'src': 'https://opendev.org/x/tobiko.git',
+        'src': 'https://github.com/redhat-openstack/tobiko.git',
         'src_path': 'infrared_plugin',
         'desc': 'Deploy and run Tobiko test cases',
         'type': 'test'
