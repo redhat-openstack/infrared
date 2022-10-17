@@ -30,29 +30,34 @@
     - network: internal_api
     - network: tenant
     - network: external
-{% if loadbalancer is defined and loadbalancer.network %}
   instances:
+{% if loadbalancer is defined and loadbalancer.network %}
 {% for x in range(groups.controller|length) %}
-   - hostname: {{ loadbalancer.controllers.name_prefix }}{{x}}
-     name: {{ loadbalancer.controllers.name_prefix }}{{x}}
-     networks:
-     - network: ctlplane
-       vif: true
-     - network: external
-       fixed_ip: {{ loadbalancer.network.external.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
-       subnet: external_subnet
-     - network: internal_api
-       fixed_ip: {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
-       subnet: internal_api_subnet
-     - network: storage
-       fixed_ip: {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
-       subnet: storage_subnet
-     - network: storage_mgmt
-       fixed_ip: {{ loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
-       subnet: storage_mgmt_subnet
-     - network: tenant
-       fixed_ip: {{ loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
-       subnet: tenant_subnet
+  - hostname: {{ loadbalancer.controllers.name_prefix }}{{x}}
+    name: {{ loadbalancer.controllers.name_prefix }}{{x}}
+    networks:
+    - network: ctlplane
+      vif: true
+    - network: external
+      fixed_ip: {{ loadbalancer.network.external.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+      subnet: external_subnet
+    - network: internal_api
+      fixed_ip: {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+      subnet: internal_api_subnet
+    - network: storage
+      fixed_ip: {{ loadbalancer.network.storage.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+      subnet: storage_subnet
+    - network: storage_mgmt
+      fixed_ip: {{ loadbalancer.network.storage_mgmnt.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+      subnet: storage_mgmt_subnet
+    - network: tenant
+      fixed_ip: {{ loadbalancer.network.tenant.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}
+      subnet: tenant_subnet
+{% endfor %}
+{% else %}
+{% for host_name in groups.controller|sort %}
+  - hostname: {{ host_name }}
+    name: {{ host_name }}
 {% endfor %}
 {% endif %}
 {% else %}
@@ -112,6 +117,11 @@
     - network: tenant
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
     - network: external
+  instances:
+{% for host_name in groups.compute|sort %}
+  - hostname: {{ host_name }}
+    name: {{ host_name }}
+{% endfor %}
 {% endif %}
 {% endif %}
 {% if install.splitstack|default(false) %}
@@ -149,6 +159,11 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+  instances:
+{% for host_name in groups.ceph|sort %}
+  - hostname: {{ host_name }}
+    name:{{ host_name }}
+{% endfor %}
 {% endif -%}
 {% if install.splitstack|default(false) %}
   instances:
@@ -182,6 +197,11 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+  instances:
+{% for host_name in groups.swift|sort %}
+  - hostname: {{ host_name }}
+    name: {{ host_name }}
+{% endfor %}
 {% endif %}
 {% if install.splitstack|default(false) %}
   instances:
