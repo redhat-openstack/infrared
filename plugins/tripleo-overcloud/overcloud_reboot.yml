@@ -123,7 +123,6 @@
         delegate_to: "{{ ceph_client }}"
         with_items:
             - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd set noout"
-            - "{{ container_runtime }} exec ceph-mon-{{ ceph_client }} ceph {{ ceph_conf_option }} osd set norebalance"
 
       # Temporarily disable ceph rebalance on OSP >= 17
       - name: temporarily disable ceph rebalance
