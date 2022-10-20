@@ -33,6 +33,9 @@
       delay: 15
       until: _katello_download is successful
 
+    - set_fact:
+        cdn_satellite: True
+      
     - name: remove hosts from Satellite server
       uri:
           url: "https://{{ cdn_creds.server_hostname }}/api/v2/hosts/{{ item }}.{{ install.overcloud.domain }}"

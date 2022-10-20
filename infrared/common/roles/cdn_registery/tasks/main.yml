@@ -14,14 +14,29 @@
       register: unregister_repos
       become: true
 
-    - name: register to openstack repos for OSP >= 15
+    - set_fact:
+        cdn_prefix: "{% if cdn_creds.prefix|default('')|length >0 %}{{ cdn_creds.prefix }}_{% else %} '' {% endif %}"
+
+    - name: register to openstack repos for OSP 15, 16
       vars:
           repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
           repo_list: "{{ (subscriptions.common_8) + (subscriptions[(repo_version|float)] if not cdn_skip_openstack_repos | default(false) else []) + (subscriptions.ceph_4 if install.storage is defined and install.storage.backend is defined and install.storage.backend == 'ceph' else []) }}"
           modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
       command: "subscription-manager repos {{ modified_list }}"
       become: true
-      when: install_version|default(openstack_release) is version('15', '>=')
+      when: install_version|default(openstack_release) is version('15', '>=') and install_version|default(openstack_release) is version('17', '<')
+
+    - debug:
+        var: cdn_prefix
+
+    - name: register to openstack repos for OSP >= 17
+      vars:
+          repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
+          repo_list: "{{ (subscriptions.common_9) + (subscriptions[(repo_version|float)] if not cdn_skip_openstack_repos | default(false) else []) + (subscriptions.ceph_5 if install.storage is defined and install.storage.backend is defined and install.storage.backend == 'ceph' else []) }}"
+          modified_list: "{{ repo_list | map('regex_replace', '^(.*)$', cdn_prefix + '\\1') | list | map('regex_replace', '^(.*)$', '--enable=\\1') | join(' ') }}"
+      command: "subscription-manager repos {{ modified_list }}"
+      become: true
+      when: install_version|default(openstack_release) is version('17', '>=')
 
     - name: register to openstack repos for OSP < 15
       vars:
@@ -31,7 +46,6 @@
       command: "subscription-manager repos {{ modified_list }}"
       become: true
       when: install_version|default(openstack_release) is version('15', '<')
-
 
       # running also if subscriptions are defined to avoid job breakages.
 
@@ -45,7 +59,7 @@
       block:
       - command: 'dnf module disable {{ modules_list_disabled }} -y'
       - command: 'dnf module enable {{ modules_list_enabled }} -y'
-      when: install_version|default(openstack_release) is version('16', '>')
+      when: install_version|default(openstack_release) is version('16', '>') and not cdn_satellite|default(false)
 
 
   when: (cdn_args_file != '' and cdn_creds.activationkey is undefined) or (subscriptions is defined and subscriptions|length > 0 )
