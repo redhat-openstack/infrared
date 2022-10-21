@@ -341,11 +341,11 @@
             - ceph_node_exporter
             - ceph_prometheus
       block:
-          - name: "ceph-dashboard: apply local mirror for registry"
+          - name: "ceph-dashboard: apply local mirror for registry if user_mirror not set"
             loop: "{{ ceph_dashboard_deps }}"
             when: "install.mirror|default(False) and container_env['container-image-prepare'][item + '_namespace'] | default(False)"
             vars:
-                new_namespace: "{{ container_env['container-image-prepare'][ item + '_namespace' ]  | container_mirror(install.mirror|default('')) }}"
+                new_namespace: "{{ user_mirror | ternary(user_mirror + '/' + container_env['container-image-prepare'][ item + '_namespace'].split('/')[1], container_env['container-image-prepare'][ item + '_namespace' ]  | container_mirror(install.mirror|default(''))) }}"
             set_fact:
                 container_env: "{{ container_env | combine({'container-image-prepare': { item + '_namespace': new_namespace }}, recursive=True) }}"
 
