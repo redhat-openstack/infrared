@@ -1,0 +1,55 @@
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/metrics/collectd-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-edge-only.yaml"
+custom_templates:
+  parameter_defaults:
+    CeilometerQdrEventsConfig:
+      driver: amqp
+      topic: osp13-event
+    CeilometerQdrMetricsConfig:
+      driver: amqp
+      topic: osp13-metering
+    CeilometerQdrPublishMetrics: true
+    CollectdAmqpInstances:
+      osp13-notify:
+        format: JSON
+        notify: true
+        presettle: false
+      osp13-telemetry:
+        format: JSON
+        presettle: false
+    MetricsQdrAddresses:
+      - distribution: multicast
+        prefix: collectd
+      - distribution: multicast
+        prefix: anycast/ceilometer
+    MetricsQdrConnectors:
+      - host: '{{ stf_server_name }}'
+        port: 443
+        role: edge
+        verifyHostname: false
+        sslProfile: sslProfile
+    MetricsQdrSSLProfiles:
+      - name: sslProfile
+        caCertFileContent: |
+         -----BEGIN CERTIFICATE-----
+         MIIDUzCCAjugAwIBAgIRAPtIaoSBtQnbU+mPAwGOTC4wDQYJKoZIhvcNAQELBQAw
+         QzFBMD8GA1UEAxM4ZGVmYXVsdC1pbnRlcmNvbm5lY3Quc2VydmljZS10ZWxlbWV0
+         cnkuc3ZjLmNsdXN0ZXIubG9jYWwwHhcNMjIxMDIwMTcyNjE3WhcNMjMwMTE4MTcy
+         NjE3WjBDMUEwPwYDVQQDEzhkZWZhdWx0LWludGVyY29ubmVjdC5zZXJ2aWNlLXRl
+         bGVtZXRyeS5zdmMuY2x1c3Rlci5sb2NhbDCCASIwDQYJKoZIhvcNAQEBBQADggEP
+         ADCCAQoCggEBANtmT4WMOUy5FoPiyjysrVT/onXAoDsE6SX/lOo6y2JMqKaYtt19
+         7rMqqsqzx+dBzTkEkfanm4ZRb/Tkp6FajyqAeXZKFOHpIPXk/KnDUxDOiztlBGZ6
+         sN1FvDiCi/4pSsBo5FJZ7Lt/ZO8dMAltk59g8uygDMcbVbrYZ/nLpHNQmp4fsISN
+         6IuYK95qk1O2Mf5eU2QQgNqGZejMgXTGqvGf+aMHPwKySF8Piwe2qHbj9MR/sHD1
+         Wova2LLEekpIq/PU1tL7kjcz7ZdprjJ5ZlD317XIVoB41K/PV7Z6a09mkEH5qV9L
+         lS1r97oI7eFJEc31cfXotiqvZ7tJm8X2WE8CAwEAAaNCMEAwDgYDVR0PAQH/BAQD
+         AgKkMA8GA1UdEwEB/wQFMAMBAf8wHQYDVR0OBBYEFEsrMUJCDrJ9JO1X2zOIzN19
+         wIwXMA0GCSqGSIb3DQEBCwUAA4IBAQAL5gbWCkGS3Eg8AlL8AzQaB0yN6XQbN8T4
+         KSTUGvMLRKfh0Yb5wh/gbOBkWa0sOPFfqpfNMv2QaUK6eWe9JPOOGGqTqFvRDbhW
+         210VDRa7c5wExgBjgNiTHWynP6BeOjVRUEbLVQ6rlAEZ3u5jqaQZhNutoRafkiSU
+         bmLxzmoRy0y8sXTGqHUeexgDC2rSaYyhkWC0WF4zIceQIMAvzyWNsycnytPtYg6M
+         eT884DeXtV1ysQ+LZgfG5IfCH3W2BmzWSPc+Gs6CAzFIk0FJIfxGuiITpBSQBVAL
+         /mUVTOlZfwhFpJFoec0QbEorJUMIKoXOVmjVkb/5VzneXJ8Fube7
+         -----END CERTIFICATE-----
