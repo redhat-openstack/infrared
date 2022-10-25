@@ -128,6 +128,30 @@
       },
       "revId": "4c14ea46c11bc09059e7e0ad1fd7a06f68cc6b6e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e650cbaa_4bcb3061",
+        "filename": "plugins/tempest/tasks/setup/git/install_plugins.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1017837
+      },
+      "writtenOn": "2022-10-25T16:20:20Z",
+      "side": 1,
+      "message": "Hello Marian.\n\nYes, venv_constraints is set by the create_venv role, which is called right after install_plugins.yml:\n\n\t- name: Create the venv and install tempest\n\t  import_role:\n\t\tname: create_venv\n\t  vars:\n\t\tvenv_constraints_remove:\n\t\t  - \"^tempest\u003d\u003d\u003d.*$\"\n\t\tvenv_destination_path: \"{{ virtualenvs.tempest }}\"\n\t\t# Make sure os-testr is installed for versions \u003c13 since it was removed\n\t\t# from tempest requirements file on tempest master branch\n\t\t# and stestr was not required yet (only from tempest \u003e\u003d18)\n\t\tvenv_pip_packages: \"{{ setup.pip_packages + [ (test.openstack.version|default(overcloud_version)|openstack_release \u003c 13) | ternary(\u0027os-testr\u0027, \u0027\u0027), \u0027~/\u0027 ~ setup.clone_dir ] | select | list }}\"\n\t\tvenv_pip_requirements: \"~/{{ setup.clone_dir }}/requirements.txt\"\n\t\tvenv_python_version: \"{{ ((force_py3venv | default(False)) | bool or (ansible_distribution in [\u0027CentOS\u0027, \u0027RedHat\u0027] and ansible_distribution_major_version | int \u003e 7)) | ternary(3, 2) }}\"\n\t\tvenv_rebuild: true\n\t- name: Install test plugins\n\t  include_tasks: install_plugins.yml\n\t  with_items: \"{{ test.tests }}\"\n\t  loop_control:\n\t\t  loop_var: test_suite\n\t  when: test.openstack.version|default(overcloud_version)|openstack_release \u003e\u003d 7\n\t  \n\nand it is a variable on the create_role role:\n    venv_constraints: \"https://releases.openstack.org/constraints/upper/{{ (venv_python_version | int \u003d\u003d 2) | ternary(\u0027train\u0027, \u0027yoga\u0027) }}\"",
+      "parentUuid": "966e3c5e_f19005a4",
+      "range": {
+        "startLine": 57,
+        "startChar": 27,
+        "endLine": 57,
+        "endChar": 43
+      },
+      "revId": "4c14ea46c11bc09059e7e0ad1fd7a06f68cc6b6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
