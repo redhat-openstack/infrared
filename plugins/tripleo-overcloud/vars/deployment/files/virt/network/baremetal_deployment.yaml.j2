@@ -70,9 +70,12 @@
       - network: external
 {% endfor %}
 {% endif %}
-{# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
-{% if install.version|default(undercloud_version)|openstack_release >= 17 and (install.storage|default({})).backend != 'ceph' and not (install.splitstack|default(false)) %}
+{% if ((install.storage|default({})).backend != 'ceph' and not (install.splitstack|default(false))) or
+      install.container.extra.repos is defined %}
   ansible_playbooks:
+{% endif %}
+{# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
+{% if (install.storage|default({})).backend != 'ceph' and not (install.splitstack|default(false)) %}
     - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-growvols.yaml
       extra_vars:
         growvols_args: >
@@ -83,6 +86,10 @@
           /home=1GB
           /srv=10GB
           /var=100%
+{% endif %}
+{# Workaround the rhbz#2121504 that affects RHEL9 when extra repos are configured #}
+{% if install.container.extra.repos is defined %}
+    - playbook: {{ template_base }}/playbooks/sssd_selinux_workaround.yaml
 {% endif %}
 - name: Compute
   count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}

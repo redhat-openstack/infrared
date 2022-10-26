@@ -55,31 +55,3 @@
               yum_repos_dir_path: /etc/yum.repos.d
               update_repo: "{{ install.update_repo|default('patched-rpms') }}"
             excludes: [ceph, node-exporter, prom, alertmanager, grafana]
-
-- name: Get roles data file if exists
-  shell: |
-      if [ -f "{{ template_base }}/roles/roles_data.yaml" ];then
-         echo -n "{{ template_base }}/roles/roles_data.yaml"
-      else
-         roles_file=$(grep '\-r\ ' /home/stack/overcloud_deploy.sh | sed 's/.*-r\ \(.*\)\ .*/\1/')
-         [ "$roles_file" == "" ] && roles_file=$(grep '\-\-roles\-file\ ' /home/stack/overcloud_deploy.sh | sed 's/.*--roles-file\ \(.*\)\ .*/\1/')
-         echo -n $roles_file
-      fi
-  register: found_roles_data
-
-- name: Set roles data parameter
-  set_fact:
-      roles_data_parameter: "-r {{ found_roles_data.stdout }}"
-  when: found_roles_data.stdout != ""
-
-- name: Run images modification
-  shell: |
-      source /home/stack/stackrc
-      {% if install.version|default(undercloud_version)|openstack_release > 14 %}
-      sudo \
-      {% endif %}
-      openstack tripleo container image prepare \
-        -e {{ containers_home_dir }}/containers-prepare-parameter-copy.yaml \
-        {{ roles_data_parameter | default('') }} \
-        --output-env-file {{ template_base }}/docker-images.yaml \
-        --cleanup none
