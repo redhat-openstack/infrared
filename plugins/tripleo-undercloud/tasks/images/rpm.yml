@@ -11,6 +11,18 @@
   # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
   delay: "{{ install.download.ppc64le.images | ternary(300, 150) }}"
 
+- name: install the RPM with the pre-built minimal overcloud images
+  become: yes
+  package:
+      name: "rhosp-director-images-minimal"
+      state: latest
+  register: yum_install
+  until: "yum_install is not failed or not yum_install.msg | regex_search('Operation too slow')"
+  retries: 2
+  # on a regular day this package install takes 120-150sec
+  # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
+  delay: "{{ install.download.minimal.images | ternary(300, 150) }}"
+
 - name: Install the RPM with hardened uefi pre-build overcloud images
   become: yes
   package:
@@ -25,6 +37,14 @@
   when: >
     overcloud_image_name == "hardened-uefi-full" or
     overcloud_image_name == "hardened-uefi-full-fips"
+
+
+- name: create multiarch image directory structure
+  become_user: "{{ install.user.name }}"
+  become: yes
+  file:
+      path: "~/images/"
+      state: directory
 
 # create Directory structure for multiarch images
 - name: create multiarch image directory structure
@@ -79,3 +99,16 @@
   register: image_files
   with_items: "{{ tar_images }}"
   when: multiarch_images
+
+- name: untar the images - minimal deployment
+  become: yes
+  unarchive:
+      src: "/usr/share/rhosp-director-images/{{ item }}"
+      dest: "~{{ install.user.name }}/images/{{ item }}"
+      copy: no
+      owner: "{{ install.user.name }}"
+      group: "{{ install.user.name }}"
+      list_files: yes
+  register: image_files
+  with_items: "{{ minimal_tar_images }}"
+  when: minimal_images

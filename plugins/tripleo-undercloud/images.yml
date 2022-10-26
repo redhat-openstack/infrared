@@ -76,11 +76,18 @@
               - "overcloud-full-latest-{{ undercloud_version }}-x86_64.tar"
               - "overcloud-full-latest-{{ undercloud_version }}-s390x.tar"
               - "ironic-python-agent-latest-{{ undercloud_version }}-s390x.tar"
+          minimal:
+              - "ironic-python-agent-latest-{{ undercloud_version }}-minimal.tar"
+              - "overcloud-full-latest-{{ undercloud_version }}-minimal.tar"
+              - "overcloud-full-latest-{{ undercloud_version }}-minimal.tar"
+              - "ironic-python-agent-latest-{{ undercloud_version }}-minimal.tar"
           # Any higher version defaults to 8
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
       fips_images: "{{ install.fips.mode == true | ternary(true, false) }}"
       fips_tar_images: "{{ tar_files.fips }}"
+      minimal_images:  "{{ install.minimal.images == true | ternary(true, false) }}"
+      minimal_tar_images: "{{ tar_files.minimal }}"
       tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
       overcloud_image_file: "overcloud-{{overcloud_image_name}}.qcow2"
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
@@ -229,6 +236,13 @@
             source ~/stackrc
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/x86_64 {% if overcloud_image_name == "hardened-uefi-full" %}--whole-disk{% endif %} --http-boot /var/lib/ironic/tftpboot/
         when: multiarch_images
+
+      - name: Upload minimal images to glance
+        shell: |
+            set -exuo pipefail
+            source ~/stackrc
+            openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ --os-image-name overcloud-minimal.qcow2 --image-type os
+        when: minimal_images
 
       - name: check for existing nodes ( OS <= 10 )
         shell: |
