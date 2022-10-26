@@ -87,6 +87,29 @@
       "parentUuid": "5d5d3d8b_ea6cc9ac",
       "revId": "62ef722c04bb4189bc9b66eb8bacab6d200b39aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "53b27a57_d2f704ec",
+        "filename": "plugins/tripleo-overcloud/files/generate_baremetal_deployment_from_roles_data.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2022-10-26T08:53:38Z",
+      "side": 1,
+      "message": "I\u0027m wondering if this works as expected ...\n\nI believe that `[] + \u0027string\u0027` considers second arg for the + of list as list too,\nresulting in something like:\n\n  a \u003d []\n  a +\u003d \u002712\u0027\n  a +\u003d \u002713\u0027\n  a # \u003d\u003d\u003e  [\u00271\u0027, \u00272\u0027, \u00271\u0027, \u00273\u0027]\n\nSo ansible_playbook_dict[role_name] will then hold concatenated loaded playbook files as list but splitted by each character?\n\nImho, it would have same effect if it would be kept just as string (\u003d \u0027\u0027) and appended into it with +\u003d (maybe always also append newline after it to ensure there is proper termination/delimiting of each/all playbooks accumulated there)?",
+      "range": {
+        "startLine": 208,
+        "startChar": 48,
+        "endLine": 208,
+        "endChar": 52
+      },
+      "revId": "62ef722c04bb4189bc9b66eb8bacab6d200b39aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
