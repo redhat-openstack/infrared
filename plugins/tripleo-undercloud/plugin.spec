@@ -514,6 +514,12 @@ subparsers:
                       help: |
                           Use the FIPS images for the OverCloud
                       default: no
+        
+                  download-minimal-images:
+                      type: Bool
+                      help: |
+                          Enables download of minimal overcloud images and their upload into glance
+                      default: false
 
             - title: Undercloud Upgrade
               options:
