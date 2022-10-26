@@ -26,6 +26,13 @@
     overcloud_image_name == "hardened-uefi-full" or
     overcloud_image_name == "hardened-uefi-full-fips"
 
+- name: create multiarch image directory structure
+  become_user: "{{ install.user.name }}"
+  become: yes
+  file:
+      path: "~/images/"
+      state: directory
+
 # create Directory structure for multiarch images
 - name: create multiarch image directory structure
   become_user: "{{ install.user.name }}"
@@ -79,3 +86,16 @@
   register: image_files
   with_items: "{{ tar_images }}"
   when: multiarch_images
+
+- name: untar the images - Multiarch deployment
+  become: yes
+  unarchive:
+      src: "/usr/share/rhosp-director-images/{{ item }}"
+      dest: "~{{ install.user.name }}/images/{{ item }}"
+      copy: no
+      owner: "{{ install.user.name }}"
+      group: "{{ install.user.name }}"
+      list_files: yes
+  register: image_files
+  with_items: "{{ minimal_tar_images }}"
+  when: minimal_images
