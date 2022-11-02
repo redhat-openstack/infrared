@@ -7,8 +7,9 @@
     item_src: "{{ item.split(',')[0] }}"
     item_ver: "{{ item.split(',')[1] | default('HEAD') }}"
     item_refspec: "{{ item.split(',')[2] | default('') }}"
+    item_ospver: "{{ test.openstack.version | default(overcloud_version) | int }}"
   set_fact:
-      cli_plugins: "{{ cli_plugins|default({}) | combine({ (item_src|basename): { 'repo': item_src, 'version': item_ver, 'refspec': item_refspec }}) }}"
+      cli_plugins: "{{ cli_plugins|default({}) | combine({ (item_src|basename): { 'repo': item_src, 'version': { item_ospver: item_ver }, 'refspec': item_refspec }}) }}"
   with_items: "{{ test.plugin|default([]) }}"
 
 - name: Set plugins list iterator for "{{ test_suite }}"
