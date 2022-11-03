@@ -10,6 +10,7 @@ import tarfile
 import tempfile
 import time
 import urllib3
+from pathlib import Path
 
 from infrared.core.utils import exceptions
 from infrared.core.utils import logger
@@ -399,6 +400,37 @@ class WorkspaceManager(object):
 
         return self.get(active_name)
 
+    @staticmethod
+    def _copy_workspace(src_dir, dst_dir) :
+        """Copies workspace from one directory to the other
+
+        The methods copy the workspaces and corrects symlinks that points to
+        the original workspace directory, by pointing them to the new dir.
+
+        :param src_dir: Path of the already exists workspace directory
+        :param dst_dir: Path of the destination directory
+        :return: A string with a path to the workspace directory
+                 (dst_dir\workspace_name)
+        """
+        tmp_workspace_path = os.path.join(dst_dir, os.path.basename(src_dir))
+
+        shutil.copytree(src_dir, tmp_workspace_path, symlinks=True)
+
+        for subdir, _, files in os.walk(tmp_workspace_path):
+            for file_name in files:
+                file_path = os.path.join(subdir, file_name)
+                if Path(file_path).is_symlink():
+                    target = os.readlink(file_path)
+                    if not os.path.isabs(target):
+                        continue
+
+                    if target.startswith(src_dir):
+                        new_target = target.replace(src_dir, '.')
+                        os.unlink(file_path)
+                        os.symlink(new_target, file_path)
+
+        return tmp_workspace_path
+
     def export_workspace(self, workspace_name, file_name=None, copykeys=False):
         """Export content of workspace folder as gzipped tar file
 
@@ -416,18 +448,17 @@ class WorkspaceManager(object):
 
         fname = file_name or workspace.name
 
-        # Copy workspace to not damage original,
         tmpdir = tempfile.mkdtemp()
-        tmp_workspace_path = os.path.join(tmpdir,
-                                          os.path.basename(workspace.path))
-
         try:
-            shutil.copytree(workspace.path, tmp_workspace_path,
-                            symlinks=True)
-            tmp_workspace = Workspace(name=workspace.name,
-                                      path=tmp_workspace_path)
-            tmp_workspace._update_paths(workspace.path,
-                                        workspace.path_placeholder)
+            # Copy workspace to not damage original,
+            tmp_workspace_path = \
+                self.__class__._copy_workspace(workspace.path, tmpdir)
+
+            tmp_workspace = \
+                Workspace(name=workspace.name, path=tmp_workspace_path)
+            tmp_workspace._update_paths(
+                workspace.path, workspace.path_placeholder)
+
             if copykeys:
                 tmp_workspace._copy_outside_keys()
             with tarfile.open(fname + '.tgz', "w:gz") as tar:
