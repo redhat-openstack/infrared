@@ -3,6 +3,7 @@ tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
     - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-edge-only.yaml"
     - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/logging-environment-rsyslog.yaml"
 custom_templates:
   parameter_defaults:
     CollectdEnableSensubility: true
@@ -16,6 +17,9 @@ custom_templates:
       driver: amqp
       topic: osp161-metering
     CeilometerQdrPublishMetrics: true
+    RsyslogElasticsearchSetting:
+      server: ["192.168.0.11:9200", "192.168.0.12:9200"]
+      bulkmode: "on"
     CollectdAmqpInstances:
       osp161-notify:
         format: JSON
