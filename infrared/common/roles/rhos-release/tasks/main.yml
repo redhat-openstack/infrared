@@ -128,6 +128,12 @@
                 error: "rhos-release failed unexpectedly"
                 rhos_release_output: "{{ command_result }}"
 
+      - name: set customized Ceph repository
+        shell: |
+          rhos-release ceph-{{ install.ceph.customize.version }}
+        become: yes
+        when: install.ceph.customize.version is defined
+
   # A workaround for an issue described in https://projects.engineering.redhat.com/browse/RHOSINFRA-3802
 - name: Enable rhelosp-devtools for OSP15 and 16.0
   command: 'dnf config-manager --set-enabled rhelosp-{{ rhos_release_version|float }}-devtools'
