@@ -4,6 +4,10 @@
   tags: init
   any_errors_fatal: true
   tasks:
+       - name: Make sure dnf is installed on 13 undercloud
+         yum:
+             name: dnf
+             state: present
        - name: Install pre-defined Undercloud packages for OSP 12 and beyond
          package:
              name: "{{ install.undercloud.packages }}"
