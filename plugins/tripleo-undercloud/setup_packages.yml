@@ -57,6 +57,16 @@
             - cdn_status.rc != 0
             - not skip_release
         tags: rhos-release
+        
+      - include_role:
+          name: ceph-release
+        vars:
+          release: "ceph-{{ install.ceph.customize.version }}"
+          build: "{{ install.build | default(omit) }}"
+          rr_buildmods: "{{ install.buildmods }}"
+          mirror: "{{ install.mirror | default(omit) }}"
+        when: install.ceph.customize.version is defined
+        tags: rhos-release
 
       - include_role:
             name: from-script
