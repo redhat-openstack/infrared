@@ -138,10 +138,13 @@
         become_user: root
         when: rhos_release_version == "16" or rhos_release_version == "15"
 
-      - block:
-          - name: parse specific number of director puddle used from rhos-release output
-            set_fact:
-                director_puddle_version: "{{ command_result.releases.director.version }}"
+      - set_fact:
+            rhos_release_version: "{{ command_result.releases.core.release }}"
+      - name: set customized Ceph repository on tmp repos directory
+        shell: |
+          rhos-release ceph-{{ install.ceph.customize.version }} -t {{ rr_target_directory }}
+        become: yes
+        when: install.ceph.customize.version is defined
 
           - debug:
                 msg: "Build mark: director_puddle={{ director_puddle_version }}"
