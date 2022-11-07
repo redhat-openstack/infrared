@@ -159,6 +159,12 @@
           dstat_output_dir: '/var/log/extra'
         tags: dstat
 
+      - name: set customized Ceph repository
+        shell: |
+          "rhos-release ceph-{{ install.ceph.cutomize.version }}"
+        become: yes
+        when: install.ceph.cutomize.version is defined
+
       - name: install packages on Undercloud
         package:
           name: "{{ _package_list }}"
