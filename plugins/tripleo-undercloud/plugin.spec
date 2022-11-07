@@ -348,6 +348,10 @@ subparsers:
                       default: yes
                       help: Skips the ceph repository configuration in he Undercloud during rhos-release execution if set to false.
 
+                  ceph-customize-version:
+                      type: Value
+                      help: set customize ceph repository
+
                   validate:
                       type: Bool
                       default: yes
