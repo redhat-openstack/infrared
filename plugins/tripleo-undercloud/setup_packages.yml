@@ -197,6 +197,17 @@
             {%- endif %}
             {{- package_list }}
 
+      - name: set customized Ceph repository
+        import_role:
+          name: rhos-release
+        vars:
+          state: install
+          release: "ceph-{{ install.ceph.customize.version }}"
+          build: "{{ install.build | default(omit) }}"
+          rr_buildmods: "{{ install.buildmods }}"
+          mirror: "{{ install.mirror | default(omit) }}"
+        when: install.ceph.customize.version is defined
+
       - name: Update system packages
         package:
             state: latest
