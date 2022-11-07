@@ -108,6 +108,12 @@
 
             - set_fact:
                   rhos_release_version: "{{ command_result.releases.core.release }}"
+            - name: set customized Ceph repository on tmp repos directory
+              shell: |
+                rhos-release ceph-{{ install.ceph.customize.version }} -t {{ rr_target_directory }}
+              become: yes
+              when: install.ceph.customize.version is defined
+
         rescue:
             - name: run rhos-release without retries
               rhos_release:
