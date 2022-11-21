@@ -65,6 +65,9 @@
             {% if install.overcloud.ssh.user != '' %}
             --overcloud-ssh-user {{ install.overcloud.ssh.user }} \
             {% endif %}
+            {% if install.overcloud.concurrency != 20 %}
+            --concurrency {{ install.overcloud.concurrency }} \
+            {% endif %}
             --network-config --stack {{ install.overcloud.stack }} \
             -o /home/stack/templates/overcloud-baremetal-deployed.yaml  {{ template_base }}/network/baremetal_deployment.yaml | \
             tee -a /home/stack/overcloud_provision_nodes.log
