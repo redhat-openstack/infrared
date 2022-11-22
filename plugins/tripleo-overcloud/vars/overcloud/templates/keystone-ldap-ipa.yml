@@ -7,16 +7,16 @@ custom_templates:
         KeystoneLDAPDomainEnable: true
         KeystoneLDAPBackendConfigs:
             REDHAT:
-                url: ldaps://freeipa-0.redhat.local
-                user: uid=svc-ldap,cn=users,cn=accounts,dc=redhat,dc=local
+                url: ldaps://freeipa-0.{{ install.freeipa.domain }}
+                user: uid=svc-ldap,cn=users,cn=accounts{{ freeipa_suffix }}
                 password: 'RedHat1!'
-                suffix: dc=redhat,dc=local
-                user_tree_dn: cn=users,cn=accounts,dc=redhat,dc=local
+                suffix: {{ freeipa_suffix }}
+                user_tree_dn: cn=users,cn=accounts{{ freeipa_suffix }}
                 user_objectclass: person
                 user_id_attribute: uid
                 user_name_attribute: uid
                 user_mail_attribute: mail
-                group_tree_dn: cn=groups,cn=accounts,dc=redhat,dc=local
+                group_tree_dn: cn=groups,cn=accounts{{ freeipa_suffix }}
                 group_objectclass: groupOfNames
                 group_id_attribute: cn
                 group_name_attribute: cn

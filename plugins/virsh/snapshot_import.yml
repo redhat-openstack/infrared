@@ -293,7 +293,7 @@
         - name: Update /etc/hosts with VM's details
           lineinfile:
             dest: /etc/hosts
-            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
+            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.{{ provision.overcloud.domain }} {{ item.name }}"
             regexp: ".*{{ item.name }}$"
             state: present
           loop: "{{ _running_servers }}"

@@ -336,3 +336,9 @@ subparsers:
                           correct state. This action must be done independently of the import process
                           because infrared will need to use the newly imported inventory.
                       default: False
+                  overcloud-domain:
+                      type: Value
+                      help: |
+                          DNS domain name to use when deploying the overcloud. The overcloud
+                          parameter "CloudDomain" must be set to a matching value.
+                      default: 'redhat.local'

@@ -218,7 +218,7 @@
             dest: "/etc/hosts"
             line: "{{ hostvars[groups['undercloud'][0]].ansible_host|
                       default(hostvars[groups['undercloud'][0]].ansible_ssh_host) }}    \
-                   {{ groups['undercloud'][0] }}.redhat.local \
+                   {{ groups['undercloud'][0] }}.{{ install.overcloud.domain }} \
                    {{ groups['undercloud'][0] }}"
             state: present
 

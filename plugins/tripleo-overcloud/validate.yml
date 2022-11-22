@@ -58,7 +58,10 @@
   gather_facts: no
   any_errors_fatal: true
   tasks:
-
+      - set_fact:
+          freeipa_suffix: "{{ freeipa_suffix|default('') }},dc={{ item }}"
+        with_items:
+          - '{{ install.freeipa.domain.split(".") | lower }}'
       - name: validate and copy environment plan file
         include_tasks: tasks/environment_plan.yml
         when: (install.environment|default({})).plan|default(false)
