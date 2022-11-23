@@ -59,6 +59,13 @@
       - install.get('custom', {}).hostnames|default(False)
       - install.version|default(undercloud_version) | openstack_release >= 10
 
+- name: Prefixed hostnames
+  import_tasks: control_node_placement/prefixed_hostnames.yml
+  when:
+      - install.provision.prefix is defined
+      - install.version|default(undercloud_version) | openstack_release >= 10
+
+
 - name: Generate the hostnames template
   include_tasks: hostname.yml
   when: templates.generate_host_name_template|default(True)
