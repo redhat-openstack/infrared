@@ -96,6 +96,7 @@
 {% if install.container.extra.repos is defined %}
     - playbook: {{ template_base }}/playbooks/sssd_selinux_workaround.yaml
 {% endif %}
+{%- if 'compute' in groups %}
 - name: Compute
   count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
   hostname_format: compute-%index%
@@ -149,6 +150,7 @@
 {% endif %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
+{% endif %}
 - name: CephStorage
   count: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
   hostname_format: ceph-%index%
