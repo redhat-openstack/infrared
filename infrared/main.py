@@ -335,10 +335,6 @@ class PluginManagerSpec(api.SpecObject):
             "rhos-infra organization on GitHub")
 
         # import plugins from registry yml file
-        plugin_subparsers.add_parser(
-            'import', help='Install plugins from a YAML file')
-
-        # Add plugin
         import_parser = plugin_subparsers.add_parser(
             'import', help='Install plugins from a registry YML file')
         import_parser.add_argument("src",
