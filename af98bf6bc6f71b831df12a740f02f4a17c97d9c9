@@ -38,6 +38,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "ef3a1b18_1f366125",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1005097
+      },
+      "writtenOn": "2022-11-25T16:53:16Z",
+      "side": 1,
+      "message": "\u003e First of all, let\u0027s determine why we should use RHEL7 on 16.X environments where we have RHEL9.\nI don\u0027t understand this sentence, can you please rephrase?\n\n16.X environment with RHEL9 on which layer? L1 is 8.2 or 8.4. L0 is basically always 8.2 because no other version is (officaly, yet) supported by RHOSINFRA as the RHEL hypervisor has to be compabitle with the provisioning playbooks http://rhos-qe-mirror-tlv.usersys.redhat.com/cgit/rhos-qe-jenkins/tree/infra/slaves (http://rhos-qe-mirror-tlv.usersys.redhat.com/infrared/slaves.html#) and InfraRed\u0027s nested virt. deployments.\n\n\u003e Also, OSP17 is based on RHEL9...\nThat should not matter to the hypervisor environment. 8.2 is the only type of the env we support from IR perspective currently. Note we have to create and maintain virtualized env that satisfies all requirements for all d/s deployments.\n\n\u003eIdeally this should be configured based on osp version\nWhy do you think it should? It should not. From our perspective it would mean we killed the entire CI slave pool scalability and splitting CI slaves by RHEL version. If we are able to maintain single env for all OSP deployments to maintain CI slave pool scaling as it should be (to the maximum anytime), we will always reach for that solution, unless we get hard blocker issue that prevents us to do so (then and onlythen we do the unfortunate CI slave pool split).\n\nAll in all I wonder, since we do not support anything than 8.2 and the provisioning playbooks are not adapted to support RHEL9 (and will not be in foreseable future, we are barely able to add support for 8.6), is this some kind of experimental effort? If yes, then I suggest to not merge this rather than cherry-pick and thorougly test first (over following months) to see what effect it will have on all d/s IR OSP deployments first (though on the first look it seems \"harmless\", it can have unforseen consequences, due to libvirt\u0027s \"guessing features\"). Even simple bump in hypervisor\u0027s minor RHEL version can kill half of the CI, feel free to check e.g. https://code.engineering.redhat.com/gerrit/c/rhos-qe-jenkins/+/430397 .\n\nFyi I am trying to prepare the bump to 8.6, but it it still WIP: https://issues.redhat.com/browse/RHOSINFRA-4765 due to several issues discovered.",
+      "parentUuid": "b295459c_eb099c4b",
+      "revId": "af98bf6bc6f71b831df12a740f02f4a17c97d9c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "ff42efc9_52c59f06",
         "filename": "/PATCHSET_LEVEL",
         "patchSetId": 6
