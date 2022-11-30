@@ -73,6 +73,15 @@
      - install.get('custom_network_names',{})|default(False)
      - install.version|default(undercloud_version) | openstack_release >= 14
 
+- name: Prefixed network names
+  import_tasks: network/prefixed_network_names.yml
+  when:
+     - install.provision.prefix is defined
+     - install.version|default(undercloud_version) | openstack_release >= 14
+
+- pause:
+    seconds: 30
+
 - name: Upload network file for custom network topology
   vars:
       network_data_file: "network_data{{ ((install.version|default(undercloud_version)|openstack_release >= 17)) | \

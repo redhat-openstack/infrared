@@ -112,6 +112,15 @@ subparsers:
                           Register the undercloud with a Red Hat Subscription Management platform.
                           see documentation for more details
 
+                  provision-prefix:
+                      type: Value
+                      help: |
+                          Prefix VMs and networks names with this value. If this value is
+                          more than 4 characters long some resources like bridges will fail
+                          to create due to name lengths limit.
+                      length: 5
+
+
                   registry-mirror:
                       type: Value
                       help: |
