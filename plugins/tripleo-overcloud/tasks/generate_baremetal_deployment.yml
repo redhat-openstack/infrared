@@ -46,6 +46,9 @@
         {% for name, count in roles_count.nodes_count.items() %}
         -c {{ name }} {{ count }} \
         {% endfor %}
+        {% for name, mapped_name in roles_count.nodes_mapping.items() %}
+        -m {{ name }} {{ mapped_name }} \
+        {% endfor %}
         -a ansible_playbook \
         >{{ template_base }}/network/baremetal_deployment.yaml
 
