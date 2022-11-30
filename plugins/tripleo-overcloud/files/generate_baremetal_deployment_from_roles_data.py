@@ -85,6 +85,7 @@ class BaremetalRoleData():
                  enable_profiles: bool = False) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
+        self.mapping_name = None
         self._hostname_format = role_data.get('HostnameFormatDefault')
         self._default_network = [networks_data[x] for x in role_data.get(
             'default_route_networks', [])]
@@ -103,6 +104,13 @@ class BaremetalRoleData():
         defaults = {}
         if self._enable_profiles:
             defaults['profile'] = self.profile
+
+        if self.mapping_name:
+          out['instances'] = []
+          for instance in range(self.roles_count):
+            instances = { "hostname": '{0}-{1}'.format(self.name.lower(), instance),
+                         "name": '{0}-{1}'.format(self.mapping_name, instance)}
+            out['instances'].append(instances)
 
         network_config = {}
         if self._default_network:
@@ -140,7 +148,8 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
                       ansible_playbook_dict: Dict,
-                      enable_profiles: bool = False) -> None:
+                      enable_profiles: bool = False,
+                      nodes_mapping: Dict = {} ) -> None:
     all_roles = []
     for role_data in roles_data:
         role_obj = BaremetalRoleData(role_data, networks_data,
@@ -155,6 +164,7 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
             pass
 
         role_obj.roles_count = nc
+        role_obj.mapping_name = nodes_mapping.get(role_obj.name, None)
         all_roles.append(role_obj.to_baremetal_format(network_templates_dir))
     print(yaml.dump(all_roles, sort_keys=False))
 
@@ -176,6 +186,10 @@ def parse_opts(argv):
                         metavar=('ROLE_TYPE', 'COUNT'),
                         nargs=2, action='append', default=[],
                         help='Override the count of nodes for each node type')
+    parser.add_argument('-m', '--nodes-mapping',
+                        metavar=('ROLE_TYPE', 'MAPPING_NAME'),
+                        nargs=2, action='append', default=[],
+                        help='Assign role types to exact already provisioned nodes')
     parser.add_argument('-p', '--enable-profiles', action='store_true',
                         help='Whether add some default profiles to the nodes')
     parser.add_argument('-a', '--ansible-playbook',
@@ -192,6 +206,7 @@ def main():
     opts = parse_opts(sys.argv)
 
     roles_count = dict(opts.roles_count)
+    mapping = dict(opts.nodes_mapping)
 
     with open(opts.roles_data, 'r') as rdf:
         roles_data = yaml.safe_load(rdf)
@@ -218,7 +233,7 @@ def main():
 
     networks_data = parse_networks_names(networks_data_file)
     convert_role_data(roles_data, networks_data, opts.network_templates,
-                      roles_count, ansible_playbook_dict, opts.enable_profiles)
+                      roles_count, ansible_playbook_dict, opts.enable_profiles, mapping)
 
 
 if __name__ == '__main__':

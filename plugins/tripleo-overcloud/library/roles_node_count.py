@@ -28,11 +28,11 @@ DOCUMENTATION = r'''
 ---
 module: node_data_roles
 
-short_description: Compute the node count for each role
+short_description: Compute the node count for each role and mapping for nodes in infrared
 
 version_added: "1.0.0"
 
-description: Return the amount of nodes for each role.
+description: Return the amount of nodes for each role and role/infrared nodes mapping.
 
 options:
     tht_roles:
@@ -76,6 +76,17 @@ nodes_count:
         'CephStorage': 3,
         'Compute': 2,
         'ControllerStorageNfs': 3
+    }
+nodes_mapping:
+    description: |
+      The dictionary containing information about mapping between role
+      node names and name of node from infrared
+    type: dict
+    returned: always
+    sample: {
+        'ControllerOpenstack': 'controller',
+        'CephStorage': 'ceph',
+        'Compute': 'compute'
     }
 '''
 
@@ -138,6 +149,7 @@ def main():
     result = dict(
         changed=False,
         nodes_count={},
+        nodes_mapping={}
     )
 
     if module.check_mode or not module.params['tht_roles']:
@@ -156,6 +168,7 @@ def main():
             oc_role_name = ROLE_NAMES_MAPPING.get(oc_name,
                                                   oc_name.capitalize())
             result['nodes_count'][oc_role_name] = oc_count
+            result['nodes_mapping'][oc_role_name] = oc_name
     else:
         # list of roles, for each of them find out which overcloud nodes
         # are associated to them, and count them.
@@ -165,6 +178,7 @@ def main():
                 found_node_count = overcloud_node_counter.get(found_node_name,
                                                               0)
                 result['nodes_count'][tht_role] = found_node_count
+                result['nodes_mapping'][tht_role] = found_node_name
 
     module.exit_json(**result)
 
