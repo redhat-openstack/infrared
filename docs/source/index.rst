@@ -51,7 +51,6 @@ Welcome to infrared's documentation!
    cloud-config
    tempest
    collect-logs
-   gabbi_tester
    list_builds
    pytest_runner
    ospdui_tester

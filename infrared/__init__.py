@@ -157,11 +157,6 @@ PLUGINS_REGISTRY = {
         'desc': 'Provision systems using Foreman',
         'type': 'provision'
     },
-    'gabbi': {
-        'src': 'https://github.com/rhos-infra/gabbi.git',
-        'desc': 'The gabbi test runner',
-        'type': 'test'
-    },
     'list-builds': {
         'src': 'plugins/list-builds',
         'desc': 'Lists all the available puddles',
