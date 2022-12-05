@@ -55,14 +55,14 @@
       subnet: tenant_subnet
 {% endfor %}
 {% else %}
-{% for host_name in groups.controller|sort %}
+{% for host_name in groups.controller|default([])|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
 {% endif %}
 {% else %}
   instances:
-{% for host_name in groups.controller|sort %}
+{% for host_name in groups.controller|default([])|sort %}
   - hostname: {{ host_name }}
     managed: false
     networks:
@@ -126,14 +126,14 @@
     - network: external
 {% endif %}
   instances:
-{% for host_name in groups.compute|sort %}
+{% for host_name in groups.compute|default([])|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
 {% endif %}
 {% if install.splitstack|default(false) %}
   instances:
-{% for host_name in groups.compute|sort %}
+{% for host_name in groups.compute|default([])|sort %}
   - hostname: {{ host_name }}
     managed: false
     networks:
@@ -167,14 +167,14 @@
     - network: storage
     - network: storage_mgmt
   instances:
-{% for host_name in groups.ceph|sort %}
+{% for host_name in groups.ceph|default([])|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
 {% endif -%}
 {% if install.splitstack|default(false) %}
   instances:
-{% for host_name in groups.ceph|sort %}
+{% for host_name in groups.ceph|default([])|sort %}
   - hostname: {{ host_name }}
     managed: false
     networks:
@@ -205,14 +205,14 @@
     - network: storage
     - network: storage_mgmt
   instances:
-{% for host_name in groups.swift|sort %}
+{% for host_name in groups.swift|default([])|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
 {% endif %}
 {% if install.splitstack|default(false) %}
   instances:
-{% for host_name in groups.swift|sort %}
+{% for host_name in groups.swift|default([])|sort %}
   - hostname: {{ host_name }}
     managed: false
     networks:
