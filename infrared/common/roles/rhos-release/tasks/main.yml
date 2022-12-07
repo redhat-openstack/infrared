@@ -137,6 +137,14 @@
   become_user: root
   when: rhos_release_version == "16" or rhos_release_version == "15"
 
+- name: Enable CRB repo required for vbmc dependencies
+  shell: |
+    set -ex
+    dnf config-manager --save --setopt rhosp-rhel-{{ rr_distro_version }}-crb.includepkgs=libvirt-devel
+    dnf config-manager --set-enabled rhosp-rhel-{{ rr_distro_version }}-crb
+  become: true
+  when: rhos_release_version >= 17.0 and install.get('update', {}).undercloud|default('')
+
 - block:
     - name: parse specific number of director puddle used from rhos-release output
       set_fact:
