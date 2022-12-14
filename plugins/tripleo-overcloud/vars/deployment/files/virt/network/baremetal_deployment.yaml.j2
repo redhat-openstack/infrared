@@ -127,10 +127,17 @@
     - network: external
 {% endif %}
   instances:
+{%- if install.compute|default({})).nodes|default(0)|int > 0 %}
+{% for compute_count in range(install.compute.nodes|int) %}
+  - hostname: {{ groups.compute[compute_count] }}
+    name: {{ groups.compute[compute_count] }}
+{% endfor %}
+{% else %}
 {% for host_name in groups.compute|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
+{% endif -%}
 {% endif %}
 {% if install.splitstack|default(false) %}
   instances:
