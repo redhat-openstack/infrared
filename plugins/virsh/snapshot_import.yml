@@ -236,25 +236,35 @@
         state: present
         key: "{{ lookup('file', ir_home ~ '/.workspaces/active/id_rsa.pub') }}"
 
+    - name: Discover the list of inventory files which need to be adjusted
+      find:
+        path: "{{ ir_home }}/.workspaces/active"
+        file_type: file
+      register: _ir_inventory_files
+      delegate_to: localhost
+
     - name: Use the current hypervisor key for direct connections to VMs
       replace:
-        path: "{{ ir_home }}/.workspaces/active/hosts"
+        path: "{{ item.path }}"
         regexp: "ansible_ssh_private_key_file=\\/[a-zA-Z./0-9_-]+\\/id_rsa-[a-zA-Z./0-9_-]+ "
         replace: "ansible_ssh_private_key_file={{ provision.host.key }} "
+      loop: "{{ _ir_inventory_files.files }}"
       delegate_to: localhost
 
     - name: Use the current hypervisor key for proxy connections to VMs
       replace:
-        path: "{{ ir_home }}/.workspaces/active/hosts"
+        path: "{{ item.path }}"
         regexp: '-i [\.a-zA-Z0-9\/\_-]+ '
         replace: "-i {{ provision.host.key }} "
+      loop: "{{ _ir_inventory_files.files }}"
       delegate_to: localhost
 
     - name: Adjust the imported workspace inventory for the new hypervisor
       replace:
-        path: "{{ ir_home }}/.workspaces/active/hosts"
+        path: "{{ item.path }}"
         regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
         replace: "{{ provision.host.address[0] }}"
+      loop: "{{ _ir_inventory_files.files }}"
       delegate_to: localhost
 
     - name: Read the new inventory
