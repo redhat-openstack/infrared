@@ -67,6 +67,52 @@
       "message": "I guess the change is not complete until this task is removed? There shouldn\u0027t be a reason to move it, just removed, because plugins/tripleo-overcloud/tasks/generate_baremetal_deployment.yml should do the job.",
       "revId": "005f1b9d3fdd4ced50409e6d5196309338d347bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c579f0cf_db83feae",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt/network/network-environment.yaml.j2",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2022-12-21T22:19:59Z",
+      "side": 1,
+      "message": "Same for all of these. If they are being included in deployments of OSP17 or greater, these network configs would all need to be defined using the baremetal-deployment.yaml file like so:\nhttps://github.com/openstack/tripleo-heat-templates/blob/master/baremetal-samples/baremetal_deployment.yaml#L5\n\nIf network provisioning isn\u0027t being done during the provisioning phase, then it can be specified in environment files like so:\nhttps://github.com/openstack/tripleo-heat-templates/blob/201409adb4c0c1ab1fce6f4893172f764172e18c/overcloud.j2.yaml#L218-L221",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 135
+      },
+      "revId": "005f1b9d3fdd4ced50409e6d5196309338d347bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "23ac7aed_31342930",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt_vswitch/network/network-environment.yaml.j2",
+        "patchSetId": 5
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2022-12-21T22:19:59Z",
+      "side": 1,
+      "message": "Are these files included in deployments \u003e\u003d17?\n\nIf so, we don\u0027t use SoftwareConfig for Nic configuration in \u003e\u003d17 actually. Instead, we use Ansible for all of the network configuration:\n\nhttps://github.com/openstack/tripleo-heat-templates/blob/76cb99a2a7ebc557119af1bffa1df02c9d3aff44/releasenotes/notes/nic-config-with-ansible-default-cbcaedd0a5ad49b0.yaml\n\nSo, we just set these to OS::Heat::None now:\nhttps://github.com/openstack/tripleo-heat-templates/blob/stable/wallaby/environments/network-environment.j2.yaml#L9\n\nBut this might be a generic file that isn\u0027t used in 17 with infrared?",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 133
+      },
+      "revId": "005f1b9d3fdd4ced50409e6d5196309338d347bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
