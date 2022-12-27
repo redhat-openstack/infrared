@@ -420,10 +420,11 @@ class WorkspaceManager(object):
         tmpdir = tempfile.mkdtemp()
         tmp_workspace_path = os.path.join(tmpdir,
                                           os.path.basename(workspace.path))
-
         try:
+            #shutil.copytree(workspace.path, tmp_workspace_path,
+            #                symlinks=True)
             shutil.copytree(workspace.path, tmp_workspace_path,
-                            symlinks=True)
+                            symlinks=False)
             tmp_workspace = Workspace(name=workspace.name,
                                       path=tmp_workspace_path)
             tmp_workspace._update_paths(workspace.path,
