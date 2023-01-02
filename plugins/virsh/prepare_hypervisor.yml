@@ -21,6 +21,10 @@
           mode: 0755
 
     - block:
+    # Current block allows to deploy prefixed deployment under different subnets that the standard
+    # one. Currently this possibility is disabled as overcloud_install doesn't support it.
+    # In order to enable it, net_list and data_net_list should be set up to different values.
+    # (tkorol)
         - name: Get deployment prefix
           set_fact:
               prefix: "{{ provision.prefix }}"
@@ -29,7 +33,7 @@
               net_list: [0]
 
         - set_fact:
-              data_net_list: [14]
+              data_net_list: [24]
 
         - block:
             - set_fact:
@@ -44,8 +48,8 @@
         - name: generate deployment info dict
           vars:
               id: "{{ prefix }}"
-              net_prefix: "{{ (net_list|max)|int+10 }}"
-              data_net: "{{ (data_net_list|max)|int+10 }}"
+              net_prefix: "{{ (net_list|max)|int }}"
+              data_net: "{{ (data_net_list|max)|int }}"
           set_fact:
               deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }}) }}"
 
