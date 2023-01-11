@@ -230,25 +230,39 @@
       loop_control:
         label: "{{ item.name }}"
 
-    - name: Add the imported ssh key to the remote hypervisor
+    - name: Discover the list of workspace public ssh keys to be imported
+      find:
+        path: "{{ ir_home }}/.workspaces/active"
+        patterns: "*.pub"
+        file_type: file
+      register: _ir_workspace_pubkeys
+      delegate_to: localhost
+
+    - name: Add the imported workspace ssh key to the remote hypervisor
       authorized_key:
         user: root
         state: present
-        key: "{{ lookup('file', ir_home ~ '/.workspaces/active/id_rsa.pub') }}"
+        key: "{{ lookup('file', item.path) }}"
+      loop: "{{ _ir_workspace_pubkeys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
 
-    - name: Discover the list of inventory files which need to be adjusted
+    - name: Discover the list of imported workspace files which need to be adjusted
       find:
         path: "{{ ir_home }}/.workspaces/active"
+        pattern: "hosts*"
         file_type: file
-      register: _ir_inventory_files
+      register: _ir_workspace_files
       delegate_to: localhost
 
-    - name: Use the current hypervisor key for direct connections to VMs
+    - name: Use the current hypervisor ssh key for direct connections to VMs
       replace:
         path: "{{ item.path }}"
-        regexp: "ansible_ssh_private_key_file=\\/[a-zA-Z./0-9_-]+\\/id_rsa-[a-zA-Z./0-9_-]+ "
+        regexp: "ansible_ssh_private_key_file=\\/[a-zA-Z\\.\\/0-9_-]+\\/id_(rsa|ecdsa)[a-zA-Z0-9_-]* "
         replace: "ansible_ssh_private_key_file={{ provision.host.key }} "
-      loop: "{{ _ir_inventory_files.files }}"
+      loop: "{{ _ir_workspace_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
       delegate_to: localhost
 
     - name: Use the current hypervisor key for proxy connections to VMs
@@ -256,15 +270,19 @@
         path: "{{ item.path }}"
         regexp: '-i [\.a-zA-Z0-9\/\_-]+ '
         replace: "-i {{ provision.host.key }} "
-      loop: "{{ _ir_inventory_files.files }}"
+      loop: "{{ _ir_workspace_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
       delegate_to: localhost
 
-    - name: Adjust the imported workspace inventory for the new hypervisor
+    - name: Final adjustments of the imported workspace inventory files for the new hypervisor
       replace:
         path: "{{ item.path }}"
         regexp: "{{ _virsh_snapshot_manifest_content.hypervisor_fqdn | regex_escape() }}"
         replace: "{{ provision.host.address[0] }}"
-      loop: "{{ _ir_inventory_files.files }}"
+      loop: "{{ _ir_workspace_files.files }}"
+      loop_control:
+        label: "{{ item.path }}"
       delegate_to: localhost
 
     - name: Read the new inventory
@@ -308,23 +326,35 @@
             state: present
           loop: "{{ _running_servers }}"
 
-        - name: Fetch the remote hypervisor's public ssh key
+        - name: Discover the list of remote hypervisor public ssh keys to be imported
+          find:
+            path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+            patterns: "*.pub"
+            file_type: file
+          register: _remote_ssh_public_keys
+
+        - name: Fetch the remote hypervisor's public ssh keys
           fetch:
-            src: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa.pub"
+            src: "{{ item.path }}"
             dest: "{{ src_workspace }}/"
-          register: _remote_ssh_public_key
+          loop: "{{ _remote_ssh_public_keys.files }}"
+          loop_control:
+            label: "{{ item.path }}"
+          register: _remote_ssh_public_keys_fetch
 
         - name: Copy the remote hypervisor's public ssh key into the VM authorized_keys
           shell: >-
             ssh
-            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
-            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
-            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
-            'tee -a ~/.ssh/authorized_keys' < {{ _remote_ssh_public_key['dest'] }}
+            {{ _inventory[item.0]['ansible_ssh_common_args'] }}
+            -i {{ _inventory[item.0]['ansible_ssh_private_key_file'] }}
+            {{ _inventory[item.0]['ansible_user'] }}@{{ _inventory[item.0]['ansible_host'] }}
+            'tee -a ~/.ssh/authorized_keys' < {{ item.1 }}
           args:
             executable: /bin/bash
           delegate_to: localhost
-          loop: "{{ _running_servers }}"
+          loop: "{{ _running_servers | map(attribute='name') | product(_remote_ssh_public_keys_fetch.results | map(attribute='dest')) | list }}"
+          loop_control:
+            label: "{{ item.0 }}: {{ item.1 | basename }}"
 
         - when: _inventory['undercloud-0'] is defined
           block:
