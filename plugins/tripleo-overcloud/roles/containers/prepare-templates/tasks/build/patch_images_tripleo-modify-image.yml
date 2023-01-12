@@ -38,15 +38,16 @@
   loop_control:
       loop_var: repo_config
 
-- name: make copy of containers-prepare-parameter.yaml
+- name: make a backup copy of containers-prepare-parameter.yaml
   copy:
       src: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
-      dest: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
+      dest: "{{ containers_home_dir }}/containers-prepare-parameter-backup.yaml"
       remote_src: yes
 
-- name: Configure containers-prepare-parameter-copy.yaml for image modification
+# in newer OSPd releases, this is passed directly to the deploy command
+- name: Configure containers-prepare-parameter.yaml for image modification
   blockinfile:
-      path: "{{ containers_home_dir }}/containers-prepare-parameter-copy.yaml"
+      path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
       block: |2
             modify_role: tripleo-modify-image
             modify_append_tag: '-patched'
