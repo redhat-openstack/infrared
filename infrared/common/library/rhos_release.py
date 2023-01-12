@@ -136,7 +136,7 @@ def _parse_output(module, cmd, stdout):
         )
     """
     def released(line):
-        """ Returns the release parameters (aka release, version, puddle and channel) """
+        """Returns the release parameters (aka release, version, puddle and channel) """
         pattern = re.compile(r'(?P<start># rhos-release )'
                              r'(?P<release>\d+[\.\d+]*)(?P<trunk>(-trunk)?)\s*'
                              r'(?P<director>-director)?\s*'
@@ -155,7 +155,7 @@ def _parse_output(module, cmd, stdout):
         )
 
     def installed(line):
-        """ Returns the version of products already installed on the machine """
+        """Returns the version of products already installed on the machine """
         pattern = re.compile(r'(?P<start>Installed: )(?P<filename>\S+)')
         match = pattern.search(line)
         if not match:
