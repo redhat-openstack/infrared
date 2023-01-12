@@ -82,6 +82,25 @@
         tags:
             - always
 
+      - name: Enable extra repo for vbmc dependencies (RHEL9)
+        become: yes
+        shell: |
+            set -ex
+            dnf config-manager --save --setopt rhosp-rhel-9.0-crb.includepkgs=libvirt-devel
+            dnf config-manager --set-enabled rhosp-rhel-9.0-crb
+        vars:
+            custom_script_url: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('url', {})|default('') }}"
+            skip_release: "{{ custom_script_url != '' or install.get('repos', {}).get('skip', {}).release|default('') }}"
+            rr_distro_version: "{{ install.osrelease|default('') }}"
+        when:
+            - ansible_distribution == 'RedHat'
+            - rr_distro_version == '9.0'
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - not skip_release
+        tags:
+            - upgrade_repos
+
       - name: Enable extra repo (crb) for vbmc dependencies (RHEL9.2) before GA
         become: yes
         shell: |
