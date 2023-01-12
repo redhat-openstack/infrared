@@ -82,6 +82,24 @@
         tags:
             - always
 
+      - name: Enable extra repo for vbmc dependencies (RHEL9)
+        become: yes
+        shell: |
+            set -ex
+            dnf config-manager --save --setopt rhosp-rhel-{{ version_escaped }}-crb.includepkgs=libvirt-devel
+            dnf config-manager --set-enabled rhosp-rhel-{{ version_escaped }}-crb
+        vars:
+            version_escaped: "{{ ansible_distribution_version | replace('.', '\\.') }}"
+            skip_release: "{{ custom_script_url != '' or install.get('repos', {}).get('skip', {}).release|default('') }}"
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_major_version | int >= 9
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - not skip_release
+        tags:
+            - upgrade_repos
+
       - name: update packages for the upgrade
         become: true
         tags:
