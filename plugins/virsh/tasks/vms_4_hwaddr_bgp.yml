@@ -1,0 +1,13 @@
+---
+- name: set BGP facts topology_node and node_name
+  set_fact:
+    topology_node: "{{ node.value }}"
+    node_name: "{{ node.key }}"
+- name: get VMs hardware adresses
+  include_tasks: tasks/vms_3_hwaddr.yml
+
+- name: add BGP hosts to host list
+  include_tasks: tasks/add_bgp_hosts.yml
+  loop: '{{ topology_node.node_indexes }}'
+  loop_control:
+    loop_var: i
