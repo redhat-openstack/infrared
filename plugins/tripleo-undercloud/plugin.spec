@@ -163,6 +163,7 @@ subparsers:
                       type: Value
                       default: iscsi
                       help: |
+                          DEPRECATED: Since osp16 we are using direct anyway.
                           This option (when set to direct) changes the default in Ironic for the value
                           of deploy_interface from iscsi to direct.
                       choices:
@@ -173,6 +174,7 @@ subparsers:
                       type: Value
                       default: swift
                       help: |
+                          DEPRECATED: We are using http since osp16 anyway.
                           This option when using in conjunction with (deploy_interface_default: direct) changes
                           the default in Ironic for the value of image_download_source from swift to http.
                           (swift) IPA ramdisk retrieves instance image from the Object Storage service.
