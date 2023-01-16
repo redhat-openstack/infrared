@@ -16,6 +16,69 @@
       "message": "recheck",
       "revId": "0278c627f17267f2e6748bb718a48883269f93c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2c6b98c7_58abcbfb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2023-01-16T13:51:55Z",
+      "side": 1,
+      "message": "please see inline comments, they\u0027re not a hard stop for this patch to land but it would be good to have them or at least have your take on them\n\nit looks good to me and any non-critical improvements can be done later \n\nthis patch is in a chain of many hence I\u0027d prefer to avoid changing this patch and the need to rebase all the others on top of it... hence I\u0027m merging this one as-is with _possible_ some follow-up from the author(s) later",
+      "revId": "0278c627f17267f2e6748bb718a48883269f93c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "10748a5d_434c0d26",
+        "filename": "plugins/virsh/cleanup.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2023-01-16T13:51:55Z",
+      "side": 1,
+      "message": "potentially this file would be cleaning up more than just bgp route, if that\u0027s the case please consider a proper name for it in future patches",
+      "range": {
+        "startLine": 64,
+        "startChar": 38,
+        "endLine": 64,
+        "endChar": 59
+      },
+      "revId": "0278c627f17267f2e6748bb718a48883269f93c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "afe574e9_78811282",
+        "filename": "plugins/virsh/cleanup.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2023-01-16T13:51:55Z",
+      "side": 1,
+      "message": "condier using more specific to handle failure, i.e.:\nregister: bgp_cleanup_file_execute\nfailed_when: bgp_cleanup_file_execute.rc not in [0, 2] \n\nthat would cause this task to fail if, for example, your cleanup scripts would be missing execute permissions (error code 126) but I haven\u0027t checked how your cleanup works so I can\u0027t tell if there are other error codes (apart from \u00272\u0027) that are a failure which is \u0027ok\u0027",
+      "range": {
+        "startLine": 71,
+        "startChar": 8,
+        "endLine": 71,
+        "endChar": 27
+      },
+      "revId": "0278c627f17267f2e6748bb718a48883269f93c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
