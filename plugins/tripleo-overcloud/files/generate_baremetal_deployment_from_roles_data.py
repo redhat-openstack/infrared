@@ -108,7 +108,10 @@ class BaremetalRoleData():
         if self.mapping_name:
           out['instances'] = []
           for instance in range(self.roles_count):
-            instances = { "hostname": '{0}-{1}'.format(self._hostname_format
+            hostname_pattern = self._hostname_format
+            if hostname_pattern is None:
+                 hostname_pattern = self.mapping_name
+            instances = { "hostname": '{0}-{1}'.format(hostname_pattern
                           .replace('-%index%', ''), instance),
                           "name": '{0}-{1}'.format(self.mapping_name, instance
                         )}
