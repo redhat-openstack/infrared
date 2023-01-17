@@ -82,6 +82,21 @@
         tags:
             - always
 
+      - name: Enable extra repo (crb) for vbmc dependencies (RHEL9.2) before GA
+        become: yes
+        shell: |
+            set -ex
+            dnf config-manager --save --setopt rhosp-rhel-9.2-nightly-crb.includepkgs=libvirt-devel
+            dnf config-manager --set-enabled rhosp-rhel-9.2-nightly-crb
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_version is version('9.2', '==')
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - not skip_release
+        tags:
+            - upgrade_repos
+
       - name: update packages for the upgrade
         become: true
         tags:
