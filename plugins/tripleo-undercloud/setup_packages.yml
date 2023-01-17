@@ -144,6 +144,18 @@
             - not skip_release
         tags: rhos-release
 
+      - name: Enable extra repo (crb) for vbmc dependencies (RHEL9.2) before GA
+        become: yes
+        shell: |
+            dnf config-manager --set-enabled rhosp-rhel-9.2-nightly-crb
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_version is version('9.2', '==')
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - cdn_status.rc != 0
+            - not skip_release
+
       - name: Disable gpgcheck for custom repos
         become: yes
         shell: |
