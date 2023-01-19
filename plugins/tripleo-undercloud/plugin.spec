@@ -300,6 +300,9 @@ subparsers:
                           Supports any rhos-release labels.
                           RDO supported labels: master-tripleo-ci
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                          NOTE: If you override this parameter and deploying multirhel (mixed rhel/computerhel8) overcloud
+                          then consider setting the right values for multirhel-overcloud-image-urls parameter -
+                          the version of images in multirhel-overcloud-image-urls has to be older than compose from this (build) parameter.
                       type: Value
 
                   director-build:
@@ -528,6 +531,31 @@ subparsers:
                       help: |
                           Enables download of minimal overcloud images and their upload into glance
                       default: false
+
+            - title: MultiRHEL options
+              options:
+                  multirhel-enabled:
+                      type: Bool
+                      help: |
+                        Whether to prepare files and overcloud images required for MultiRHEL/Mixed-RHEL Overcloud deployments.
+                        The container-image-prepare-parameter YAML file and overcloud*.tar/qcow2 files are generated
+                        and processed automatically unless overridden by below multirhel-* options. Supported only in OSP17.1.
+                      default: false
+                      ansible_variable: multirhel_enabled
+                      required_when: "multirhel-overcloud-image-urls != '' or multirhel-overcloud-image-urls != '' or multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''"
+
+                  multirhel-overcloud-image-urls:
+                      type: Value
+                      default: ''
+                      help: |
+                        Comma separated URLs to 'rhosp-director-images-uefi' and 'rhosp-director-images-ipa'
+                        RPMs which will be used for Compute RHEL8 nodes.
+                        Providing the 'ipa' (RPM name 'rhosp-director-images-ipa...rpm') image URL is mandatory.
+                        NOTE: If empty, the URLs are automatically discovered based on latest available OSP17.1/RHEL8 compose.
+                        NOTE2: The version of images in this parameter has to be older than compose from the 'build' parameter of this infrared plugin.
+                        Example:
+                          --multirhel-overcloud-image-urls http://.../Packages/rhosp-director-images-uefi-x86_64-17.1-20230125.1.test.el8ost.noarch.rpm,http://.../Packages/rhosp-director-images-ipa-x86_64-17.1-20230125.1.test.el8ost.noarch.rpm
+                      ansible_variable: multirhel_overcloud_image_urls
 
             - title: Undercloud Upgrade
               options:
