@@ -38,6 +38,81 @@
     overcloud_image_name == "hardened-uefi-full" or
     overcloud_image_name == "hardened-uefi-full-fips"
 
+- when:
+    - "'computerhel8' in groups"
+  become_user: "{{ install.user.name }}"
+  become: yes
+  block:
+#    - set_fact:
+#        computerhel8_yum_repo_file: /tmp/infrared_tripleo_undercloud_computerhel8/rhos-release-17.1.repo"
+#
+#    - name: Enable OSP16.1/rhel8.2 yum repo via rhos-release
+#      shell: |
+#        mkdir -p {{ computerhel8_yum_repo_file | dirname }}
+#        rhos-release 17.1 -p latest-RHOS-17.1-RHEL-8.4 -P -r 8.4 -O -t {{ computerhel8_yum_repo_file | dirname }}
+#
+#    - name: "Read {{ computerhel8_yum_repo_file }}"
+#      set_fact:
+#        computerhel8_rhos_release_17_1_repo: "{{ item }}"
+#      with_ini:
+#        - '.* section=rhelosp-17.1 file=/tmp/infrared_tripleo_undercloud_computerhel8/rhos-release-17.1.repo re=True '
+#
+#    - debug:
+#        var: computerhel8_rhos_release_17_1_repo
+#
+#    - fail:
+#        msg: failing
+#
+#    # TODO(wznoinsk): includepkgs should be applied to all repos, currently it's only to the last repo in that file
+#    - name: Limit the OSP16.1 yum repo to only rhosp-director-images RPMs
+#      lineinfile:
+#          backrefs: true
+#          dest: "/etc/yum.repos.d/rhos-release-16.1.repo"
+#          regexp: '(.*)(enabled=.*)'
+#          line: '\1\2\n\1includepkgs=rhosp-director-images'
+
+    - name: "(computerhel8) Copy rhos-release-osp17.1-rhel-8.4.repo file (repo disabled by default)"
+      template:
+        src: rhos-release-17.1-rhel-8.4.repo.j2
+        dest: /etc/yum.repos.d/rhos-release-17.1-rhel-8.4.repo
+      become: true
+      become_user: root
+
+    - name: "(computerhel8) Ensure ~/images/computerhel8/ exists and it's empty"
+      file:
+        path: ~/images/computerhel8/
+        state: "{{ item }}"
+      with_items:
+        - absent
+        - directory
+
+    - name: "(computerhel8) Download OSP17.1 RHEL-8 rhosp-director-images-uefi-x86_64"
+    #        rpm -v --root /home/stack/images/computerhel8 --install --nodeps $PKGS
+      shell: |
+        IMAGES_RPMS_URLS=$(dnf download --url --disablerepo=* --enablerepo rhelosp-17.1-rhel-8.4 --releasever el8ost rhosp-director-images* octavia-amphora-image* | grep -iE "rhosp-director-images-uefi-x86_64|rhosp-director-images-ipa-x86_64")
+        echo "IMAGES_RPMS_URLS: $IMAGES_RPMS_URLS"
+        cd ~/images/computerhel8/
+        for url in ${IMAGES_RPMS_URLS[@]}; do
+          curl -L $url | rpm2cpio | cpio -idmv
+        done
+
+#      register: yum_install_rhosp_director_images_el8
+#      until: "yum_install_rhosp_director_images_el8 is not failed or not yum_install_rhosp_director_images_el8.msg | regex_search('Operation too slow')"
+#      retries: 2
+#      delay: "{{ install.download.ppc64le.images | ternary(300, 150) }}"
+
+#
+#    - name: Install OSP17.1 RHEL-8 rhosp-director-images
+#      dnf:
+#        name: rhosp-director-images-17.1
+#        releasever: el8
+#        state: latest
+#      register: yum_install_rhosp_director_images_el8
+#      until: "yum_install_rhosp_director_images_el8 is not failed or not yum_install_rhosp_director_images_el8.msg | regex_search('Operation too slow')"
+#      retries: 2
+#      # on a regular day this package install takes 120-150sec
+#      # here we want to allow for mirror/proxy cache to have enough time to download it from main download server before we'll retry
+#      delay: "{{ install.download.ppc64le.images | ternary(300, 150) }}"
 
 - name: create multiarch image directory structure
   become_user: "{{ install.user.name }}"
@@ -111,3 +186,35 @@
   register: image_files
   with_items: "{{ minimal_tar_images }}"
   when: minimal_images
+
+- when: "'computerhel8' in groups"
+  become_user: "{{ install.user.name }}"
+  become: yes
+  block:
+  - name: (computerhel8) Find .tar files containing osp17.1/rhel8 rhosp-director-images hardened-uefi
+    find:
+      path: ~/images/computerhel8/
+      patterns: "overcloud-hardened-uefi-full-17.1*.tar,ironic-python-agent*.tar"
+      recurse: true
+    register: overcloud_hardened_uefi_full_17_1_tar_files
+
+  - debug:
+      var: overcloud_hardened_uefi_full_17_1_tar_file
+
+  - name: (computerhel8) untar the images - computerhel8/multirhel deployment
+    unarchive:
+        src: "{{ item.path }}"
+        dest: "~/images/computerhel8/"
+        copy: no
+        owner: "{{ install.user.name }}"
+        group: "{{ install.user.name }}"
+        list_files: yes
+    register: image_files_computerhel8
+    with_items: "{{ overcloud_hardened_uefi_full_17_1_tar_files.files }}"
+
+  - name: "(computerhel8) rename overcloud-hardened-uefi-full* image files to overcloud-hardened-uefi-full-rhel8*"
+    shell: |
+      cd ~/images/computerhel8/
+      for file in $(ls -C1 overcloud-hardened-uefi-full*); do
+        mv $file ${file%.*}-rhel8.${file##*.}
+      done
