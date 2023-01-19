@@ -29,3 +29,7 @@ openstack overcloud deploy \
 {# rhbz#2020590 - network_data_v2.yaml has to be part of both, the "network provision" step also the OC deployment from now on  #}
 --networks-file {{ template_base }}/network/network_data_v2.yaml \
 {% endif %}
+{% if 'computerhel8' in groups %}
+--roles-file "{{ template_base }}/roles/roles_data.yaml" \
+-e /home/stack/container-image-prepare-parameter-computerhel8.yaml \
+{% endif %}

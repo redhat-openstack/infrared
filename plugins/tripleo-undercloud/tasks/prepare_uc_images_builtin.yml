@@ -368,5 +368,90 @@
                 # append to list of insecure registries, needed later for undercloud.conf.j2 template
                 insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ registry }}']"
 
+    - when:
+        - multirhel_enable
+        - multirhel_overcloud_container_image_prepare_parameter_file == ''
+      block:
+        - name: Read the content of containers-prepare-parameter.yaml
+          shell: cat "{{ working_dir }}/containers-prepare-parameter.yaml"
+          register: containers_prepare_parameter_orig_raw
+
+        - name: convert output of previous command to yaml
+          set_fact:
+            containers_prepare_parameter_orig: "{{ containers_prepare_parameter_orig_raw.stdout | from_yaml }}"
+
+        - debug:
+            var: containers_prepare_parameter_orig
+
+        # TODO(wznoinsk): add support for automatically getting 'tag' based on RHEL8_COMPOSE_ID file (it should exist for any new RHEL9 compose)
+        # https://issues.redhat.com/browse/PCTOOLING-596 
+        - name: Generate content of 'container-image-prepare-parameter-computerhel8.yaml' file
+          set_fact:
+            containers_prepare_parameter_computerhel8: |
+              parameter_defaults:
+                ComputeRHEL8ContainerImagePrepare:
+                - push_destination: true
+                  set:
+                    ceph_alertmanager_image: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_alertmanager_image }}
+                    ceph_alertmanager_namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_alertmanager_namespace }}
+                    ceph_alertmanager_tag: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_alertmanager_tag }}
+                    ceph_grafana_image: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_grafana_image }}
+                    ceph_grafana_namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_grafana_namespace }}
+                    ceph_grafana_tag: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_grafana_tag }}
+                    ceph_image: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_image }}
+                    ceph_namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_namespace }}
+                    ceph_node_exporter_image: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_node_exporter_image }}
+                    ceph_node_exporter_namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_node_exporter_namespace }}
+                    ceph_node_exporter_tag: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_node_exporter_tag }}
+                    ceph_prometheus_image: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_prometheus_image }}
+                    ceph_prometheus_namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_prometheus_namespace }}
+                    ceph_prometheus_tag: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_prometheus_tag }}
+                    ceph_tag: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.ceph_tag }}
+                    name_prefix: rhosp17-openstack-
+                    name_suffix: ''
+                    namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.namespace }}
+                    neutron_driver: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.neutron_driver }}
+                    rhel_containers: false
+                    tag: "{{ (multirhel_overcloud_container_image_prepare_parameter_tag != '') | ternary(multirhel_overcloud_container_image_prepare_parameter_tag, '17.1_20230125.1') }}"
+
+        - debug:
+            var: containers_prepare_parameter_computerhel8 | from_yaml
+
+        - name: Save 'container-image-prepare-parameter-computerhel8.yaml' file
+          copy:
+            content: "{{ containers_prepare_parameter_computerhel8 }}"
+            dest:  "{{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+            backup: yes
+
+    - when:
+        - multirhel_enable
+        - multirhel_overcloud_container_image_prepare_parameter_file != ''
+      block:
+        - name: Copy user-provided multirhel_overcloud_container_image_prepare_parameter_file as container-image-prepare-parameter-computerhel8.yaml
+          copy:
+            src: "{{ multirhel_overcloud_container_image_prepare_parameter_file }}"
+            dest: "{{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+            backup: yes
+          when: multirhel_overcloud_container_image_prepare_parameter_file | regex_search('^http.*', ignorecase=True) == ''
+
+        - when: multirhel_overcloud_container_image_prepare_parameter_file | regex_search('^http.*', ignorecase=True) != ''
+          block:
+            - name: Fetch user-provided multirhel_overcloud_container_image_prepare_parameter_file URL as container-image-prepare-parameter-computerhel8.yaml
+              get_url:
+                url: "{{ multirhel_overcloud_container_image_prepare_parameter_file }}"
+                dest: "{{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+                backup: yes
+
+            - name: "Replace ContainerImagePrepare with ComputeRHEL8ContainerImagePrepare in {{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+              lineinfile:
+                path: "{{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+                regexp: '^(\W)+ContainerImagePrepare:'
+                line: '\1ComputeRHEL8ContainerImagePrepare:'
+                backrefs: yes
+
+    - name: "show content of {{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+      shell: "cat {{ working_dir }}/container-image-prepare-parameter-computerhel8.yaml"
+      when: multirhel_enable
+
   when:
       - (target_install_version|openstack_distribution) == 'OSP'
