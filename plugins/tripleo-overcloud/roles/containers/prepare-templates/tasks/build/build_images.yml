@@ -111,8 +111,39 @@
           - from_source.repo
       tags: container-images-packages
 
+    - when:
+        - multirhel_enabled
+        - multirhel_overcloud_container_image_prepare_parameter_file != 'auto'
+      block:
+        - name: "Save user-provided {{ multirhel_overcloud_container_image_prepare_parameter_file }} as ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+          copy:
+            src: "{{ multirhel_overcloud_container_image_prepare_parameter_file }}"
+            dest: "~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+            backup: yes
+          when: multirhel_overcloud_container_image_prepare_parameter_file | regex_search('^http.*', ignorecase=True) is none
+
+        - when: multirhel_overcloud_container_image_prepare_parameter_file | regex_search('^http.*', ignorecase=True) is not none
+          block:
+          - name: Fetch user-provided multirhel_overcloud_container_image_prepare_parameter_file URL as ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }} (.gz)
+            vars:
+              is_archive: "{{ multirhel_overcloud_container_image_prepare_parameter_file | regex_search('.*\\.gz$', ignorecase=True) is not none }}"
+            get_url:
+              url: "{{ multirhel_overcloud_container_image_prepare_parameter_file }}"
+              dest: "~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}{{ is_archive | ternary('.gz', '') }}"
+              backup: yes
+              force: yes
+
+          - name: "Unarchive the file if it's *.gz (overwrite existing)"
+            command: gzip -f -d ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}.gz
+            vars:
+              chdir: "{{ template_base }}"
+            when: "multirhel_overcloud_container_image_prepare_parameter_file | regex_search('.*\\.gz$', ignorecase=True) is not none"
+
+        - name: "show content of ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+          shell: "cat ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+
     ## Workaround BZ#1627946
-    - name:  Run *tripleo* container image prepare (OSP >= 14)
+    - name: Run tripleo container image prepare (OSP >= 14)
       shell: |
           {% if install.version|default(undercloud_version)|openstack_release > 14 %}
           sudo \
@@ -136,11 +167,56 @@
             ) or
             (
               install.version|default(undercloud_version)|openstack_release >= 17 and
-              install.storage.backend|default('') == 'ceph'
+              install.storage.backend|default('') == 'ceph' and
+              multirhel_enabled is false
             )
       tags:
           - skip_ansible_lint
           - container-image-prepare
+
+    # required for the next TASK (container image prepare multirhel) to work properly when testing it in isolation
+    # this tasks doesn't run by default
+    - setup:
+      tags:
+        - never
+        - container_image_prepare_multirhel
+
+    - when:
+        - install.version|default(undercloud_version)|openstack_release >= 17
+        - multirhel_enabled
+        - multirhel_overcloud_container_image_prepare_parameter_file == 'auto'
+      tags: container_image_prepare_multirhel
+      block:
+        # the container image prepare process for multirhel deployments is to different from regular hence it's a separate task
+        # TODO(wznoinsk): make the parameters gathering done using yaml to support user-provided namespace/name_prefix/tag/ceph overrides
+        - name: (multirhel) Run tripleo container image prepare
+          shell: |
+            set -eo pipefail
+
+            export NAMESPACE=$(awk '/\s+namespace:/ {print $2}' ~/containers-prepare-parameter.yaml)
+
+            EL9_COMPOSE={{ containers_puddle_number.stdout }} # i.e. EL9_COMPOSE=RHOS-17.1-RHEL-9-20230315.n.1
+            EL9_TAGS=$(cat ~/containers-prepare-parameter.yaml | sed 's/: / /g' | sed "s/''//g" | awk '/^ *tag |^ *namespace |^ *name_/ {print "\""$1"\":\""$2"\","}')
+            CEPH_TAGS=$(cat ~/containers-prepare-parameter.yaml | sed -e 's/: / /g' | sed "s/''//g" | sed "s#registry-proxy.engineering.redhat.com/rh-osbs#${NAMESPACE}#g" | awk '/ceph/ {print "\""$1"\":\""$2"\","}')
+
+            export DOWNLOAD_HOST=download.devel.redhat.com
+            if ! ping -q -c 3 ${DOWNLOAD_HOST}; then DOWNLOAD_HOST=download.eng.bos.redhat.com; fi
+            # discover which 17.1-RHEL8 compose is "linked" to the 17.1-RHEL9 compose that is being deployed
+            EL8_COMPOSE=$(curl -4 -k -L http://${DOWNLOAD_HOST}/rcm-guest/puddles/OpenStack/17.1-RHEL-9/${EL9_COMPOSE}/RHEL8_COMPOSE_ID)
+            EL8_TAGS=$(curl -4 -k -L http://${DOWNLOAD_HOST}/rcm-guest/puddles/OpenStack/17.1-RHEL-8/${EL8_COMPOSE}/container_image_prepare_parameter_defaults.yaml \
+            | sed 's/: / /g' | sed "s/''//g"| sed "s#registry-proxy.engineering.redhat.com/rh-osbs#${NAMESPACE}#g" | awk '/^ *tag |^ *namespace |^ *name_/ {print "\""$1"\":\""$2"\","}')
+
+            /usr/share/openstack-tripleo-heat-templates/tools/multi-rhel-container-image-prepare.py \
+               --enable-multi-rhel \
+               --excludes nova-libvirt --excludes iscsid --excludes multipathd --excludes collectd \
+               {% for r in multirhel_roles.split(',') %}--role {{ r.split(':')[1] }} {% endfor %} \
+               --role-file {{ template_base }}/roles/roles_data_multirhel.yaml \
+               --minor-override "{${EL8_TAGS}${CEPH_TAGS}\"no_tag\":\"not_used\"}" --major-override "{${EL9_TAGS}${CEPH_TAGS}\"no_tag\":\"not_used\"}" \
+               --local-push-destination \
+               --output-env-file ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
+
+        - name: (multirhel) remove ComputeContainerImagePrepare from container image prepare parameter file
+          shell: sed -i '/ComputeContainerImagePrepare/d' {{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
 
     - name: install packages in container images
       include_tasks: container_images_packages.yml
