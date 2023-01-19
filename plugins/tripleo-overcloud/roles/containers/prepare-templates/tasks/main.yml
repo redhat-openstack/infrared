@@ -71,3 +71,10 @@
       - not install_container_images_packages is defined
       - not install_container_images_patch is defined
       - install.overcloud.script is not defined
+
+- name: append containers-prepare-parameter-computerhel8.yaml to the overcloud deploy script
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '-e ~/containers-prepare-parameter-computerhel8.yaml \'
+      insertbefore: "^--log-file.*"
+  when: containers_prepare_parameter_computerhel8_yaml.stat.exists
