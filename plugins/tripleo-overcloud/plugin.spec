@@ -1103,6 +1103,58 @@ subparsers:
                           network separation).
                       default: False
 
+            - title: MultiRHEL options
+              options:
+                  multirhel-enabled:
+                      type: Bool
+                      help: Whether to prepare MultiRHEL files to use when deploying Overcloud. Supported only in OSP17.1.
+                      default: false
+                      ansible_variable: multirhel_enabled
+                      required_when: multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-namespace != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''
+
+                  multirhel-roles-map:
+                      type: Value
+                      default: Compute:ComputeRHEL8
+                      help: |
+                        Comma,separated list of THT Roles map to use in MultiRHEL overcloud deployment. The format is <source_tht_role>:<rhel8_tht_role>.
+                        Example: Compute:ComputeRHEL8,ComputeOvsDpdkSriov:ComputeOvsDpdkSriovRHEL8
+                        In this example, the ComputeRHEL8 from default THT Compute role and ComputeOvsDpdkSriovRHEL8 from ComputeOvsDpdkSriov.
+                      ansible_variable: multirhel_roles
+
+                  # TODO(wznoinsk): provide an example URL of such a file (note the difference between set with list vs. set with dict)
+                  # Example: http://download.eng.tlv.redhat.com/rcm-guest/puddles/OpenStack/17.1-RHEL-8/latest-RHOS-17.1-RHEL-8.4/container_image_prepare_parameter_defaults.yaml
+                  multirhel-overcloud-container-image-prepare-parameter-file:
+                      type: Value
+                      default: 'auto'
+                      help: |
+                        Path (or HTTP URL) to container image prepare parameter yaml file that will be used for preparing/uploading of
+                        container images for MultiRHEL overcloud nodes. If this parameter is set to 'auto' then file will be generated automatically
+                        as '~/container-image-prepare-parameter-multirhel.yaml' using container image namespace/tag from latest available RHEL9/RHEL8 OSP composes.
+                        NOTE: The file/URL provided in this parameter will be saved as '~/container-image-prepare-parameter-multirhel.yaml'.
+                        NOTE2: This parameter is mutually exclusive with multirhel-overcloud-container-image-prepare-parameter-tag, e.g.: only either of these two params can be set.
+                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_file
+
+#                  multirhel-overcloud-container-image-prepare-parameter-namespace:
+#                      type: Value
+#                      default: ''
+#                      help: |
+#                        Namespace of container images to be used for Overcloud deployment.
+#                        Example: registry-proxy.engineering.redhat.com/rh-osbs
+#
+#                        NOTE: This parameters is ignored if 'multirhel-overcloud-container-image-prepare-parameter-file' parameter is specified (is not 'auto').
+#                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_namespace
+#
+#                  multirhel-overcloud-container-image-prepare-parameter-tag:
+#                      type: Value
+#                      default: ''
+#                      help: |
+#                        Container images tag that will be used when deploying OSP containers on ComputeRHEL8 overcloud nodes.
+#                        Example: 17.1_20230213.1
+#
+#                        NOTE: The above example is a container image tag for (used by) OSP compose/puddle: RHOS-17.1-RHEL-8-20230214.n.1. Consult "container_image_prepare_parameter_defaults.yaml" file of a given OSP compose to find the container image tag used in it.
+#                        NOTE2: This parameters is ignored if 'multirhel-overcloud-container-image-prepare-parameter-file' parameter is specified (is not 'auto').
+#                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_tag
+
             - title: ansible facts
               options:
                   collect-ansible-facts:

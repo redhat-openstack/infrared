@@ -49,6 +49,55 @@
         command: bash ~/post_undercloud_deploy_workarounds.sh
         when: install.workarounds != ''
 
+      - name: apply the currently required workarounds for multirhel
+        shell: |
+          set -eo pipefail
+
+          sudo dnf -y install patch
+
+          cat > ~/post_undercloud_deploy_workarounds_multirhel.sh <<EOF
+          #!/bin/bash
+          #
+          # Apply workarounds on undercloud
+          set -euo pipefail
+          function apply_patch {
+              local patch_dir=\$1
+              local patch_id=\$2
+              local patch_level=\$3
+              curl -L -4 https://review.opendev.org/changes/\${patch_id}/revisions/current/patch?download | \
+                  base64 -d > /tmp/patch.txt
+
+              set -x
+
+              if sudo patch --dry-run --reverse --force -d \${patch_dir} -p\${patch_level} < /tmp/patch.txt >/dev/null 2>&1
+              then
+                  echo "Patch \${patch_id} already applied, skipping"
+              else
+                  sudo patch -Ns  -d \${patch_dir} -p\${patch_level} < /tmp/patch.txt
+              fi
+          }
+          # SITE_PACKAGES_DIR="\$(dirname \$(python -c "import tripleoclient.command; print(tripleoclient.command.__file__)"))/../"
+          # echo "SITE_PACKAGES_DIR: \$SITE_PACKAGES_DIR"
+
+          # echo RHOSINFRA-4925_change869857site-packages
+          # apply_patch \$SITE_PACKAGES_DIR 869857 1
+
+          # echo RHOSINFRA-4925_change877659tripleo_common
+          # apply_patch /usr/share/openstack-tripleo-common-containers/ 877659 1
+
+          echo RHOSINFRA-4925_change877363tripleo_common_multi-rhel-container-image-prepare.py
+          apply_patch /usr/share/openstack-tripleo-heat-templates 877363 1
+
+          echo RHOSINFRA-4925_change877916tripleo_common_NovaLibvirtLegacy
+          apply_patch /usr/share/openstack-tripleo-common-containers/ 877916 1
+
+          EOF
+
+          chmod 0755 ~/post_undercloud_deploy_workarounds_multirhel.sh
+          bash ~/post_undercloud_deploy_workarounds_multirhel.sh
+          
+        when: multirhel_enabled
+
       - name: remove workaround for BZ#1428608
         lineinfile:
             line: 'exclude=docker-distribution'

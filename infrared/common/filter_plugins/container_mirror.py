@@ -34,6 +34,7 @@ def container_mirror(registry_host, mirror):
             source,
             target.format(mirror=mirror))
 
+
     return registry_host
 
 

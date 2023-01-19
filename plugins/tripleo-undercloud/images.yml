@@ -78,6 +78,9 @@
               - "ironic-python-agent-latest-{{ undercloud_version }}-s390x.tar"
           minimal:
               - "overcloud-minimal-latest-{{ undercloud_version }}.tar"
+          computerhel8: # the filename of rhosp-director-images-uefi-x86_64*.tar files differs from compose to compose, can't fix it here - it's discovered at runtime
+              # - "ironic-python-agent.tar"
+              # - "overcloud-full-latest-16.1.tar"
           # Any higher version defaults to 8
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
@@ -90,6 +93,7 @@
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
+      multirhel_images_dir: "~{{ install.user.name }}/images/multirhel/"
   pre_tasks:
       - block:
           - name: check for subscription
@@ -241,6 +245,13 @@
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ --os-image-name overcloud-minimal.qcow2 --image-type os
         when: minimal_images
 
+      - name: Upload computerhel8/multirhel images (overcloud-hardened-uefi-full-rhel8)
+        shell: |
+            set -exuo pipefail
+            source ~/stackrc
+            openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --whole-disk --os-image-name overcloud-hardened-uefi-full-rhel8.qcow2
+        when: multirhel_enabled
+
       - name: check for existing nodes ( OS <= 10 )
         shell: |
             set -exuo pipefail
@@ -308,3 +319,11 @@
             path: "~{{ install.user.name }}/images"
             state: absent
         when: install.images.cleanup and multiarch_images
+
+      - name: remove downloaded images directory for computerhel8/mutlirhel deployments
+        file:
+            path: "~{{ install.user.name }}/images/multirhel"
+            state: absent
+        when:
+          - install.images.cleanup
+          - multirhel_enabled

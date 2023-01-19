@@ -4,12 +4,18 @@
 resource_registry:
     OS::TripleO::Controller::Net::SoftwareConfig: OS::Heat::None
     OS::TripleO::Compute::Net::SoftwareConfig: OS::Heat::None
+{% if 'computerhel8' in groups %}
+    OS::TripleO::ComputeRHEL8::Net::SoftwareConfig: OS::Heat::None
+{% endif %}
     OS::TripleO::BlockStorage::Net::SoftwareConfig: OS::Heat::None
     OS::TripleO::ObjectStorage::Net::SoftwareConfig: OS::Heat::None
     OS::TripleO::CephStorage::Net::SoftwareConfig: OS::Heat::None
 parameter_defaults:
     ControllerNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/controller.j2'
     ComputeNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/compute.j2'
+{% if 'computerhel8' in groups %}
+    ComputeRHEL8NetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/compute.j2'
+{% endif %}
     BlockStorageNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/cinder-storage.j2'
     ObjectStorageNetworkConfigTemplate: '/home/stack/virt/network/templates/three-nics-vlans/swift-storage.j2'
     CephStorageNetworkConfigTemplate: '/home/stack/virt/network/three-nics-vlans/ceph-storage.j2'
@@ -23,6 +29,10 @@ parameter_defaults:
       NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
     ComputeParameters:
       NeutronBridgeMappings: ""
+{% if 'computerhel8' in groups %}
+    ComputeRHEL8Parameters:
+      NeutronBridgeMappings: ""
+{% endif %}
 {% else %}
     NeutronBridgeMappings: "datacentre:br-ex,tenant:br-tenant"
 {% endif %}
