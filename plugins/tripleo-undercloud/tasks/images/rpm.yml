@@ -38,6 +38,48 @@
     overcloud_image_name == "hardened-uefi-full" or
     overcloud_image_name == "hardened-uefi-full-fips"
 
+- when:
+    - multirhel_enable
+  become_user: "{{ install.user.name }}"
+  become: yes
+  block:
+    # TODO(wznoinsk): use rhos-release tool to generate this file instead of the template...
+    # ... remember to disable all the repos in the newly created file by default
+    - name: "(multirhel) Copy rhos-release-osp17.1-rhel-8.4.repo file (repo disabled by default)"
+      template:
+        src: rhos-release-17.1-rhel-8.4.repo.j2
+        dest: /etc/yum.repos.d/rhos-release-17.1-rhel-8.4.repo
+      become: true
+      become_user: root
+
+    - name: "(multirhel) Ensure ~/images/computerhel8/ exists and it's empty"
+      file:
+        path: ~/images/computerhel8/
+        state: "{{ item }}"
+      with_items:
+        - absent
+        - directory
+
+    - name: "(multirhel) Discover available rhosp-director-images packages based on the above DNF repo"
+      shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1-rhel-8.4 --releasever el8ost rhosp-director-images* octavia-amphora-image* | grep -iE "rhosp-director-images-uefi-x86_64|rhosp-director-images-ipa-x86_64"
+      register: discover_available_rhosp_director_images
+
+    - name: "(multirhel) set fact to user-defined rhosp-director-images.* RPM URLs"
+      set_fact:
+          multirhel_overcloud_images: "{{ multirhel_overcloud_image_urls.split(',') | join(' ') }}"
+      when: multirhel_overcloud_image_urls != ''
+
+    - name: "(multirhel) set fact to automatically discovered rhosp-director-images.* RPM URLs"
+      set_fact:
+          multirhel_overcloud_images: "{{ discover_available_rhosp_director_images.stdout_lines | join(' ') }}"
+      when: multirhel_overcloud_image_urls == ''
+
+    - name: "(multirhel) Download OSP17.1 RHEL-8 rhosp-director-images"
+      shell: |
+        cd ~/images/computerhel8/
+        for url in {{ multirhel_overcloud_images }}; do
+          curl -L $url | rpm2cpio | cpio -idmv
+        done
 
 - name: create multiarch image directory structure
   become_user: "{{ install.user.name }}"
@@ -111,3 +153,35 @@
   register: image_files
   with_items: "{{ minimal_tar_images }}"
   when: minimal_images
+
+- when: multirhel_enable
+  become_user: "{{ install.user.name }}"
+  become: yes
+  block:
+  - name: (computerhel8) Find .tar files containing osp17.1/rhel8 rhosp-director-images hardened-uefi
+    find:
+      path: ~/images/computerhel8/
+      patterns: "overcloud-hardened-uefi-full-17.1*.tar,ironic-python-agent*.tar"
+      recurse: true
+    register: overcloud_hardened_uefi_full_17_1_tar_files
+
+  - debug:
+      var: overcloud_hardened_uefi_full_17_1_tar_file
+
+  - name: (computerhel8) untar the images - computerhel8/multirhel deployment
+    unarchive:
+        src: "{{ item.path }}"
+        dest: "~/images/computerhel8/"
+        copy: no
+        owner: "{{ install.user.name }}"
+        group: "{{ install.user.name }}"
+        list_files: yes
+    register: image_files_computerhel8
+    with_items: "{{ overcloud_hardened_uefi_full_17_1_tar_files.files }}"
+
+  - name: "(computerhel8) rename overcloud-hardened-uefi-full* image files to overcloud-hardened-uefi-full-rhel8*"
+    shell: |
+      cd ~/images/computerhel8/
+      for file in $(ls -C1 overcloud-hardened-uefi-full*); do
+        mv $file ${file%.*}-rhel8.${file##*.}
+      done
