@@ -368,5 +368,40 @@
                 # append to list of insecure registries, needed later for undercloud.conf.j2 template
                 insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ registry }}']"
 
+    - when: "'computerhel8' in groups"
+      block:
+        - name: Read the content of containers-prepare-parameter.yaml
+          shell: cat "{{ working_dir }}/containers-prepare-parameter.yaml"
+          register: containers_prepare_parameter_orig_raw
+
+        - name: convert output of previous command to yaml
+          set_fact:
+            containers_prepare_parameter_orig: "{{ containers_prepare_parameter_orig_raw.stdout | from_yaml }}"
+
+        - debug:
+            var: containers_prepare_parameter_orig
+
+        - name: Generate content of 'containers-prepare-parameter-computerhel8.yaml' file
+          set_fact:
+            containers_prepare_parameter_computerhel8: |
+              parameter_defaults:
+                ComputeRHEL8ContainerImagePrepare:
+                - push_destination: true
+                  set:
+                    name_prefix: rhosp16.2-openstack-
+                    name_suffix: ''
+                    namespace: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.namespace }}
+                    neutron_driver: {{ containers_prepare_parameter_orig.parameter_defaults.ContainerImagePrepare[0].set.neutron_driver }}
+                    rhel_containers: false
+                    tag: latest_cdn
+
+        - debug:
+            var: containers_prepare_parameter_computerhel8 | from_yaml
+
+        - name: Save 'containers-prepare-parameter-computerhel8.yaml' file
+          copy:
+            content: "{{ containers_prepare_parameter_computerhel8 }}"
+            dest:  "{{ working_dir }}/containers-prepare-parameter-computerhel8.yaml"
+
   when:
       - (target_install_version|openstack_distribution) == 'OSP'

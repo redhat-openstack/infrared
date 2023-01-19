@@ -1,0 +1,85 @@
+# this file will set up files required by computeRHEL8 tripleo role
+# - name: Create a local copy of network_data.yaml
+#   copy:
+#     src: /usr/share/openstack-tripleo-heat-templates/network_data.yaml
+#     dest: "{{ template_base }}/network/network_data.yaml"
+#     remote_src: yes
+
+- name: "Ensure {{ template_base }}/roles/ directory exists"
+  file:
+    path: "{{ template_base }}/roles/"
+    state: directory
+
+# with this template we get
+# heat.common.exception.StackValidationFailed: The Resource Type (OS::TripleO::Services::Rear) could not be found.
+# - name: Fetch the last known Openstack Victoria 'Compute' role file as roles/ComputeRHEL8.yaml
+#   get_url:
+#     url: https://raw.githubusercontent.com/openstack/tripleo-heat-templates/victoria-eol/roles/Compute.yaml
+#     dest: "{{ template_base }}/roles/ComputeRHEL8.yaml"
+
+#- name: Fetch the last known Openstack Wallaby 'Compute' role file as roles/ComputeRHEL8.yaml
+#  get_url:
+#    url: https://raw.githubusercontent.com/openstack/tripleo-heat-templates/stable/wallaby/roles/Compute.yaml
+#    dest: "{{ template_base }}/roles/ComputeRHEL8.yaml"
+
+- name: Create ComputeRHEL8.yaml role file from an existing Compute.yaml one
+  copy:
+    remote_src: true
+    src: /usr/share/openstack-tripleo-heat-templates/roles/Compute.yaml
+    dest: "{{ template_base }}/roles/ComputeRHEL8.yaml"
+
+#  reading the file, modifying the dict and saving it as yaml messes up the output yaml file (the tags are in alphabetical order - completely different from iriginal Role file)
+# - block:
+#     - name: Read role/ComputeRHEL8.yaml
+#       command: cat "{{ template_base }}/roles/ComputeRHEL8.yaml"
+#       register: computerhel8_yaml_orig
+#
+#     - debug:
+#         var: computerhel8_yaml_orig
+#
+#     - name: Save updated role/ComputeRHEL8.yaml file
+#       vars:
+#         role_override:
+#             - Name: ComputeRHEL8
+#       set_fact:
+#         computerhel8_yaml_content:
+#             - "{{ computerhel8_yaml_orig.stdout | from_yaml | combine(role_override)}}"
+#
+#     - name: Save updated roles/ComputeRHEL8.yaml file
+#       copy:
+#         content: "{{ computerhel8_yaml_content | to_nice_yaml(indent=2) }}"
+#         dest: "{{ template_base }}/roles/ComputeRHEL8.yaml"
+#
+#     - debug:
+#         var: computerhel8_yaml_content
+
+- name: Modify the ComputeRHEL8.yaml file with the new "Role" name
+  lineinfile:
+    backrefs: true
+    dest: "{{ template_base }}/roles/ComputeRHEL8.yaml"
+    regexp: '(.*)name: Compute'
+    line: '\1name: ComputeRHEL8'
+
+- name: Append "-r {{ template_base }}/roles/ComputeRHEL8.yaml" line to ~/overcloud_deploy.sh
+  lineinfile:
+    dest: "~/overcloud_deploy.sh"
+    line: '-r {{ template_base }}/roles/ComputeRHEL8.yaml \'
+    insertbefore: "^--log-file.*"
+
+#- name: Create ComputeRHEL8.yaml with parameter_defaults
+#  copy:
+#    src: templates/computerhel8.yaml.j2
+#    dest: "{{ template_base }}/ComputeRHEL8.yaml"
+#
+#- name: Append "-e {{ template_base }}/ComputeRHEL8.yaml" line to ~/overcloud_deploy.sh
+#  lineinfile:
+#    dest: "~/overcloud_deploy.sh"
+#    line: '-e {{ template_base }}/ComputeRHEL8.yaml \'
+#    insertbefore: "^--log-file.*"
+
+# - name: Rename the role Compute->ComputeRHEL8
+#   set_fact:
+#     compute_role_yaml
+
+# - fail:
+#     msg: failing

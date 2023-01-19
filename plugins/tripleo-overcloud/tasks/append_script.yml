@@ -105,6 +105,10 @@
   include_tasks: firstboot.yml
   when: install.version|default(undercloud_version)|openstack_release < 17
 
+- name: Setup ComputeRHEL8 tripleo role and files
+  include_tasks: computerhel8.yml
+  when: "'computerhel8' in groups"
+
 - name: "find user defined templates in {{ template_base }}"
   find:
       paths: "{{ template_base }}"

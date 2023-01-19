@@ -111,6 +111,11 @@
           - from_source.repo
       tags: container-images-packages
 
+    - name: check if ~/containers-prepare-parameter-computerhel8.yaml exists
+      stat:
+        path: ~/containers-prepare-parameter-computerhel8.yaml
+      register: containers_prepare_parameter_computerhel8_yaml
+
     ## Workaround BZ#1627946
     - name:  Run *tripleo* container image prepare (OSP >= 14)
       shell: |
@@ -119,6 +124,7 @@
           {% endif %}
           openstack tripleo container image prepare \
             -e ~/containers-prepare-parameter.yaml \
+            {% if containers_prepare_parameter_computerhel8_yaml.stat.exists %}-e ~/containers-prepare-parameter-computerhel8.yaml {% endif -%}
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}{{ environment_yamls | default('') }} {% endif -%}
             {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}
