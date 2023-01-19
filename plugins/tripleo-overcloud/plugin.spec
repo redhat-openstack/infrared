@@ -1103,6 +1103,36 @@ subparsers:
                           network separation).
                       default: False
 
+            - title: MultiRHEL options
+              options:
+                  multirhel-enabled:
+                      type: Bool
+                      help: Whether to prepare MultiRHEL files to use when deploying Overcloud. Supported only in OSP17.1.
+                      default: false
+                      ansible_variable: multirhel_enabled
+                      required_when: multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-namespace != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''
+
+                  multirhel-roles-map:
+                      type: Value
+                      default: Compute:ComputeRHEL8
+                      help: |
+                        Comma,separated list of THT Roles map to use in MultiRHEL overcloud deployment. The format is <source_tht_role>:<rhel8_tht_role>.
+                        Example: Compute:ComputeRHEL8,ComputeOvsDpdkSriov:ComputeOvsDpdkSriovRHEL8
+                        In this example, the ComputeRHEL8 from default THT Compute role and ComputeOvsDpdkSriovRHEL8 from ComputeOvsDpdkSriov.
+                      ansible_variable: multirhel_roles
+
+                  multirhel-overcloud-container-image-prepare-parameter-file:
+                      type: Value
+                      default: 'auto'
+                      help: |
+                        Path (or HTTP URL) to container image prepare parameter yaml file that will be used for preparing/uploading of
+                        container images for MultiRHEL overcloud nodes. If this parameter is set to 'auto' then file will be generated automatically
+                        as '~/container-image-prepare-parameter-multirhel.yaml' on the undercloud using container image namespace/tag from latest available RHEL9/RHEL8 OSP composes.
+                        NOTE: The file/URL provided in this parameter will be saved as '~/container-image-prepare-parameter-multirhel.yaml' on the undercloud.
+                        NOTE2: Compressed "...yaml.gz" files are supported as well.
+                        Example: http://rhos-ci-logs/.../undercloud-0/home/stack/container-image-prepare-parameter-multirhel.yaml.gz
+                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_file
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
