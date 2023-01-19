@@ -160,6 +160,12 @@
             - install.version|openstack_release > 9
 
       - block:
+          - name: ensure 'patch' tool is installed
+            become: true
+            dnf:
+              name: patch
+              state: present
+
           - name: download workarounds file
             get_url:
                 url: "{{ install.workarounds }}"
