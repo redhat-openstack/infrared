@@ -480,6 +480,13 @@ subparsers:
                           Removes all the downloaded images when images-task is in 'rpm' or 'import'
                       default: yes
 
+#                  images-multirhel:
+#                      type: Bool
+#                      help: Enables downloading, installing and configuring overcloud RHEL8 images that will be used in
+#                        Multi-RHEL overcloud environment, i.e.: Overcloud deployed with a mix of RHEL9 and RHEL8 Compute
+#                        nodes.
+#                      default: no
+
                   disk-pool:
                       type: Value
                       help: |
