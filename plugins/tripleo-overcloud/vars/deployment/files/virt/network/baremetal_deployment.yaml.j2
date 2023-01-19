@@ -96,12 +96,19 @@
 {% if install.container.extra.repos is defined %}
     - playbook: {{ template_base }}/playbooks/sssd_selinux_workaround.yaml
 {% endif %}
-{%- if 'compute' in groups %}
-- name: Compute
-  count: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
-  hostname_format: compute-%index%
+{% for compute_type in ['compute', 'computerhel8'] %}
+{% if compute_type in groups %}
+- name: {% if compute_type == 'compute' %}Compute
+{% elif compute_type == 'computerhel8' %}ComputeRHEL8
+{% endif %}
+  count: {{ (install[compute_type]|default({})).nodes|default(0) or groups[compute_type]|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
+  hostname_format: {{ compute_type }}-%index%
   defaults:
-    profile: compute
+    profile: {{ compute_type }}
+{% if compute_type == 'computerhel8' %}
+    image:
+      href: 'file:///var/lib/ironic/images/overcloud-hardened-uefi-full-rhel8.raw'
+{% endif %}
     network_config:
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
 {%- if install.splitstack|default(false) %}
@@ -133,7 +140,7 @@
     name: {{ groups.compute[compute_count] }}
 {% endfor %}
 {% else %}
-{% for host_name in groups.compute|sort %}
+{% for host_name in groups[compute_type]|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
@@ -141,7 +148,7 @@
 {% endif %}
 {% if install.splitstack|default(false) %}
   instances:
-{% for host_name in groups.compute|sort %}
+{% for host_name in groups[compute_type]|sort %}
   - hostname: {{ host_name }}
     managed: false
     networks:
@@ -156,6 +163,7 @@
 {% endfor %}
 {% endif %}
 {% endif %}
+{% endfor %}
 {% if not install.storage.external %}
 {%- if install.storage.backend == 'ceph' %}
 - name: CephStorage

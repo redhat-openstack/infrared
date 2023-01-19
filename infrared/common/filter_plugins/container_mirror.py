@@ -22,6 +22,7 @@ def container_mirror(registry_host, mirror):
     :return: (str) registry_host with urls converted to use local mirror
     """
 
+    print("container_mirror.py - wznoinsk mirror: " % mirror)
     if not mirror:
         return registry_host
 
@@ -32,6 +33,8 @@ def container_mirror(registry_host, mirror):
         registry_host = registry_host.replace(
             source,
             target.format(mirror=mirror))
+
+    print("container_mirror.py - wznoinsk registry_host: " % registry_host)
 
     return registry_host
 

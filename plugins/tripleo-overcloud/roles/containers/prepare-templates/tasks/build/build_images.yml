@@ -111,6 +111,11 @@
           - from_source.repo
       tags: container-images-packages
 
+    - name: check if ~/containers-prepare-parameter-computerhel8.yaml exists
+      stat:
+        path: ~/containers-prepare-parameter-computerhel8.yaml
+      register: containers_prepare_parameter_computerhel8_yaml
+
     ## Workaround BZ#1627946
     - name:  Run *tripleo* container image prepare (OSP >= 14)
       shell: |
@@ -119,8 +124,9 @@
           {% endif %}
           openstack tripleo container image prepare \
             -e ~/containers-prepare-parameter.yaml \
+            {% if containers_prepare_parameter_computerhel8_yaml.stat.exists %}-e ~/containers-prepare-parameter-computerhel8.yaml --roles-file {{ template_base }}/roles/roles_data.yaml{% endif -%} \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}{{ environment_yamls | default('') }} {% endif -%}
-            {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+            {% if not containers_prepare_parameter_computerhel8_yaml.stat.exists %}{{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }}{% endif -%} \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}
             --output-env-file {{ template_base }}/docker-images.yaml
             {% elif install_container_images_urls is defined %}
@@ -137,6 +143,11 @@
             (
               install.version|default(undercloud_version)|openstack_release >= 17 and
               install.storage.backend|default('') == 'ceph'
+            )
+            or
+            (
+              install.version|default(undercloud_version)|openstack_release >= 17 and
+              'computerhel8' in groups
             )
       tags:
           - skip_ansible_lint

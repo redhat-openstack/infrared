@@ -58,6 +58,26 @@
             - not skip_release
         tags: rhos-release
 
+#      - include_role:
+#            name: rhos-release
+#        vars:
+#            release: "{{ install.version }}"
+#            rr_buildmods: "{{ install.buildmods }}"
+#            build: "latest-RHOS-17.1-RHEL-8.4"
+#            director_build: "{{ install.get('director', {}).build|default(omit) }}"
+#            mirror: "{{ install.mirror | default(omit) }}"
+#            rr_distro_version: "8.4"
+#            enable_testing_repos: "no"
+#            without_ceph: "yes"
+#            skip_remove_repo: "{{ install.get('skip', {}).get('remove', {}).repo|default(omit) }}"
+#        when:
+#            - "'computerhel8' in groups"
+#            - "install.version|openstack_distribution == 'OSP'"
+#            - not install.cdn|default(False)
+#            - cdn_status.rc != 0
+#            - not skip_release
+#        tags: rhos-release
+
       - include_role:
             name: from-script
         vars:
