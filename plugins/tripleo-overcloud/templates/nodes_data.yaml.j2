@@ -3,6 +3,10 @@ parameter_defaults:
     OvercloudControllerFlavor: {{ ('controller' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('controller', 'baremetal') }}
     ComputeCount: {{ (install.compute|default({})).nodes|default(0) or groups.compute|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
     OvercloudComputeFlavor: {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }}
+{% if 'computerhel8' in groups %}
+    ComputeRHEL8Count: {{ groups.computerhel8|default([])|length }}
+    OvercloudComputeRHEL8Flavor: {{ ('compute' in existing_flavors.stdout_lines and not install.specific.node.ids) | ternary('compute', 'baremetal') }}
+{% endif %}
 {% if not install.storage.external %}
 {%- if storage_backend == 'ceph' %}
     CephStorageCount: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
