@@ -298,6 +298,9 @@ subparsers:
                           Supports any rhos-release labels.
                           RDO supported labels: master-tripleo-ci
                           Examples: "passed_phase1", "2016-08-11.1", "Y1", "Z3", "GA"
+                          NOTE: If you override this parameter and deploying multirhel (mixed rhel/computerhel8) overcloud
+                          then consider setting the right values for multirhel-overcloud-image-urls and multirhel-overcloud-container-image-prepare-parameter-tag
+                          parameters - these two should be pointing to a RHEL8 compose + container image tag which already existed when the compose from this (build) parameter was created.
                       type: Value
 
                   director-build:
@@ -526,6 +529,56 @@ subparsers:
                       help: |
                           Enables download of minimal overcloud images and their upload into glance
                       default: false
+
+            - title: MultiRHEL options
+              options:
+                  multirhel-enabled:
+                      type: Bool
+                      help: |
+                        Whether to prepare files and images required for MultiRHEL/Mixed-RHEL Overcloud deployments.
+                        The container-image-prepare-parameter YAML file and overcloud*.tar/qcow2 files are generated
+                        and processed automatically unless overridden by below multirhel-* options.
+                      default: false
+                      ansible_variable: multirhel_enabled
+                      required_when: "multirhel-overcloud-image-urls != '' or multirhel-overcloud-image-urls != '' or multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''"
+
+                  multirhel-overcloud-image-urls:
+                      type: Value
+                      default: ''
+                      help: |
+                        Comma separated URLs to 'rhosp-director-images-uefi' and 'rhosp-director-images-ipa'
+                        RPMs which will be used for Compute RHEL8 nodes.
+                        NOTE: If empty, the URLs are automatically discovered based on latest available OSP17.1/RHEL8 compose.
+                        Providing the 'ipa' (RPM name 'rhosp-director-images-ipa...rpm') image URL is mandatory.
+                        Example:
+                          --multirhel-overcloud-image-urls http://.../Packages/rhosp-director-images-uefi-x86_64-17.1-20230125.1.test.el8ost.noarch.rpm,http://.../Packages/rhosp-director-images-ipa-x86_64-17.1-20230125.1.test.el8ost.noarch.rpm
+                      ansible_variable: multirhel_overcloud_image_urls
+
+                  # TODO(wznoinsk): provide an example URL of such a file (note the difference between set with list vs. set with dict)
+                  # Example: http://download.eng.tlv.redhat.com/rcm-guest/puddles/OpenStack/17.1-RHEL-8/latest-RHOS-17.1-RHEL-8.4/container_image_prepare_parameter_defaults.yaml
+                  multirhel-overcloud-container-image-prepare-parameter-file:
+                      type: Value
+                      default: 'auto'
+                      help: |
+                        Path (or HTTP URL) to container image prepare parameter yaml file that will be used for preparing/uploading of
+                        container images for MultiRHEL/ComputeRHEL8 overcloud nodes. Note that any line containing 'ContainerImagePrepare' will be replaced
+                        with 'ComputeRHEL8ContainerImagerPrepare'.
+
+                        NOTE: If this parameter is set to 'auto' then file will be generated automatically as '~/container-image-prepare-parameter-multirhel.yaml'.
+                        NOTE2: This parameter is mutually exclusive with multirhel-overcloud-container-image-prepare-parameter-tag, e.g.: only either of these two params can be set.
+                        NOTE3: The file/URL provided in this parameter will be saved as '~/container-image-prepare-parameter-multirhel.yaml'.
+                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_file
+
+                  multirhel-overcloud-container-image-prepare-parameter-tag:
+                      type: Value
+                      default: ''
+                      help: |
+                        Container images tag that will be used when deploying OSP containers on ComputeRHEL8 overcloud nodes.
+                        Example: 17.1_20230213.1
+
+                        NOTE: The above example is a container image tag for (used by) OSP compose/puddle: RHOS-17.1-RHEL-8-20230214.n.1. Consult "container_image_prepare_parameter_defaults.yaml" file of a given OSP compose to find the container image tag used in it.
+                        NOTE2: This parameters is mutually exclusive with multirhel-overcloud-container-image-prepare-parameter-file, e.g.: only either of these two params can be set.
+                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_tag
 
             - title: Undercloud Upgrade
               options:
