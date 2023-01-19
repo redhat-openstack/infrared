@@ -111,6 +111,52 @@
           - from_source.repo
       tags: container-images-packages
 
+    - when:
+        - multirhel_enabled
+        - multirhel_overcloud_container_image_prepare_parameter_file != 'auto'
+      block:
+        - name: "Save user-provided {{ multirhel_overcloud_container_image_prepare_parameter_file }} as {{ template_base }}/container-image-prepare-parameter-multirhel.yaml"
+          copy:
+            src: "{{ multirhel_overcloud_container_image_prepare_parameter_file }}"
+            dest: "{{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+            backup: yes
+          when: multirhel_overcloud_container_image_prepare_parameter_file | regex_search('^http.*', ignorecase=True) == ''
+
+        - when: multirhel_overcloud_container_image_prepare_parameter_file | regex_search('^http.*', ignorecase=True) != ''
+          block:
+          - name: Fetch user-provided multirhel_overcloud_container_image_prepare_parameter_file URL as {{ multirhel_overcloud_container_image_prepare_parameter_file_name }} (.gz)
+            vars:
+              is_archive: "{{ multirhel_overcloud_container_image_prepare_parameter_file | regex_search('.*\\.gz$', ignorecase=True) is not none }}"
+            get_url:
+              url: "{{ multirhel_overcloud_container_image_prepare_parameter_file }}"
+              dest: "{{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}{{ is_archive | ternary('.gz', '') }}"
+              backup: yes
+              force: yes
+
+          - name: "Unarchive the file if it's *.gz (overwrite existing)"
+            command: gzip -f -d {{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}.gz
+            vars:
+              chdir: "{{ template_base }}"
+            when: "multirhel_overcloud_container_image_prepare_parameter_file | regex_search('.*\\.gz$', ignorecase=True) is not none"
+
+    #       - name: "Try to fix the 'set' key in container image prepare file - if it's not an item of a list, add push_destination: true"
+    #         lineinfile:
+    #           path: "{{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+    #           regexp: '(\W+)set:'
+    #           line: '\1\b\b- push_destination: true\n\1set:'
+    #           backrefs: yes
+
+          - name: "Replace ContainerImagePrepare with ComputeRHEL8ContainerImagePrepare in {{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+            lineinfile:
+              path: "{{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+              regexp: '^(\W+)ContainerImagePrepare:'
+              line: '\1ComputeRHEL8ContainerImagePrepare:'
+              backrefs: yes
+
+    - name: "show content of {{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+      shell: "cat {{ containers_home_dir }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}"
+      when: multirhel_enabled
+
     ## Workaround BZ#1627946
     - name:  Run *tripleo* container image prepare (OSP >= 14)
       shell: |
@@ -119,12 +165,16 @@
           {% endif %}
           openstack tripleo container image prepare \
             -e ~/containers-prepare-parameter.yaml \
+            {% if multirhel_enabled %}--enable-multi-rhel --excludes nova-libvirt --excludes iscsid --excludes multipathd --excludes collectd --role-file {{ template_base }}/roles/roles_data_multirhel.yaml{% endif -%} \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}{{ environment_yamls | default('') }} {% endif -%}
-            {{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }} \
+            {% if not multirhel_enabled %}{{ roles_yamls | default('--roles-file /usr/share/openstack-tripleo-heat-templates/roles_data.yaml') }}{% endif -%} \
             {% if install.version|default(undercloud_version)|openstack_release < 17 %}
             --output-env-file {{ template_base }}/docker-images.yaml
             {% elif install_container_images_urls is defined %}
              --output-env-file {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_
+            {% endif -%}
+            {% elif multirhel_enabled %}
+             --output-env-file {{ template_base }}/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
             {% endif -%}
       when: install.version|default(undercloud_version)|openstack_release >= 14 and
             ( install.network.ovn|default(False) or
@@ -137,6 +187,11 @@
             (
               install.version|default(undercloud_version)|openstack_release >= 17 and
               install.storage.backend|default('') == 'ceph'
+            )
+            or
+            (
+              install.version|default(undercloud_version)|openstack_release >= 17 and
+              multirhel_enabled and multirhel_overcloud_container_image_prepare_parameter_file == 'auto'
             )
       tags:
           - skip_ansible_lint

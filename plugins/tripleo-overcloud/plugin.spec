@@ -1103,6 +1103,29 @@ subparsers:
                           network separation).
                       default: False
 
+            - title: MultiRHEL options
+              options:
+                  multirhel-enabled:
+                      type: Bool
+                      help: |
+                        Whether to search for multirhel/computerhel8 files to use when deploying Overcloud.
+                      default: false
+                      ansible_variable: multirhel_enabled
+                      required_when: multirhel-overcloud-container-image-prepare-parameter-file != ''
+
+                  multirhel-overcloud-container-image-prepare-parameter-file:
+                      type: Value
+                      default: 'auto'
+                      help: |
+                        Path (or HTTP URL) to container image prepare parameter yaml file that will be used for preparing/uploading of
+                        container images for MultiRHEL/ComputeRHEL8 overcloud nodes. Note that any line containing 'ContainerImagePrepare' will be replaced
+                        with 'ComputeRHEL8ContainerImagerPrepare'.
+
+                        NOTE: If this parameter is set to 'auto' then this plugin will try to use '~/container-image-prepare-parameter-multirhel.yaml' file (this file has to exist already).
+                        NOTE2: The path/URL provided in this parameter should be the same as provided when calling tripleo-undercloud plugin.
+                        NOTE3: The file/URL provided in this parameter will be saved as '~/container-image-prepare-parameter-multirhel.yaml'.
+                      ansible_variable: multirhel_overcloud_container_image_prepare_parameter_file
+
             - title: ansible facts
               options:
                   collect-ansible-facts:
