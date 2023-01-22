@@ -1,3 +1,9 @@
 ---
 tripleo_heat_templates:
   - "{{ install.heat.templates.basedir }}/environments/enable-secure-rbac.yaml"
+
+custom_templates:
+    parameter_defaults:
+        ExtraConfig:
+          swift::proxy::keystone::project_reader_roles: SwiftProjectReader
+          swift::proxy::keystone::system_reader_roles: SwiftSystemReader
