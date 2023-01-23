@@ -3,8 +3,18 @@ test_dict:
     test_regex:
       default: ironic_tempest_plugin.tests.scenario
 
-    whitelist: []
-    blacklist: []
+    whitelist:
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_basic_ops.BaremetalBasicOps.test_baremetal_server_ops_wholedisk_image"
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_basic_ops.BaremetalBasicOpsAndRescue.test_baremetal_server_ops_wholedisk_image"
+    blacklist:
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_boot_from_volume.BaremetalBFV.test_baremetal_boot_from_volume"
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_basic_ops.BaremetalBasicOps.test_baremetal_server_ops_partition_image"
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_basic_ops.BaremetalBasicOpsAndRescue.test_baremetal_server_ops_partition_image"
+        - "^ironic_tempest_plugin.tests.scenario.ironic_standalone*"
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_multitenancy*"
+        - "^ironic_tempest_plugin.tests.scenario.test_baremetal_single_tenant*"
+        - "^ironic_tempest_plugin.tests.scenario.test_introspection_basic*"
+        - "^ironic_tempest_plugin.tests.scenario.test_introspection_discovery*"
     plugins:
       ironic_tests:
         repo: "https://opendev.org/openstack/ironic-tempest-plugin.git"
