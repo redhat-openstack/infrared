@@ -143,6 +143,7 @@
       - name: run tempest "{{ test_suite }}" suite with tempest run
         shell: >
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
+            printenv;
             tempest run --subunit --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
             {{ blacklistfile }}
