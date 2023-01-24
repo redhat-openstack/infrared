@@ -21,8 +21,8 @@
           - custom_script_url != ''
   vars:
     - custom_script_url: "{{ install.get('registry', {}).get('custom', {}).get('script', {}).get('url', {})|default('') }}"
-  when: install.cdn is undefined
+  when: install.cdn is undefined or (install.cdn is defined and _sat6_check['status'] == 200)
 
 - name: Import prepare_uc_images for CDN
   import_tasks: prepare_uc_images_cdn.yml
-  when: install.cdn is defined
+  when: install.cdn is defined and _sat6_check['status'] != 200
