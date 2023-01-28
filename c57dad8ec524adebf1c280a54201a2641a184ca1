@@ -37,6 +37,87 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "1bcb8362_81b93f6a",
+        "filename": "plugins/tripleo-overcloud/roles/containers/prepare-templates/tasks/build/build_images.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2023-01-28T01:34:42Z",
+      "side": 1,
+      "message": "If managing two seperate files is more difficult, or makes general maintenance of infrared more complicated. This can be done all in the same file. It\u0027s really your preference as to what makes the implementation easier. But an example of a single file with RHEL9 and RHEL8 CIP parameters would look like:\n\n```\nparameter_defaults:\n  # Default ContainerImagePrepare for all roles  \n  ContainerImagePrepare:\n  - set:\n      name_prefix: openstack-\n      name_suffix: \u0027\u0027\n      namespace: registry.redhat.io/rhosp-rhel9\n      neutron_driver: ovn\n      rhel_containers: false\n      tag: \u002717.0\u0027\n    tag_from_label: \u0027{version}-{release}\u0027\n  # ContainerImagePrepare specific for ComputeRHEL8 role\n  ComputeRHEL8ContainerImagePrepare:\n  - set:\n      name_prefix: openstack-\n      name_suffix: \u0027\u0027\n      namespace: registry.redhat.io/rhosp-rhel8\n      neutron_driver: ovn\n      rhel_containers: false\n      tag: \u002717.0\u0027\n    tag_from_label: \u0027{version}-{release}\u0027\n```\n\nWhatever is easier from a maintenance perspective.",
+      "parentUuid": "97720ade_e74f247f",
+      "revId": "c57dad8ec524adebf1c280a54201a2641a184ca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c7a95806_ff39d397",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt/network/baremetal_deployment.yaml.j2",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2023-01-28T01:34:42Z",
+      "side": 1,
+      "message": "Just FYI to clarify my comment on the network_environment.yaml file. This line is how Nic-config templates are defined in Wallaby / OSP17. So, the changes in this file are sufficient to ensure the ComputeRHEL8 nodes are using the compute.j2 Nic-config templates.",
+      "revId": "c57dad8ec524adebf1c280a54201a2641a184ca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6c8551a6_e92e43e4",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt/network/network-environment.yaml.j2",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2023-01-28T01:34:42Z",
+      "side": 1,
+      "message": "This doesn\u0027t work in OSP17 / Wallaby. We no longer use Heat to manage the network configuration. So we don\u0027t need to make any change here.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 11
+      },
+      "revId": "c57dad8ec524adebf1c280a54201a2641a184ca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d287281f_275a03a8",
+        "filename": "plugins/tripleo-overcloud/vars/deployment/files/virt/network/network-environment_v2.yaml.j2",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1019722
+      },
+      "writtenOn": "2023-01-28T01:34:42Z",
+      "side": 1,
+      "message": "This also works for defining the nic-config if networks aren\u0027t configured during the node provisioning stage. So we should leave this one in place.\n\nJust the `OS::TripleO::ComputeRHEL8::Net::SoftwareConfig` change in https://review.gerrithub.io/c/redhat-openstack/infrared/+/548610/1/plugins/tripleo-overcloud/vars/deployment/files/virt/network/network-environment.yaml.j2 that we don\u0027t need and should remove to avoid causing any confusion.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 11
+      },
+      "revId": "c57dad8ec524adebf1c280a54201a2641a184ca1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "8b92512c_e75c14e1",
         "filename": "plugins/tripleo-undercloud/tasks/prepare_uc_images_builtin.yml",
         "patchSetId": 1
