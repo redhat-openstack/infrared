@@ -1,18 +1,22 @@
-# TODO (tjamrisk): Need to somehow skip this if deployment exists
-- name: Create Rally deployment
+- name: List Rally deployments
   shell: |
-      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
-      echo $OS_AUTH_URL | grep https > /dev/null && export OS_INSECURE=True
+      set -exo pipefail
       {{ rally.bin }} db ensure
-      {{ rally.bin }} deployment create --fromenv --name {{ test.deployment }} | awk '/{{ test.deployment }}/ {print $2}'
-  register: rally_deployment_uuid
-  ignore_errors: true
+      {{ rally.bin }} deployment list
+  register: rally_deployment_list
 
-- name: Use Rally deployment
+- name: Create Rally deployment if it does not exist
   shell: |
-      {{ rally.bin }} deployment use {{ test.deployment }} | awk '/Using deployment/ {print $3}'
-  register: rally_deployment_uuid
-  when: "'Deployment' in rally_deployment_uuid.stdout"
+      set -exo pipefail
+      test -f ~/overcloudrc.v3 && source ~/overcloudrc.v3 || source ~/overcloudrc
+      echo $OS_AUTH_URL | grep https > /dev/null && export OS_INSECURE=True || true
+      {{ rally.bin }} deployment create --fromenv --name {{ test.deployment }}
+  when: "'{{ test.deployment }}' not in rally_deployment_list.stdout"
+
+- name: Use Rally deployment if it exists
+  shell: |
+      {{ rally.bin }} deployment use {{ test.deployment }}
+  when: "'{{ test.deployment }}' in rally_deployment_list.stdout"
 
 - name: Ensures {{ rally.dir }}/rally-jobs dir exists
   file:
