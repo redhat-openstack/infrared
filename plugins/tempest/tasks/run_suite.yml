@@ -142,6 +142,7 @@
 
       - name: run tempest "{{ test_suite }}" suite with tempest run
         shell: >
+            unset SSH_AUTH_SOCK;
             test -e {{ virtualenvs.tempest }}/bin/activate && source {{ virtualenvs.tempest }}/bin/activate;
             tempest run --subunit --regex '{{ regex | default('') }}'
             {{ whitelistfile }}
