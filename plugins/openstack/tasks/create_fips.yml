@@ -1,0 +1,17 @@
+- name: Create floating IPs
+  vars:
+    os_cloud: "{{ provision.cloud is defined | ternary('--os-cloud ' + provision.cloud, '') }}"
+    public_network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
+    private_network: "{{ prefix }}{{ topology_node.external_network }}"
+    timeout: "{{ provision.os.server.timeout | int }}"
+  shell: >
+    fip=$(timeout {{ timeout }} openstack {{ os_cloud }} floating ip create {{ network }} -c floating_ip_address -f value) &&
+    timeout {{ timeout }} openstack {{ os_cloud }} server add floating ip --fixed-ip-address {{ server.addresses[private_network][0].addr }} {{ server.id }} $fip &&
+    echo $fip
+  register: floating_ips
+  retries: 3
+  until: floating_ips is successful
+
+- name: Build fip_dict
+  set_fact:
+    fip_dict: "{{ fip_dict|default({}) | combine( { server.name: (floating_ips.stdout | trim) } ) }}"
