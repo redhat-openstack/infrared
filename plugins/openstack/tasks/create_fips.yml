@@ -1,0 +1,35 @@
+- name: Create floating IPs
+  os_floating_ip:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
+      nat_destination: "{{ prefix }}{{ topology_node.external_network }}"
+      server: "{{ server.id }}"
+      state: present
+      reuse: yes
+      # always wait for floating ip
+      wait: yes
+      timeout: "{{ provision.os.server.timeout | int }}"
+  register: floating_ips
+  retries: 3
+  until: floating_ips is successful
+
+# For some reason, sometimes the os_floating_ip module ends successfully (the
+# FIP is created) but its output doesn't include the created FIPs
+- name: Workaround - Obtain FIPs if they were not obtained before
+  floating_ip_info:
+      cloud: "{{ provision.cloud | default(omit) }}"
+      fixed_ip_address: "{{ server.addresses.[prefix+topology_node.external_network].addr }}"
+      wait: yes
+  register: floating_ips_aux
+  when: floating_ips.floating_ip is null
+
+- name: Build fip_dict
+  set_fact:
+    fip_dict: >-
+      {{ fip_dict|default({}) |
+         combine( { server.name:
+                      floating_ips.get('floating_ip', {}).get('floating_ip_address') |
+                      default(floating_ips_aux.floating_ips[0].floating_ip_address)
+                } )
+      }}
+
