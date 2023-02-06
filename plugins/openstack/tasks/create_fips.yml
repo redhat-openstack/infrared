@@ -1,0 +1,20 @@
+- name: Check if the FIP existed
+  shell: >
+    timeout {{ timeout }}
+    openstack {{ os_cloud }} floating ip list --network {{ public_network }} --fixed-ip-address {{ server.addresses[private_network][0].addr }} -c "Fixed IP Address" -f value
+  register: floating_ip_old
+
+- name: Create floating IPs
+  shell: >
+    fip=$(timeout {{ timeout }} openstack {{ os_cloud }} floating ip create {{ public_network }} -c floating_ip_address -f value) &&
+    timeout {{ timeout }} openstack {{ os_cloud }} server add floating ip --fixed-ip-address {{ server.addresses[private_network][0].addr }} {{ server.id }} $fip &&
+    echo $fip
+  register: floating_ip_new
+  retries: 5
+  until: floating_ip_new is successful
+  when: (floating_ip_old.stdout | trim) == ''
+
+- name: Build fip_dict
+  set_fact:
+    # if a new FIP was created, use the new one; else, use the old one
+    fip_dict: "{{ fip_dict|default({}) | combine( { server.name: ((floating_ip_new.stdout|default(floating_ip_old.stdout)) | trim) } ) }}"
