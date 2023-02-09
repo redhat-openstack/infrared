@@ -186,7 +186,7 @@
     - name: Discover the overcloud stack name
       shell: |
         if [ -d overcloud-deploy ]; then
-          ls -1 overcloud-deploy
+          ls -1 overcloud-deploy | grep -v cell | grep -v undercloud
         else
           source stackrc
           openstack stack list -c 'Stack Name' -f value
