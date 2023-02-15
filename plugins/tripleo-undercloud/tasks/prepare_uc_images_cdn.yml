@@ -44,59 +44,46 @@
       - (target_install_version|openstack_distribution) != 'OSP'
       - container_env is not defined
 
-- block:
-    - name: containers_images_env facts
-      vars:
-          cont_img_yml: "{{ (target_install_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
-      set_fact:
-          containers_images_env_template_download_basename: "{{ cont_img_yml }}"
-          containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
+- name: set undercloud_version during installation
+  set_fact:
+      undercloud_version: "{{ install.version }}"
+  when:
+      - undercloud_version is not defined
 
-    - name: get puddle url from the repos
-      vars:
-          repod_file: "/etc/yum.repos.d/rhos-release-{{ target_install_version }}.repo"
-      shell: |
-          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
-      register: containers_puddle_base_url
+- name: set target version
+  vars:
+      is_upgrade: "{{ install.upgrade|default(false) }}"
+  set_fact:
+  # TODO(psedlak): replace '|int + 1' with special logic (helper/filter) which can do proper version increments (juno->kilo, 15-trunk->16-trunk etc)
+  #                - this code (as original version before it) is not allowing RDO + upgrade
+  #                  there is no conversion for 'version+1 => named rdo release', so if upgrade==yes then loosing the openstack_distribution information
+  #                - also, same issue will be when upgrade==yes with OSP15-trunk
+  #                  as 15-trunk needs to have that '-trunk' string part, so '|int + 1' will also strip this information
+  #                - likely solution is to add new |openstack_release_increment helper, where proper conversion can be handled (to after +1 convert back to name string)
+      target_install_version: "{{ install.version | default( is_upgrade | ternary((undercloud_version|openstack_release|int) + 1, undercloud_version) ) }}"
 
-    - name: get puddle number
-      command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
-      register: containers_puddle_number
+- name: set registry namespace if from user input
+  set_fact:
+      registry_namespace: "{{ install.get('registry', {}).namespace | default('') }}"
 
-    - name: puddle to be used
-      debug:
-          msg: "{{ containers_puddle_number.stdout }}"
 
-    - name: Downloading overcloud container images environment file
-      get_url:
-          url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
-          dest: "{{ containers_images_env_template_dest_file }}"
-          force: true
-      delegate_to: localhost
+- name: Prepare info for image registry if we have it from user input and not from puddle
+  set_fact:
+      container_env:
+          container-image-prepare:
+              namespace: "{{ registry_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
+              prefix: "{{ install.registry.prefix|default('openstack-') }}"
+              tag: "{{ install.registry.tag|default('AUTODETECT') }}"
+  when: install.registry.skip.puddle
 
-    - name: Load variables from container environment file
-      include_vars:
-          file: "{{ containers_images_env_template_dest_file }}"
-          name: container_env
-
-  when: not install.registry.skip.puddle and install.cdn is undefined
-
-- block:
-  - name: determine final container registry host
-    vars:
-        user_mirror: "{{ install.get('registry').mirror|default('') }}"
-    set_fact:
-        registry_host: "{{ user_mirror | ternary(user_mirror, (container_env['container-image-prepare']['namespace'].split('/')[0] | container_mirror(install.mirror|default(''))) ) }}"
-
-  - name: determine final container registry namespace and prefix
-    vars:
-        user_prefix: "{{ install.get('registry', {}).prefix | default('') }}"
-    set_fact:
-        registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
-        registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
-        # list of insecure registries is needed later in undercloud.conf.j2 template
-        insecure_registry_hosts: "['{{ registry_host }}']"
-  when: install.cdn is undefined
+- name: Fail non-osp deployment
+  fail:
+      msg: |
+          For non-OSP deployment set --registry-skip-puddle=yes and provide
+          '-registy-namespace' '--registry-tag' options.
+  when:
+      - (target_install_version|openstack_distribution) != 'OSP'
+      - container_env is not defined
 
 # This is needed also for rdo deploympent.
 - name: generate container images environment file
@@ -113,7 +100,7 @@
     dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
     insertafter: EOF
     block: "  ContainerImageRegistryCredentials:\n    registry.redhat.io:\n      {{ cdn_creds.registry_username }}: {{ cdn_creds.registry_password }}"
-  when: install.cdn is defined and _sat6_check['status'] != 200
+  when: _sat6_check['status'] != 200
 
 - block:
     - name: import prepare_uc_images builtin
@@ -160,4 +147,174 @@
                 insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ registry }}']"
 
   when:
-      - (target_install_version|openstack_distribution) == 'OSP' and install.cdn is undefined
+      - (target_install_version|openstack_distribution) == 'OSP' and _sat6_check['status'] != 200
+
+- block:
+    - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
+      blockinfile:
+        path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+
+    - name: Get pass_phase2 tag
+      shell: >
+        container_image_version=$(curl -sL http://rhos-ci-mirror.lab.eng.tlv2.redhat.com/rcm-guest/puddles/OpenStack/17.0-RHEL-9/passed_phase2/overcloud_container_image_prepare.yaml | grep tag | grep -oP [0-9_\.]+)
+
+    - name: set registry namespace if from user input
+      set_fact:
+          registry_namespace: "{{ install.get('registry', {}).namespace | default('') }}"
+          registry_prefix: "{{ install.registry.prefix | default '' }}"
+          registry_tag: "{{ install.registry.tag | default(container_image_version) }}"
+
+    - name: Prepare info for image registry
+      set_fact:
+          container_env:
+              container-image-prepare:
+                  namespace: "{{ registry_namespace }}"
+                  prefix: "{{ registry_prefix }}"
+                  tag: "{{ registry_tag }}"
+
+    - name: set namespace in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: '^(\s*namespace:).*'
+          replace: "\\1 {{ registry_namespace }}"
+
+    - name: set name_prefix in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: '(^\ +)name_prefix.*'
+          replace: "\\1name_prefix: {{ registry_prefix }}"
+
+    # Complex processing of container_image_prepare.yaml folows as the format
+    # of the file slightly changed for OSP17, see RHOSINFRA-4180 for details
+    - set_fact:
+        ceph_namespace_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
+            {{ container_env['container-image-prepare']['ceph-namespace'] }}\
+            {% else %}\
+            {{ container_env['container-image-prepare']['ceph_namespace'] }}\
+            {% endif %}"
+        ceph_image_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
+            {{ container_env['container-image-prepare']['ceph-image'] }}\
+            {% else %}\
+            {{ container_env['container-image-prepare']['ceph_image'] }}\
+            {% endif %}"
+        ceph_tag_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
+            {{ container_env['container-image-prepare']['ceph-tag'] }}\
+            {% else %}\
+            {{ container_env['container-image-prepare']['ceph_tag'] }}\
+            {% endif %}"
+
+    - set_fact:
+        ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
+        ternary(
+            install.registry.get('ceph', {}).get('namespace', ''),
+            ceph_namespace_fromfile | default('registry.access.redhat.com/rhceph')) }}"
+        ceph_image: "{{ install.registry.get('ceph', {}).image is defined |
+        ternary(
+            install.registry.get('ceph', {}).get('image', ''),
+            ceph_image_fromfile | default('rhceph-3-rhel7')) }}"
+        ceph_tag: "{{ install.registry.get('ceph', {}).tag is defined |
+        ternary(
+            install.registry.get('ceph', {}).get('tag', ''),
+            ceph_tag_fromfile | default('latest')) }}"
+
+    - name: append ceph to list of insecure registries
+      when: ceph_registry_host|default(False)
+      vars:
+        ceph_registry_host: "{{ ceph_namespace.split('/')[0] }}"
+      set_fact:
+        # list of insecure registries is needed later in undercloud.conf.j2 template
+        insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ ceph_registry_host }}']"
+
+    - name: set ceph_namespace in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: '(ceph_namespace:).*'
+          replace: '\1 {{ ceph_namespace }}'
+
+    - name: set ceph_image in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: '(ceph_image:).*'
+          replace: '\1 {{ ceph_image }}'
+
+    - name: set ceph_tag in containers-prepare-parameter.yaml
+      replace:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          regexp: 'ceph_tag: .*'
+          replace: 'ceph_tag: {{ ceph_tag }}'
+
+    - block:
+        - name: remove tag_from_label in containers-prepare-parameter.yaml
+          lineinfile:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: '.*tag_from_label.*'
+              state: absent
+
+        - name: set tag according to puddle number
+          replace:
+              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+              regexp: '(^\ +)tag: .*'
+              replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
+      when: not install.registry.skip.puddle
+
+    - name: set insecure registry in containers-prepare-parameter file
+      lineinfile:
+          path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+          insertafter: "parameter_defaults:"
+          line: |2
+              DockerInsecureRegistryAddress:
+            {% for line in install.registry.insecure.containers.parameter.split(",") %}
+                - {{ line | trim }}
+            {% endfor %}
+      when: install.registry.insecure.containers.parameter is defined
+
+    - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
+      blockinfile:
+        path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+        block: |2
+            ContainerImageRegistryCredentials:
+              {{ install.registry.ceph.namespace }}:
+                {{ install.registry.ceph.username }}: {{ install.registry.ceph.password }}
+      when:
+        - install.get('registry', {}).get('ceph', {}).get('username', '')
+        - install.get('registry', {}).get('ceph', {}).get('password', '')
+        - install.get('registry', {}).get('ceph', {}).get('namespace', '')
+
+    - name: Configure container registries for Ceph Dashboard
+      when: (target_install_version|openstack_release) >= 16
+      vars:
+        ceph_dashboard_deps:
+            - ceph_alertmanager
+            - ceph_grafana
+            - ceph_node_exporter
+            - ceph_prometheus
+      block:
+          - name: "ceph-dashboard: apply local mirror for registry"
+            loop: "{{ ceph_dashboard_deps }}"
+            when: "install.mirror|default(False) and container_env['container-image-prepare'][item + '_namespace'] | default(False)"
+            vars:
+                new_namespace: "{{ container_env['container-image-prepare'][ item + '_namespace' ]  | container_mirror(install.mirror|default('')) }}"
+            set_fact:
+                container_env: "{{ container_env | combine({'container-image-prepare': { item + '_namespace': new_namespace }}, recursive=True) }}"
+
+          - name: "ceph-dashboard: inject values to containers-prepare-parameter.yaml"
+            loop: "{{ ceph_dashboard_deps | product(['_namespace', '_image', '_tag']) | list }}"
+            when: "container_env['container-image-prepare'][item[0] + item[1]] | default(False)"
+            vars:
+              new_value: "{{ container_env['container-image-prepare'][item[0] + item[1]] }}"
+            replace:
+                path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+                regexp: '({{ item[0] + item[1] }}:).*'
+                replace: '\1 {{ new_value }}'
+
+          - name: "ceph-dashboard: append registries to insecure list"
+            loop: "{{ ceph_dashboard_deps }}"
+            when: "container_env['container-image-prepare'][item + '_namespace'] | default(False)"
+            vars:
+                registry: "{{ container_env['container-image-prepare'][ item + '_namespace' ].split('/')[0] }}"
+            set_fact:
+                # append to list of insecure registries, needed later for undercloud.conf.j2 template
+                insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ registry }}']"
+
+  when:
+      - (target_install_version|openstack_distribution) == 'OSP' and _sat6_check['status'] == 200
