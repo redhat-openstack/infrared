@@ -306,20 +306,6 @@
             {% endfor %}
       when: install.registry.insecure.containers.parameter is defined
 
-    - block:
-        - name: set satellite namespace
-          replace:
-              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-              regexp: '(^\ +)namespace.*'
-              replace: "\\1namespace: {{ install.registry.mirror }}"
-
-        - name: set satellite prefix
-          replace:
-              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-              regexp: '(^\ +)name_prefix.*'
-              replace: "\\1name_prefix: {{ install.registry.prefix }}"
-      when: install.cdn|default(False)
-
     - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
       blockinfile:
         path: "{{ working_dir }}/containers-prepare-parameter.yaml"
