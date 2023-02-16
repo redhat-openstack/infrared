@@ -53,6 +53,10 @@ subparsers:
                       type: Value
                       help: |
                         The name of the node from where to run the tests.
+                        When not set, the undercloud node is used instead.
+                        When set to a node that is not under the undercloud group, some file from the undercloud
+                        are copied to this node. Such as keystonerc, /etc/hosts, certificates and clouds.yaml files.
+                        Those files are needed to run tempest from the tester node.
                         NOTE: this param is ignored if --openstack-installer is 'packstack' because Ansible inventory
                         already has a tester node added by 'openstack' Infrared plugin (and it's not in undercloud group).
                   debug-command:
