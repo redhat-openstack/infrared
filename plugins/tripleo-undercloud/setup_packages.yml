@@ -150,6 +150,8 @@
             set -ex
             dnf config-manager --save --setopt rhosp-rhel-9.2-nightly-crb.includepkgs=libvirt-devel
             dnf config-manager --set-enabled rhosp-rhel-9.2-nightly-crb
+            # workaround for ansible in a repo comiled with different python version (different lib dir)
+            dnf config-manager --setopt 'rhosp-rhel-9.2-nightly-appstream.exclude=ansible-*-2.14.*' rhosp-rhel-9.2-nightly-appstream --save
         when:
             - ansible_distribution == 'RedHat'
             - ansible_distribution_version is version('9.2', '==')
