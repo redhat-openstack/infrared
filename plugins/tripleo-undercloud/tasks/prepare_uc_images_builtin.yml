@@ -33,6 +33,9 @@
               namespace: "{{ registry_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
               prefix: "{{ install.registry.prefix|default('openstack-') }}"
               tag: "{{ install.registry.tag|default('AUTODETECT') }}"
+              ceph_namespace: "{{ registry_ceph_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
+              ceph_image: "{{ registry_ceph_image|default('rhosp' + (target_install_version|openstack_release|string)) }}"
+              ceph_tag: "{{ registry_ceph_tag|default('rhosp' + (target_install_version|openstack_release|string)) }}"
   when: install.registry.skip.puddle
 
 - name: Fail non-osp deployment
