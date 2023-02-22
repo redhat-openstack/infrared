@@ -159,6 +159,20 @@
             - not skip_release
         tags: rhos-release
 
+      - name: Deprecated el9.1 repo rules and content changed (workaround)
+        become: yes
+        shell: |
+            set -ex
+            yum-config-manager --disable rhelosp-17.1-image-build-override
+        when:
+            - ansible_distribution == 'RedHat'
+            - ansible_distribution_version is version('9.1', '==')
+            - "install.version|openstack_distribution == 'OSP'"
+            - not install.cdn|default(False)
+            - cdn_status.rc != 0
+            - not skip_release
+        tags: rhos-release
+
       - name: Disable gpgcheck for custom repos
         become: yes
         shell: |
