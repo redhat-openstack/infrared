@@ -160,6 +160,12 @@
             - install.version|openstack_release > 9
 
       - block:
+          - name: ensure 'patch' tool is installed
+            become: true
+            dnf:
+              name: patch
+              state: present
+
           - name: download workarounds file
             get_url:
                 url: "{{ install.workarounds }}"
@@ -168,6 +174,7 @@
                 force: yes
                 validate_certs: no
             delegate_to: localhost
+            when: install.workarounds != ''
 
           - name: load workarounds vars
             include_vars: "{{ lookup('first_found', possible_files) }}"
@@ -175,6 +182,28 @@
               possible_files:
                 - "{{ inventory_dir }}/workarounds.yml"
                 - "{{ playbook_dir }}/workarounds.yml"
+            when: install.workarounds != ''
+
+          - name: "(RHOSINFRA-4925) load workarounds for multirhel (this task to be removed once we have them in downstream composes)"
+            set_fact:
+              post_undercloud_deploy_workarounds:
+                - RHOSINFRA-4925_change851690_openstack-tripleo-heat-templates:
+                   patch: true
+                   basedir: '/usr/share/openstack-tripleo-heat-templates'
+                   id: '851690'
+                   command: ''
+                - RHOSINFRA-4925_change858914_python-tripleoclient:
+                   patch: true
+                   basedir: '/usr/lib/python3.9/site-packages/'
+                   id: '858914'
+                   command: ''
+                - RHOSINFRA-4925_change858894_tripleo-ansible:
+                   patch: true
+                   basedir: '/usr/share/ansible/plugins'
+                   id: '858894'
+                   command: ''
+                   patchlevel: 3
+            when: multirhel_enable
 
           - name: create workarounds scripts
             template:
@@ -184,7 +213,7 @@
             with_items:
               - 'pre_undercloud_deploy_workarounds'
               - 'post_undercloud_deploy_workarounds'
-        when: install.workarounds != ''
+        when: install.workarounds != '' or multirhel_enable
 
       - name: Preparing custom environment files for the undercloud deployment
         block:

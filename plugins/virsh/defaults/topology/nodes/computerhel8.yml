@@ -1,0 +1,26 @@
+# this node type will be used, primarily, but not exclusively, by multi-rhel/mixed-rhel testing, https://issues.redhat.com/browse/OSP-14538
+name: computerhel8
+prefix: null
+cpu: "4"
+cpumodel: "host-passthrough"
+memory: "8192"
+swap: "0"
+deploy_os: false
+os:
+    type: "linux"
+    variant: "rhel7"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "50G"
+        cache: "unsafe"
+        preallocation: "metadata"
+# infraces and external_network dicts were moved to network file.
+interfaces: null
+
+groups:
+    - computerhel8
+    - openstack_nodes
+    - overcloud_nodes
