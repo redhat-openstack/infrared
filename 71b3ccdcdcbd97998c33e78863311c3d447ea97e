@@ -16,6 +16,24 @@
       "message": "Putting it on hold. There is some code inside validate.yml which copies the file in the expected place when storage-external is yes.\n\nhttps://github.com/redhat-openstack/infrared/blob/master/plugins/tripleo-overcloud/validate.yml#L28\n\nBut that code is logically incorrect, it prevents you from passing an external file when deploying internal ceph.\nNow, that code works by accident with lvm just because lvm settings are applied  regardless of the value of storage-external. It would be better if this were to be handled inside tasks/storage/.\n\nSo this code needs some changes into plugins/tripleo-overcloud/validate.yml to remove that additional copy operation, which is not needed anymore after this change, and some more testing.",
       "revId": "71b3ccdcdcbd97998c33e78863311c3d447ea97e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2ec03431_ce65bd5f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1016110
+      },
+      "writtenOn": "2023-02-28T12:12:28Z",
+      "side": 1,
+      "message": "Looking more at that code, it\u0027s probably just going to set a variable which is relevant for the \u0027netapp\u0027 case.",
+      "parentUuid": "baf21a12_3d691764",
+      "revId": "71b3ccdcdcbd97998c33e78863311c3d447ea97e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
