@@ -18,9 +18,11 @@
 
     - name: Copy growvols Ansible playbook Controller file
       copy:
-        src: "files/ansible_playbook/Controller.yaml"
-        dest: "ansible_playbook/Controller.yaml"
+        src: "{{ item }}"
+        dest: "ansible_playbook/"
         mode: 0644
+      with_fileglob:
+          - "files/ansible_playbook/Controller*.yaml"
       when: (install.storage|default({})).backend != 'ceph'
 
     - name: Copy sssd_selinux Ansible playbook Controller file
