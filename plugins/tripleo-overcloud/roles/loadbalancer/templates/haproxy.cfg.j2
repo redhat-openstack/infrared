@@ -49,6 +49,14 @@ server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.i
   {% endfor %}
 {% endif %}
 
+{% if install.version|default(undercloud_version)|openstack_release > 16 %}
+listen glance_api_internal
+  bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:9293
+  {% for x in range(controllers_number|int) %}
+server {{ loadbalancer.controllers.name_prefix }}{{x}} {{ loadbalancer.network.internal_api.net | ipaddr('net') | ipaddr(loadbalancer.controllers.pool_start + x) | ipaddr('address') }}:9293 check fall 5 inter 2000 rise 2
+  {% endfor %}
+{% endif %}
+
 listen glance_registry
   bind {{ loadbalancer.network.internal_api.vip | ipaddr('address') }}:9191
   {% for x in range(controllers_number|int) %}
