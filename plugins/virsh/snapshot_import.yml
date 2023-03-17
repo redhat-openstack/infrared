@@ -295,81 +295,49 @@
       environment:
         ANSIBLE_VERBOSITY: 0
 
+    - name: Discover the list of remote hypervisor public ssh keys to be imported
+      find:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+        patterns: "*.pub"
+        file_type: file
+      register: _remote_ssh_public_keys
+
+    - name: Fetch the remote hypervisor's public ssh keys
+      fetch:
+        src: "{{ item.path }}"
+        dest: "{{ src_workspace }}/"
+      loop: "{{ _remote_ssh_public_keys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
+      register: _remote_ssh_public_keys_fetch
+
     - name: Wait until boot completes then finalise access
       vars:
         _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
         _running_servers: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list | sort(attribute='name') }}"
+      include_tasks: tasks/snapshit_import_boot_vms.yml
+      with_items: "{{ _inventory | dict2items | sort(attribute='key') }}"
+      loop_control:
+        loop_var: infrared_host_name
+      when: (infrared_host_name in _running_servers) or
+            (_inventory[infrared_host_name].original_name is defined and _inventory[infrared_host_name].original_name in _running_servers)
+
+    - name: Get and write to output the compose/puddle version
+      vars:
+        _inventory: "{{ (_new_ir_inventory.stdout | from_json)['_meta']['hostvars'] }}"
+      when: _inventory['undercloud-0'] is defined
       block:
-        - name: Wait until the boot has completed
+        - name: Get the compose/puddle version from the undercloud
           shell: >-
             ssh
-            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
-            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
-            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
-            'systemctl is-system-running'
-            | grep -e running -e degraded
+            {{ _inventory['undercloud-0']['ansible_ssh_common_args'] }}
+            -i {{ _inventory['undercloud-0']['ansible_ssh_private_key_file'] }}
+            {{ _inventory['undercloud-0']['ansible_user'] }}@{{ _inventory['undercloud-0']['ansible_host'] }}
+            'cat ~/core_puddle_version || echo "not found"'
+          register: _remote_compose_version
           args:
             executable: /bin/bash
           delegate_to: localhost
-          register: _wait_boot_complete
-          delay: 60
-          retries: 30
-          until:
-            - _wait_boot_complete.rc == 0
-          loop: "{{ _running_servers }}"
-
-        - name: Update /etc/hosts with VM's details
-          lineinfile:
-            dest: /etc/hosts
-            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
-            regexp: ".*{{ item.name }}$"
-            state: present
-          loop: "{{ _running_servers }}"
-
-        - name: Discover the list of remote hypervisor public ssh keys to be imported
-          find:
-            path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
-            patterns: "*.pub"
-            file_type: file
-          register: _remote_ssh_public_keys
-
-        - name: Fetch the remote hypervisor's public ssh keys
-          fetch:
-            src: "{{ item.path }}"
-            dest: "{{ src_workspace }}/"
-          loop: "{{ _remote_ssh_public_keys.files }}"
-          loop_control:
-            label: "{{ item.path }}"
-          register: _remote_ssh_public_keys_fetch
-
-        - name: Copy the remote hypervisor's public ssh key into the VM authorized_keys
-          shell: >-
-            ssh
-            {{ _inventory[item.0]['ansible_ssh_common_args'] }}
-            -i {{ _inventory[item.0]['ansible_ssh_private_key_file'] }}
-            {{ _inventory[item.0]['ansible_user'] }}@{{ _inventory[item.0]['ansible_host'] }}
-            'tee -a ~/.ssh/authorized_keys' < {{ item.1 }}
-          args:
-            executable: /bin/bash
-          delegate_to: localhost
-          loop: "{{ _running_servers | map(attribute='name') | product(_remote_ssh_public_keys_fetch.results | map(attribute='dest')) | list }}"
-          loop_control:
-            label: "{{ item.0 }}: {{ item.1 | basename }}"
-
-        - when: _inventory['undercloud-0'] is defined
-          block:
-            - name: Get the compose/puddle version from the undercloud
-              shell: >-
-                ssh
-                {{ _inventory['undercloud-0']['ansible_ssh_common_args'] }}
-                -i {{ _inventory['undercloud-0']['ansible_ssh_private_key_file'] }}
-                {{ _inventory['undercloud-0']['ansible_user'] }}@{{ _inventory['undercloud-0']['ansible_host'] }}
-                'cat ~/core_puddle_version || echo "not found"'
-              register: _remote_compose_version
-              args:
-                executable: /bin/bash
-              delegate_to: localhost
-
-            - name: Output the compose/puddle version
-              debug:
-                msg: "Build mark: core_puddle={{ _remote_compose_version.stdout }}"
+        - name: Output the compose/puddle version
+          debug:
+            msg: "Build mark: core_puddle={{ _remote_compose_version.stdout }}"
