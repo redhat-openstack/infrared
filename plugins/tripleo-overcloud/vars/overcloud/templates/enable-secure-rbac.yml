@@ -1,3 +1,14 @@
 ---
 tripleo_heat_templates:
   - "{{ install.heat.templates.basedir }}/environments/enable-secure-rbac.yaml"
+
+# Swift doesn't use oslo policy RBAC, so it's different from other services.
+# For enabling SRBAC for Swift we have to add a template file with the
+# following content instead of using enable-secure-rbac.yaml file, mimicking
+# the same but without setting EnforceSecureRbac.
+# This would be an intermediate workaround for now, until a permanent fix is proposed.
+custom_templates:
+    parameter_defaults:
+        ExtraConfig:
+          swift::proxy::keystone::project_reader_roles: SwiftProjectReader
+          swift::proxy::keystone::system_reader_roles: SwiftSystemReader
