@@ -25,7 +25,7 @@
       timeout: "{{ provision.os.server.timeout | int }}"
   register: floating_ips_removal
   retries: 3
-  until: floating_ips_removal is successful
+  until: floating_ips_removal is success
   with_items: "{{ servers|default([]) }}"
   ignore_errors: yes
 
@@ -40,7 +40,7 @@
   register: servers_cleanup
   retries: 5
   delay: 60
-  until: servers_cleanup is successful
+  until: servers_cleanup is success
   ignore_errors: yes
 
 - name: Cleanup volumes
@@ -53,7 +53,7 @@
   register: volumes_cleanup
   retries: 5
   delay: 60
-  until: volumes_cleanup is successful
+  until: volumes_cleanup is success
   ignore_errors: yes
 
 # Block tasks are needed for shade >= 1.24.0
