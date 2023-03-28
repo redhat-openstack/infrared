@@ -220,6 +220,11 @@
               systemctl is-system-running | grep -e running -e degraded
         when: update is changed
 
+      - name: Check if Service frr exists
+        become: true
+        stat: path=/usr/lib/systemd/systemfrr.service
+        register: service_status
+
       - name: Update BGP routes after undercloud reboot
         become: true
         service:
@@ -227,5 +232,6 @@
           enabled: yes
           state: restarted
         when:
+          - service_status.stat.exists
           - update is changed
           - install.get('bgp', {}).get('enabled', {})|default(False)|bool
