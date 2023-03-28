@@ -81,6 +81,14 @@ subparsers:
                           If value set to `none` it will use the `/usr/share/instack-undercloud/undercloud.conf.sample`
                           from the undercloud node.
 
+                  custom-template:
+                      type: FileValue
+                      help: |
+                          Path to a custom template (jinja template) file to use for deployment.
+                          This file is copied to the undercloud and included in custom_env_files.
+                          If you want to use a custon template + custom undercloud.conf, it should
+                          include custom_env_files = custom_template.yaml(name used as dest name).
+
                   boot-mode:
                       type: Value
                       help: |
