@@ -13,6 +13,7 @@
                 {%- else -%}
                 templates/undercloud.conf.j2
                 {%- endif -%}"
+      - custom_template: "{{ install.custom.template }}"
   tasks:
       - name: set workingr_dir fact
         set_fact:
@@ -42,6 +43,14 @@
             force: yes
             mode: 0755
         when: local_src != "none"
+
+      - name: copy custom heat template for undercloud.conf
+        template:
+            src: "{{ custom_template }}"
+            dest: ~/custom_template.yaml
+            force: yes
+            mode: 0755
+        when: custom_template != "none"
 
       - name: make sure ~/.ssh exists
         file:
@@ -202,6 +211,7 @@
               env_files:
                 - "{{ deploy_interface_direct | ternary(ironic_custom_env_file,'') }}"
                 - "{{ configure_ntp_pool | ternary(ntp_custom_env_file,'') }}"
+                - "{{ (custom_template != 'none') | ternary(custom_template_file,'') }}"
             ini_file:
               path: "{{ undercloud_conf_path }}"
               section: DEFAULT
@@ -211,6 +221,7 @@
         vars:
           - ironic_custom_env_file: "{{ working_dir }}/ironic_deploy_interface_direct.yaml"
           - ntp_custom_env_file: "{{ working_dir }}/ntp_pool.yaml"
+          - custom_template_file: "{{ working_dir }}/custom_template.yaml"
           - deploy_interface_direct_conditions:
               - "{{ install.deploy_interface_default == 'direct' }}"
               - "{{ install.version|default(undercloud_version) | openstack_release > 13 }}"
