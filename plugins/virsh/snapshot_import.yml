@@ -255,16 +255,6 @@
       register: _ir_workspace_files
       delegate_to: localhost
 
-    - name: Use the current hypervisor ssh key for direct connections to VMs
-      replace:
-        path: "{{ item.path }}"
-        regexp: "ansible_ssh_private_key_file=\\/[a-zA-Z\\.\\/0-9_-]+\\/id_(rsa|ecdsa)[a-zA-Z0-9_-]* "
-        replace: "ansible_ssh_private_key_file={{ provision.host.key }} "
-      loop: "{{ _ir_workspace_files.files }}"
-      loop_control:
-        label: "{{ item.path }}"
-      delegate_to: localhost
-
     - name: Use the current hypervisor key for proxy connections to VMs
       replace:
         path: "{{ item.path }}"
