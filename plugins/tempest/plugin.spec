@@ -311,6 +311,15 @@ subparsers:
                       type: Bool
                       help: Install crudini on all controller nodes (required by some tests).
                       default: no
+                  timing-data-url:
+                      type: Value
+                      help: |
+                        (! EXPERIMENTAL !)
+                        HTTP link that points to location of tarball file (.tar.gz). The file contains timing data from previous
+                        tempest runs and its content will be stored to .stestr directory before the execution of tempest tests.
+                        The reuse of timing data can lead to fater execution of tests. (Content of the tarball file: next-stream,
+                        times.dbm.bak, times.dbm.dat, times.dbm.dir)
+                      default: ''
             - title: ansible facts
               options:
                   collect-ansible-facts:
