@@ -16,6 +16,23 @@
       "message": "If this chage is not reverted, all the spine-leafs jobs go to fail too :\nhttps://rhos-ci-jenkins.lab.eng.tlv2.redhat.com/view/DFG/view/edge/",
       "revId": "36f906b2609f0d5bfbe492db06e503bcde5c9aeb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c6f05eec_fa325d41",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001189
+      },
+      "writtenOn": "2023-04-03T10:16:02Z",
+      "side": 1,
+      "message": "Revert seems needed - the initial patch comments/jira discussion selects direction which goes against what this affected job is trying to do:\n\n- virsh --prefix\u003dsite --topo\u003d1uc:3ctl:2comp --topo_net\u003d3_nets\n- virsh --prefix\u003ddcn1 --topo\u003d3comp  --topo_net\u003d3_nets\n\nand it then collides on the network (as the second prefix needs to be offset),\ni don\u0027t know about the details mentioned in those discussions that it wouldnt work well with tripleo overcload parts - maybe they do not apply here or are workarounded in another way. Neither i\u0027m sure how it could not collide when both calls use prefix.\n\nBut clearly it broke the job:\n\n  failed: [hypervisor] (item\u003d{\u0027key\u0027: \u0027net1\u0027, \u0027value\u0027: {\u0027external_connectivity\u0027: False, \u0027name\u0027: \u0027dcn1-data\u0027, \u0027ip_address\u0027: \u0027192.168.24.254\u0027, \u0027netmask\u0027: \u0027255.255.255.0\u0027}}) \u003d\u003e {\n    \"ansible_loop_var\": \"item\",\n    \"changed\": false,\n    \"item\": {\n        \"key\": \"net1\",\n        \"value\": {\n            \"external_connectivity\": false,\n            \"ip_address\": \"192.168.24.254\",\n            \"name\": \"dcn1-data\",\n            \"netmask\": \"255.255.255.0\"\n        }\n    }\n  }\n  MSG: internal error: Network is already in use by interface site-data\n",
+      "revId": "36f906b2609f0d5bfbe492db06e503bcde5c9aeb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
