@@ -27,7 +27,11 @@ def container_mirror(registry_host, mirror):
         return registry_host
 
     if not ('.' in mirror):  # no hostname or ip, just short alias used (e.g. 'tlv', 'brq')
-        mirror = ('rhos-qe-mirror-%s.usersys.redhat.com' % mirror)
+        if mirror in ['brq', 'qeos', 'tlv']:
+            # just backward compatibility for case when older short names are passed
+            mirror = ('rhos-qe-mirror-%s.usersys.redhat.com' % mirror)
+        else:
+            mirror = ('rhos-qe-mirror.lab.eng.%s.redhat.com' % mirror)
 
     for (source, target) in __registry_port_map.items():
         registry_host = registry_host.replace(

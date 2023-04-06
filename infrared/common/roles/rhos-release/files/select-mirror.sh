@@ -2,7 +2,10 @@
 set -ex
 
 mirror="$1"
-if [[ "$mirror" =~ ^(brq|rdu2|qeos|tlv)$ ]]; then
+if [[ "$mirror" =~ ^(brq2|rdu2|tlv2)$ ]]; then
+    mirror="rhos-qe-mirror.lab.eng.${mirror}.redhat.com"
+elif [[ "$mirror" =~ ^(brq|qeos|tlv)$ ]]; then
+    # just backward compatibility for case when older short names are passed
     mirror="rhos-qe-mirror-${mirror}.usersys.redhat.com"
 fi
 
