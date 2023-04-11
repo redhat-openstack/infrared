@@ -31,6 +31,10 @@
   with_items: "{{ install.container.extra.repos }}"
   when: install_container_extra_repos is defined
 
+- name: Patch to change repo for FDP testing
+  become: yes
+  shell: yum-config-manager --disable rhosp-rhel-9.2-fdp-nightly
+
 - name: Prepare custom repository temp directory
   include_tasks: prepare_tmp_repos.yml
   when: repo_config.stat.exists
