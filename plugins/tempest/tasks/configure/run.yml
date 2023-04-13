@@ -37,6 +37,13 @@
 - debug:
     var: virtualenvs
 
+- name: If designate is present, configure gather IPs for bind instances
+  shell: |
+    source ~/stackrc
+    openstack port list --format json -c ID -c Name  -c "Fixed IP Addresses"| jq -r '.[] | select(.Name | startswith("designate-controller-")) | {"Fixed IP Addresses"}[] | .[0] | {ip_address} | .[]'
+  register: designate_port_ips
+  when: "'designate' in ( test.tests | join( ' ' ) )"
+
 - name: Run tempest configuration tool
   vars:
       installer_options:
