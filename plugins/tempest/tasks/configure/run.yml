@@ -37,6 +37,13 @@
 - debug:
     var: virtualenvs
 
+- name: If designate is present, configure gather IPs for bind instances
+  shell: |
+    source ~/stackrc
+    openstack port list --format json -c ID -c Name  -c "Fixed IP Addresses"| jq -r '.[] | select(.Name | startswith("designate-controller-")) | {"Fixed IP Addresses"}[] | .[0] | {ip_address} | .[]'
+  register: designate_port_ips
+  when: "'designate' in ( test.tests | join( ' ' ) )"
+
 - name: Run tempest configuration tool
   vars:
       installer_options:
@@ -81,6 +88,9 @@
               validation.ssh_key_type ecdsa \
               {# os_glance_reserved tests can be enabled since wallaby, see https://review.opendev.org/c/openstack/tempest/+/771071 #}
               image_feature_enabled.os_glance_reserved true \
+              {% if (designate_port_ips.stdout_lines is defined) and  (designate_port_ips.stdout_lines | length > 0) %}
+              dns.nameservers {{ designate_port_ips.stdout_lines | join(',') }} \
+              {% endif %}
               {% endif %}
               {# https://bugzilla.redhat.com/show_bug.cgi?id=1382048 #}
               {# https://github.com/openstack/tripleo-heat-templates/commit/9b739012b71e2833e59e94cbe423cda77405c6cb#diff-2df80226aa5ac8fe81e6159bda8d4d2f #}
