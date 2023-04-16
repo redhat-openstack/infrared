@@ -137,7 +137,7 @@
             version_escaped: "{{ ansible_distribution_version | replace('.', '\\.') }}"
         when:
             - ansible_distribution == 'RedHat'
-            - ansible_distribution_major_version | int >= 9
+            - ansible_distribution_version is version('9.2', '<')
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
             - cdn_status.rc != 0
