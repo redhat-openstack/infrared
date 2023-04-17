@@ -115,6 +115,16 @@ subparsers:
                           to create due to name lengths limit.
                       length: 4
 
+                  net_subnet:
+                      type: Value
+                      help: |
+                        Sets the net network's 3rd octete.
+
+                  data_subnet:
+                      type: Value
+                      help: |
+                        Sets the data network's 3rd octete.
+                        
                   # fixme(yfried): add support for user files
                   topology-network:
                       type: VarFile
