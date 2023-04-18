@@ -70,6 +70,8 @@
             tee -a /home/stack/overcloud_provision_nodes.log
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17)
+        tags: baremetal_deployment
+
 
 # For <17, the inventory can't be updated at this point because the nodes
 # don't exist here yet and they would end up in the "unused" group.

@@ -53,6 +53,8 @@ class BaremetalRoleData():
         """An opionionated but sane default profile."""
         if 'hci' in self.name.lower():
             return self.name.lower()
+        if 'rhel8' in self.name.lower():
+            return self.name.lower()
         if self.generic_type == 'controller':
             return 'control'
         return self.generic_type
@@ -94,6 +96,7 @@ class BaremetalRoleData():
         self._tags = role_data.get('tags', [])
         self._enable_profiles = enable_profiles
         self.ansible_playbook_dict = ansible_playbook_dict
+        self._image = role_data.get('ImageDefault', '')
 
     def to_baremetal_format(self, network_templates_dir: Path):
         out = {}
@@ -133,6 +136,9 @@ class BaremetalRoleData():
             networks.append(net_item)
         if networks:
             defaults['networks'] = networks
+
+        if self._image:
+            defaults['image'] = {'href': self._image}
 
         if defaults:
             out['defaults'] = defaults

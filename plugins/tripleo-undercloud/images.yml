@@ -93,8 +93,12 @@
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
-      multirhel_images_dir: "~{{ install.user.name }}/images/multirhel/"
+      multirhel_images_dir: "{{ ansible_user_dir }}/images/multirhel/"
   pre_tasks:
+      - setup:
+        tags:
+          - never
+          - multirhel_images
       - block:
           - name: check for subscription
             command: subscription-manager identity
@@ -181,6 +185,7 @@
         with_items: "{{ install.get('repos', {}).urls|default([]) }}"
 
       - include_tasks: "tasks/images/{{ install.images.task }}.yml"
+        tags: multirhel_images
 
       - name: modify images - update to core build and install packages
         include_tasks: tasks/images/repos.yml
@@ -245,12 +250,13 @@
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ --os-image-name overcloud-minimal.qcow2 --image-type os
         when: minimal_images
 
-      - name: Upload computerhel8/multirhel images (overcloud-hardened-uefi-full-rhel8)
+      - name: Upload computerhel8/multirhel images (overcloud-rhel8.qcow2)
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --whole-disk --os-image-name overcloud-hardened-uefi-full-rhel8.qcow2
+            openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --whole-disk --os-image-name overcloud-rhel8.qcow2
         when: multirhel_enabled
+        tags: multirhel_images
 
       - name: check for existing nodes ( OS <= 10 )
         shell: |
@@ -327,3 +333,4 @@
         when:
           - install.images.cleanup
           - multirhel_enabled
+        tags: multirhel_images

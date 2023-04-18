@@ -208,7 +208,7 @@
             /usr/share/openstack-tripleo-heat-templates/tools/multi-rhel-container-image-prepare.py \
                --enable-multi-rhel \
                --excludes nova-libvirt --excludes collectd \
-               {% for r in multirhel_roles.split(',') %}--role {{ r.split(':')[1] }} {% endfor %} \
+               {% for r in multirhel_roles_map.split(',') %}--role {{ r.split(':')[1] }} {% endfor %} \
                --role-file {{ template_base }}/roles/roles_data_multirhel.yaml \
                --minor-override "{${EL8_TAGS}${CEPH_TAGS}\"no_tag\":\"not_used\"}" --major-override "{${EL9_TAGS}${CEPH_TAGS}\"no_tag\":\"not_used\"}" \
                --local-push-destination \
