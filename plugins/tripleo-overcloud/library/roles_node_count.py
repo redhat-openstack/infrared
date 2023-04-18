@@ -97,6 +97,8 @@ ROLE_NAMES_MAPPING = {
     'aio': 'Standalone',
     'computehci': 'ComputeHCI',
     'ironicconductor': 'IronicConductor',
+    'computerhel8': "ComputeRHEL8",
+    'computeovsdpdksriovrhel8': "ComputeOvsDpdkSriovRHEL8",
 }
 
 
@@ -105,7 +107,7 @@ THT_ROLES_MAPPING = dict([
         {'node_name': 'controller'}),
     ('^(Novacontrol).*',
         {'node_name': 'novacontrol'}),
-    ('^(Compute)(?!HCI).*$',
+    ('^(Compute)(?!HCI)(?!RHEL8).*$',
         {'node_name': 'compute'}),
     ('^(Ceph).*',
         {'node_name': 'ceph'}),
@@ -121,6 +123,10 @@ THT_ROLES_MAPPING = dict([
         {'node_name': 'hcicephall'}),
     ('^(ComputeHCI).*',
         {'node_name': 'computehci'}),
+    ('^(ComputeRHEL8).*',
+        {'node_name': 'computerhel8'}),
+    ('^(ComputeOvsDpdkSriovRHEL8).*',
+        {'node_name': 'compute'}),
     ('^(IronicConductor).*',
         {'node_name': 'ironicconductor'}),
 ])
@@ -156,7 +162,7 @@ def main():
         module.exit_json(**result)
 
     overcloud_node_counter = Counter(
-        [host_name.rstrip('1234567890-').split('-')[-1]
+        [host_name.split('-')[-2]
          for host_name in module.params['overcloud_nodes']]
     )
     tht_roles = module.params['tht_roles'].split(',')

@@ -544,18 +544,16 @@ subparsers:
                       ansible_variable: multirhel_enabled
                       required_when: "multirhel-overcloud-image-urls != '' or multirhel-overcloud-image-urls != '' or multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''"
 
-                  multirhel-overcloud-image-urls:
+                  multirhel-overcloud-image-url:
                       type: Value
                       default: ''
                       help: |
-                        Comma separated URLs to 'rhosp-director-images-uefi' and 'rhosp-director-images-ipa'
-                        RPMs which will be used for Compute RHEL8 nodes.
-                        Providing the 'ipa' (RPM name 'rhosp-director-images-ipa...rpm') image URL is mandatory.
-                        NOTE: If empty, the URLs are automatically discovered based on latest available OSP17.1/RHEL8 compose.
+                        Url to 'rhosp-director-images-uefi-x86_64' RPM which will be used for Compute RHEL8 nodes.
+                        NOTE: If empty, the URL is automatically discovered based on latest available OSP17.1/RHEL8 compose.
                         NOTE2: The version of images in this parameter has to be older than compose from the 'build' parameter of this infrared plugin.
                         Example:
-                          --multirhel-overcloud-image-urls http://.../Packages/rhosp-director-images-uefi-x86_64-17.1-20230125.1.test.el8ost.noarch.rpm,http://.../Packages/rhosp-director-images-ipa-x86_64-17.1-20230125.1.test.el8ost.noarch.rpm
-                      ansible_variable: multirhel_overcloud_image_urls
+                          --multirhel-overcloud-image-url http://.../Packages/rhosp-director-images-uefi_x86_64-17.1-20230125.1.test.el8ost.noarch.rpm
+                      ansible_variable: multirhel_overcloud_image_url
 
             - title: Undercloud Upgrade
               options:

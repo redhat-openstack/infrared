@@ -7,11 +7,32 @@ openstack overcloud roles generate -o {{ template_base }}/roles/roles_data.yaml 
 {% for host_name in groups.overcloud_nodes %}
 {% set host_short_name = host_name.rstrip('1234567890-').split('-')[-1] %}
 {% set role_name = role_names_mapping.get(host_short_name, host_short_name|title) %}
+{% if role_name in existing_common_tht_roles.stdout_lines %}
     {{ role_name }} \
+{% endif %}
 {% endfor %}
 {% else %}
 {# manual mode #}
 {% for role_name in roles %}
+{% if role_name in existing_common_tht_roles.stdout_lines %}
     {{ role_name }} \
+{% endif %}
 {% endfor %}
+{% endif %}
+
+{%- set multirhel_roles_found = [] %}
+
+{% for role in roles %}
+{%- if role not in existing_common_tht_roles.stdout_lines %}
+{%- if multirhel_roles_found.append(role)%}{%endif%}
+{%- endif -%}
+{%- endfor -%}
+
+{% if multirhel_roles_found | length >= 1 %}
+echo "generate roles_data_multirhel.yaml"
+rm -f {{ template_base }}/roles/roles_data_multirhel.yaml
+openstack overcloud roles generate --roles-path {{ template_base }}/roles/multirhel/ -o {{ template_base }}/roles/roles_data_multirhel.yaml {{ multirhel_roles_found | join(' ') }}
+
+echo "append {{ template_base }}/roles/roles_data_multirhel.yaml to roles_data.yaml file"
+cat {{ template_base }}/roles/roles_data_multirhel.yaml >> {{ template_base }}/roles/roles_data.yaml
 {% endif %}

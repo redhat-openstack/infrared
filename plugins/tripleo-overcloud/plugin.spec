@@ -828,6 +828,10 @@ subparsers:
                          --role-files=Controller,Compute,CephStorage.
                          If that value is equal to 'auto' or is not a list of roles, then Infrared will try to
                          automatically discover roles to use.
+
+                        For MultiRHEL:
+                        A mapping of MultiRHEL/RHEL8 roles specified in this param may be needed. See multirhel-roles-map param for more info.
+
                   tht-roles:
                       type: Bool
                       default: yes
@@ -1116,10 +1120,13 @@ subparsers:
                       type: Value
                       default: Compute:ComputeRHEL8
                       help: |
+                        Add the given MultiRHEL THT role to this map only if it's YAML doesn't exist in /usr/share/openstack-tripleo-heat-templates/roles already.
                         Comma,separated list of THT Roles map to use in MultiRHEL overcloud deployment. The format is <source_tht_role>:<rhel8_tht_role>.
                         Example: Compute:ComputeRHEL8,ComputeOvsDpdkSriov:ComputeOvsDpdkSriovRHEL8
-                        In this example, the ComputeRHEL8 from default THT Compute role and ComputeOvsDpdkSriovRHEL8 from ComputeOvsDpdkSriov.
-                      ansible_variable: multirhel_roles
+                        In this example, the ComputeRHEL8 role will be created based on existing THT Compute role; ComputeOvsDpdkSriovRHEL8 will be based on ComputeOvsDpdkSriov.
+
+                        NOTE: When using composable roles each MultiRHEL role specified in this mapping has to be also included in 'role-files' parameter of this plugin.
+                      ansible_variable: multirhel_roles_map
 
                   multirhel-overcloud-container-image-prepare-parameter-file:
                       type: Value
