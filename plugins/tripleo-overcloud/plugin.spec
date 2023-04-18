@@ -830,7 +830,8 @@ subparsers:
                          automatically discover roles to use.
 
                         For MultiRHEL:
-                        A mapping of MultiRHEL/RHEL8 roles specified in this param may be needed. See multirhel-roles-map param for more info.
+                        If some of the roles specified here do not exist in https://github.com/openstack/tripleo-heat-templates/tree/master/roles
+                        then a RHEL9 -> RHEL8 role mapping is required. See multirhel-roles-map param for more info.
 
                   tht-roles:
                       type: Bool
@@ -1120,12 +1121,12 @@ subparsers:
                       type: Value
                       default: Compute:ComputeRHEL8
                       help: |
-                        Add the given MultiRHEL THT role to this map only if it's YAML doesn't exist in /usr/share/openstack-tripleo-heat-templates/roles already.
-                        Comma,separated list of THT Roles map to use in MultiRHEL overcloud deployment. The format is <source_tht_role>:<rhel8_tht_role>.
+                        Comma,separated list of THT Roles pairs. The format is <existing_tht_role>:<destination_rhel8_tht_role>.
                         Example: Compute:ComputeRHEL8,ComputeOvsDpdkSriov:ComputeOvsDpdkSriovRHEL8
-                        In this example, the ComputeRHEL8 role will be created based on existing THT Compute role; ComputeOvsDpdkSriovRHEL8 will be based on ComputeOvsDpdkSriov.
+                        In this example, the 'ComputeRHEL8' role will be created based on existing THT 'Compute' role, also 'ComputeOvsDpdkSriovRHEL8' will be based on 'ComputeOvsDpdkSriov'.
 
-                        NOTE: When using composable roles each MultiRHEL role specified in this mapping has to be also included in 'role-files' parameter of this plugin.
+                        NOTE: When using composable roles then each MultiRHEL role specified in this mapping has to be also included in 'role-files' parameter of this plugin.
+                        NOTE2: If a MultiRHEL role already exists in /usr/share/openstack-tripleo-heat-templates/roles then do not include it in the mapping here.
                       ansible_variable: multirhel_roles_map
 
                   multirhel-overcloud-container-image-prepare-parameter-file:

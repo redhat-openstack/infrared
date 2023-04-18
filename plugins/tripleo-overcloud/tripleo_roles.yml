@@ -63,10 +63,6 @@
             path: "{{ template_base }}/roles"
             state: directory
 
-      - name: discover existing roles in /usr/share/openstack-tripleo-heat-templates/roles
-        shell: ls -C1 /usr/share/openstack-tripleo-heat-templates/roles | sed "s/\.yaml//g" | tr [:upper:] [:lower:]
-        register: existing_common_tht_roles
-
       - when: multirhel_enabled
         block:
         - name: create an inversed version of multirhel_roles_map
@@ -92,7 +88,6 @@
           shell: |
             set -x
             {% for r in install.role.files.split(',') %}
-            {% if r not in existing_common_tht_roles %}
             {% if r in multirhel_roles_map_inversed %}
             cat {{ install.heat.templates.basedir }}/roles/{{ multirhel_roles_map_inversed[r] }}.yaml | \
                 sed 's/name: {{ multirhel_roles_map_inversed[r] }}/name: {{ r }}/g' | \
@@ -104,7 +99,6 @@
                 sed 's/HostnameFormatDefault:.*$/HostnameFormatDefault: "{{ r | lower }}-%index%"/g' | \
                 sed -E 's#^(.*)(CountDefault:.*)$#\1\2\n\1ImageDefault: file:///var/lib/ironic/images/overcloud-rhel8.raw#g' \
                 >> {{ template_base }}/roles/multirhel/{{ r }}.yaml
-            {% endif %}
             {% endif %}
             {% endfor %}
 
