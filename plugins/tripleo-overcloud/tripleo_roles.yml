@@ -64,7 +64,7 @@
             state: directory
 
       - name: discover existing roles in /usr/share/openstack-tripleo-heat-templates/roles
-        shell: ls -C1 /usr/share/openstack-tripleo-heat-templates/roles | sed "s/\.yaml//g"
+        shell: ls -C1 /usr/share/openstack-tripleo-heat-templates/roles | sed "s/\.yaml//g" | tr [:upper:] [:lower:]
         register: existing_common_tht_roles
 
       - when: multirhel_enabled
