@@ -38,8 +38,8 @@
     overcloud_image_name == "hardened-uefi-full" or
     overcloud_image_name == "hardened-uefi-full-fips"
 
-- when:
-    - multirhel_enabled
+- when: multirhel_enabled
+  tags: multirhel_images
   become_user: "{{ install.user.name }}"
   become: yes
   block:
@@ -58,25 +58,26 @@
 
     - name: "(multirhel) Ensure {{ multirhel_images_dir }} exists and it's empty"
       file:
-        path: ~/images/multirhel/
+        path: "{{ multirhel_images_dir }}"
         state: "{{ item }}"
       with_items:
         - absent
         - directory
 
-    - name: "(multirhel) Discover available rhosp-director-images packages based on the above DNF repo"
-      shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1-rhel-8.4 --releasever el8ost rhosp-director-images* octavia-amphora-image* | grep -iE "rhosp-director-images-uefi-x86_64|rhosp-director-images-ipa-x86_64"
-      register: discover_available_rhosp_director_images
-
     - name: "(multirhel) set fact to user-defined rhosp-director-images.* RPM URLs"
       set_fact:
-          multirhel_overcloud_images: "{{ multirhel_overcloud_image_urls.split(',') | join(' ') }}"
-      when: multirhel_overcloud_image_urls != ''
+          multirhel_overcloud_images: "{{ multirhel_overcloud_image_url.split(',') | join(' ') }}"
+      when: multirhel_overcloud_image_url != ''
 
-    - name: "(multirhel) set fact to automatically discovered rhosp-director-images.* RPM URLs"
-      set_fact:
-          multirhel_overcloud_images: "{{ discover_available_rhosp_director_images.stdout_lines | join(' ') }}"
-      when: multirhel_overcloud_image_urls == ''
+    - when: multirhel_overcloud_image_url == ''
+      block:
+        - name: "(multirhel) Discover available rhosp-director-images packages based on the above DNF repo"
+          shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1-rhel-8.4 --releasever el8ost rhosp-director-images* | grep -iE "rhosp-director-images-x86_64|rhosp-director-images-ipa-x86_64"
+          register: discover_available_rhosp_director_images
+
+        - name: "(multirhel) set fact to automatically discovered rhosp-director-images.* RPM URLs"
+          set_fact:
+              multirhel_overcloud_images: "{{ discover_available_rhosp_director_images.stdout_lines | join(' ') }}"
 
     - name: "(multirhel) Download OSP17.1 RHEL-8 rhosp-director-images"
       shell: |
@@ -159,15 +160,16 @@
   when: minimal_images
 
 - when: multirhel_enabled
+  tags: multirhel_images
   become_user: "{{ install.user.name }}"
   become: yes
   block:
-  - name: (multirhel) Find .tar files containing osp17.1/rhel8 rhosp-director-images hardened-uefi
+  - name: (multirhel) Find .tar files containing osp17.1/rhel8 rhosp-director-images
     find:
-      path: ~/images/multirhel/
-      patterns: "overcloud-hardened-uefi-full-17.1*.tar,ironic-python-agent*.tar"
+      path: "{{ multirhel_images_dir }}"
+      patterns: "*"
       recurse: true
-    register: overcloud_hardened_uefi_full_17_1_tar_files
+    register: overcloud_images_17_1_rhel8_tar_files
 
   - debug:
       var: overcloud_hardened_uefi_full_17_1_tar_file
@@ -180,12 +182,14 @@
         owner: "{{ install.user.name }}"
         group: "{{ install.user.name }}"
         list_files: yes
-    register: image_files_computerhel8
-    with_items: "{{ overcloud_hardened_uefi_full_17_1_tar_files.files }}"
+    with_items: "{{ overcloud_images_17_1_rhel8_tar_files.files }}"
 
-  - name: "(multirhel) rename overcloud-hardened-uefi-full* image files to overcloud-hardened-uefi-full-rhel8*"
+  - name: "(multirhel) rename overcloud-*full*.qcow2 image file to overcloud-rhel8.qcow2"
     shell: |
-      cd ~/images/multirhel/
-      for file in $(ls -C1 overcloud-hardened-uefi-full*); do
-        mv $file ${file%.*}-rhel8.${file##*.}
-      done
+      mv overcloud-*full*.qcow2 overcloud-rhel8.qcow2
+    args:
+      chdir: "{{ multirhel_images_dir }}"
+      executable: /bin/bash
+
+  - name: "(multirhel) reuse previously downloaded non-RHEL8 ironic-python-agent* files"
+    shell: cp ~{{ install.user.name }}/ironic-python-agent* {{ multirhel_images_dir }}/
