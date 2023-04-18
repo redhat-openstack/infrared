@@ -18,6 +18,7 @@
           compute_dvr: ComputeDVR
           aio: Standalone
           computehci: ComputeHCI
+          computerhel8: ComputeRHEL8
       tht_mapping:
           - regexp: ^(Controller).*
             net_config_file: "controller{{ ipv6_postfix }}.yaml"
@@ -49,6 +50,10 @@
           - regexp: ^(ComputeHCI).*
             net_config_file: "osdcompute.yaml"
             node_name: computehci
+          - regexp: ^(ComputeRHEL8).*
+            net_config_file: "compute.yaml"
+            node_name: computerhel8
+            flavor: compute
   tags:
       - deploy_preparation
       - tht_roles
@@ -57,6 +62,51 @@
         file:
             path: "{{ template_base }}/roles"
             state: directory
+
+      - when: multirhel_enabled
+        block:
+        - name: discover existing roles in /usr/share/openstack-tripleo-heat-templates/roles
+          shell: ls -C1 /usr/share/openstack-tripleo-heat-templates/roles | sed "s/\.yaml//g"
+          register: existing_common_tht_roles
+
+        - name: create an inversed version of multirhel_roles_map
+          set_fact:
+            multirhel_roles_map_inversed: |-
+              {
+              {%- for m in multirhel_roles_map.split(',') -%}
+              "{{ m.split(':')[1] }}": "{{ m.split(':')[0] }}",
+              {%- endfor -%}
+              }
+
+        - name: "ensure {{ template_base }}/roles/multirhel exists"
+          file:
+              path: "{{ template_base }}/roles/multirhel"
+              state: "{{ item }}"
+          with_items:
+              - absent
+              - directory
+
+        - name: "create ComputeRHEL8 and other requested rhel8/multirhel-related THT role files"
+          # note that putting a 'href: file' inside the ImageDefault is not supported inside role files as per https://github.com/openstack/tripleo-heat-templates/blob/6c17f63aab39a1b98a6875304bdb03a23fecc90e/roles/README.rst
+          # we add it here and support for it inside the generate_baremetal_deployment_from_roles_data.py to enable support for user-defined images they may want to pass in their role files for multirhel machines
+          shell: |
+            set -x
+            {% for r in install.role.files.split(',') %}
+            {% if r not in existing_common_tht_roles %}
+            {% if r in multirhel_roles_map_inversed %}
+            cat {{ install.heat.templates.basedir }}/roles/{{ multirhel_roles_map_inversed[r] }}.yaml | \
+                sed 's/name: {{ multirhel_roles_map_inversed[r] }}/name: {{ r }}/g' | \
+                sed 's/Role: {{ multirhel_roles_map_inversed[r] }}/Role: {{ r }}/g' | \
+                sed 's/OS::TripleO::Services::NovaLibvirt$/OS::TripleO::Services::NovaLibvirtLegacy/g' | \
+                sed 's/{{ multirhel_roles_map_inversed[r] }} Node role/{{ r }} Node role/g' | \
+                sed 's/{{ multirhel_roles_map_inversed[r] }} role/{{ r }} role/g' | \
+                sed 's/{{ multirhel_roles_map_inversed[r] }} role/{{ r }} role/g' | \
+                sed 's/HostnameFormatDefault:.*$/HostnameFormatDefault: "{{ r | lower }}-%index%"/g' | \
+                sed -E 's#^(.*)(CountDefault:.*)$#\1\2\n\1ImageDefault: file:///var/lib/ironic/images/overcloud-rhel8.raw#g' \
+                >> {{ template_base }}/roles/multirhel/{{ r }}.yaml
+            {% endif %}
+            {% endif %}
+            {% endfor %}
 
       - name: template for generating roles_data.yml
         template:
