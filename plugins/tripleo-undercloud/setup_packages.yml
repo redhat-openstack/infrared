@@ -149,6 +149,7 @@
         shell: |
             set -ex
             dnf config-manager --save --setopt rhosp-rhel-9.2-beta-crb.includepkgs=libvirt-devel
+            dnf config-manager --save --setopt rhosp-rhel-9.2-beta-appstream.excludepkgs=ansible-core
             dnf config-manager --set-enabled rhosp-rhel-9.2-beta-crb
         when:
             - ansible_distribution == 'RedHat'
