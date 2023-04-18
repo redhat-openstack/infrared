@@ -15,6 +15,12 @@
 {%- endfor -%}
 {%- endmacro -%}
 
+{%- macro tht_node_flavor(role_name) -%}
+{%- for tht_map in tht_mapping if role_name is match(tht_map.regexp) -%}
+{{ tht_map.flavor }}
+{%- endfor -%}
+{%- endmacro -%}
+
 {# write count and flavor parameters #}
 parameter_defaults:
 {% set saved_roles = [] %}
@@ -34,7 +40,7 @@ parameter_defaults:
 {% for role_name in tht_roles %}
 {# if there is no mapping for role name (e.g. ControllerAllNovaStandalone) then take first word form that name #}
    {{ role_name }}Count: {{ count(tht_node_name(role_name)) }}
-   Overcloud{{ flavor_name_mapping.get(role_name, role_name) }}Flavor: {{ (not install.specific.node.ids) | ternary(tht_node_name(role_name), 'baremetal') }}
+   Overcloud{{ flavor_name_mapping.get(role_name, role_name) }}Flavor: {{ (not install.specific.node.ids) | ternary(tht_node_flavor(role_name) | default(tht_node_name(role_name)), 'baremetal') }}
 {% endfor %}
 {% endif %}
 

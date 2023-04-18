@@ -1,4 +1,4 @@
-# this file will set up files required by computeRHEL8 tripleo role
+# this file will set up files required by multirhel overcloud deployment (i.e.: prepare ComputeRHEL8 and other multirhel tripleo roles)
 
 - name: "Ensure {{ template_base }}/roles/ directory exists"
   file:
@@ -15,13 +15,15 @@
     sudo sed -i '/OS::TripleO::Services::NovaLibvirt:/a \ \ OS::TripleO::Services::NovaLibvirtLegacy: deployment/deprecated/nova/nova-libvirt-container-puppet.yaml' \
     /usr/share/openstack-tripleo-heat-templates/overcloud-resource-registry-puppet.j2.yaml
 
-    {% for r in multirhel_roles.split(',') %}
+    {% for r in multirhel_roles_map.split(',') %}
     cat {{ install.heat.templates.basedir }}/roles/{{ r.split(':')[0] }}.yaml | \
         sed 's/name: {{ r.split(':')[0] }}/name: {{ r.split(':')[1] }}/g' | \
         sed 's/Role: {{ r.split(':')[0] }}/Role: {{ r.split(':')[1] }}/g' | \
-        sed 's/OS::TripleO::Services::NovaLibvirt$/OS::TripleO::Services::NovaLibvirtLegacy/g' \
+        sed 's/OS::TripleO::Services::NovaLibvirt$/OS::TripleO::Services::NovaLibvirtLegacy/g' | \
+        sed 's/Basic Compute /Basic ComputeRHEL8 /g' \
         >> {{ template_base }}/roles/roles_data_multirhel.yaml
     {% endfor %}
+  when: install.role.files is not defined
 
 - name: "Create ComputeRHEL8.yaml parameter_defaults file"
   template:
