@@ -96,7 +96,7 @@ ROLE_NAMES_MAPPING = {
     'compute_dvr': 'ComputeDVR',
     'aio': 'Standalone',
     'computehci': 'ComputeHCI',
-    'ironicconductor': 'IronicConductor',
+    'ironicconductor': 'IronicConductor'
 }
 
 
