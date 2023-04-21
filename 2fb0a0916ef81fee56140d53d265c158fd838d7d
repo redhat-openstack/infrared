@@ -16,6 +16,24 @@
       "message": "wouldn\u0027t force: true work?\nhttps://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html#parameter-force",
       "revId": "2fb0a0916ef81fee56140d53d265c158fd838d7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0e3964cb_2bab4fd4",
+        "filename": "infrared/common/roles/inventory-update/tasks/main.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1016373
+      },
+      "writtenOn": "2023-04-21T10:50:58Z",
+      "side": 1,
+      "message": "no, I tested it locally.\n[mnietoji@mnietoji playbook]$ cat playbook.yml \n---\n  - name: Playbook\n    hosts: localhost\n    connection: local\n    tasks:\n      - name: update inventory file symlink\n        file:\n           dest: \"file2\"\n           state: link\n           src: \"file1\"\n           force: true\n[mnietoji@mnietoji playbook]$ ls\nfile1  file2  playbook.yml\n[mnietoji@mnietoji playbook]$ ansible-playbook playbook.yml \n/home/mnietoji/.local/lib/python3.6/site-packages/ansible/parsing/vault/__init__.py:44: CryptographyDeprecationWarning: Python 3.6 is no longer supported by the Python core team. Therefore, support for it is deprecated in cryptography. The next release of cryptography (40.0) will be the last to support Python 3.6.\n  from cryptography.exceptions import InvalidSignature\n[WARNING]: provided hosts list is empty, only localhost is available. Note that the implicit localhost does not match \u0027all\u0027\n\nPLAY [Playbook] ***************************************************************************************************************************************************************************************************\n\nTASK [Gathering Facts] ********************************************************************************************************************************************************************************************\nok: [localhost]\n\nTASK [update inventory file symlink] ******************************************************************************************************************************************************************************\nfatal: [localhost]: FAILED! \u003d\u003e {\"changed\": false, \"gid\": 105233, \"group\": \"mnietoji\", \"mode\": \"0664\", \"msg\": \"Error while replacing: [Errno 13] Permission denied: b\u0027file1\u0027 -\u003e b\u0027/.2303767.1682073885.727713.tmp\u0027\", \"owner\": \"mnietoji\", \"path\": \"file2\", \"secontext\": \"unconfined_u:object_r:user_home_t:s0\", \"size\": 1, \"state\": \"file\", \"uid\": 105233}\n\nPLAY RECAP ********************************************************************************************************************************************************************************************************\nlocalhost                  : ok\u003d1    changed\u003d0    unreachable\u003d0    failed\u003d1    skipped\u003d0    rescued\u003d0    ignored\u003d0",
+      "parentUuid": "0757726d_0c21ca15",
+      "revId": "2fb0a0916ef81fee56140d53d265c158fd838d7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
