@@ -43,11 +43,15 @@
   become_user: "{{ install.user.name }}"
   become: yes
   block:
-    # TODO(wznoinsk): use rhos-release tool to generate this file instead of the template...
-    # ... remember to disable all the repos in the newly created file by default
+    - name: extract the URL of currEnt RHEL9 COMPOSE
+      shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1 rhosp-director-images | grep http | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/"$7"/"$8"/"}'
+      register: osp17_1rhel9_compose_url
 
-    # also implement a way to find the right RHEL8 puddle ID that works with specified RHEL9 puddle id (--build plugin param)
-    # and register it for later so we can fetch and right container image tag from that RHEL8 puddle and use it in container computerhel8 image yaml file
+    - name: set RHEL8_COMPOSE_URL
+      vars:
+        osp17_1rhel8_compose_id: "{{ lookup('url', osp17_1rhel9_compose_url.stdout + '/RHEL8_COMPOSE_ID') }}"
+      shell: echo {{ osp17_1rhel9_compose_url.stdout }} | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/17.1-RHEL-8/{{ osp17_1rhel8_compose_id }}/"}'
+      register: osp17_1rhel8_compose_url
 
     - name: "(multirhel) Copy rhos-release-osp17.1-rhel-8.4.repo file (repo disabled by default)"
       template:
