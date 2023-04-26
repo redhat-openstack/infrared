@@ -43,18 +43,39 @@
   become_user: "{{ install.user.name }}"
   become: yes
   block:
-    # TODO(wznoinsk): use rhos-release tool to generate this file instead of the template...
-    # ... remember to disable all the repos in the newly created file by default
+    - name: extract the URL of current RHEL9 COMPOSE
+      shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1 rhosp-director-images | grep http | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/"$7"/"$8"/"}'
+      register: osp17_1rhel9_compose_url
 
-    # also implement a way to find the right RHEL8 puddle ID that works with specified RHEL9 puddle id (--build plugin param)
-    # and register it for later so we can fetch and right container image tag from that RHEL8 puddle and use it in container computerhel8 image yaml file
+    - name: get RHEL8 COMPOSE ID
+      uri:
+        url: "{{ osp17_1rhel9_compose_url.stdout + '/RHEL8_COMPOSE_ID' }}"
+        return_content: yes
+      register: osp17_1rhel8_compose_id
 
-    - name: "(multirhel) Copy rhos-release-osp17.1-rhel-8.4.repo file (repo disabled by default)"
-      template:
-        src: rhos-release-17.1-rhel-8.4.repo.j2
-        dest: /etc/yum.repos.d/rhos-release-17.1-rhel-8.4.repo
-      become: true
-      become_user: root
+    - name: "ensure {{ multirhel_dnf_repos_dir }} directory exists and it's empty"
+      become: true # rhos-release role acts as root, this dir has to be there available for it
+      file:
+        path: "{{ multirhel_dnf_repos_dir }}"
+        state: "{{ item }}"
+      with_items:
+        - absent
+        - directory
+
+    # rhos-release 17.1 -t ~/multirhel_dnf_repos -p {{ osp17_1rhel8_compose_id }} -r 8.4
+    - include_role:
+        name: rhos-release
+      vars:
+        release: "{{ install.version|default(undercloud_version) }}"
+        rr_distro_version: "8.4"
+        rr_buildmods: "{{ install.buildmods }}"
+        build: "{{ osp17_1rhel8_compose_id.content }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_target_directory: "{{ multirhel_dnf_repos_dir }}"
+
+    - name: discover available 17.1 RHEL8 rhosp-director-images
+      shell: dnf download --setopt=reposdir={{ multirhel_dnf_repos_dir }} --url rhosp-director-images* | grep rhosp-director-images-uefi-x86_64
 
     - name: "(multirhel) Ensure {{ multirhel_images_dir }} exists and it's empty"
       file:
@@ -72,7 +93,7 @@
     - when: multirhel_overcloud_image_url == ''
       block:
         - name: "(multirhel) Discover available rhosp-director-images packages based on the above DNF repo"
-          shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1-rhel-8.4 --releasever el8ost rhosp-director-images* | grep -iE "rhosp-director-images-uefi-x86_64"
+          shell: dnf download --setopt=reposdir={{ multirhel_dnf_repos_dir }} --url rhosp-director-images* | grep rhosp-director-images-uefi-x86_64
           register: discover_available_rhosp_director_images
 
         - name: "(multirhel) set fact to automatically discovered rhosp-director-images.* RPM URLs"
