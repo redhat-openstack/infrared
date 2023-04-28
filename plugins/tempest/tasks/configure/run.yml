@@ -31,6 +31,17 @@
     - test.customized.image.flavor
     - test.image is defined and test.image
 
+- name: Configure cinder multiattach volume type
+  tasks:
+    - name: Set a multiattach volume type and create it if needed
+      shell: |
+          source ~/keystonerc
+          openstack volume type show "{{ test.volume.multiattach.type }}" &>/dev/null || \
+            openstack volume type create "{{ test.volume.multiattach.type }}"
+          openstack volume type set multiattach="<is> True" "{{ test.volume.multiattach.type }}"
+  when:
+    - test.volume.multiattach.type
+
 - debug:
     var: test
 
@@ -105,6 +116,10 @@
               compute.flavor_ref_alt {{ flavor_alt_id.stdout }} \
               compute.image_ref {{ image_id.stdout }} \
               compute.image_ref_alt {{ image_alt_id.stdout }} \
+              {% endif %}
+              {% if test.volume.multiattach.type %}
+              compute-feature-enabled.volume_multiattach true \
+              volume.volume_type_multiattach {{ test.volume.multiattach.type }} \
               {% endif %}
               {# config options #}
               {% for section_name,options in config_options.items() %}
