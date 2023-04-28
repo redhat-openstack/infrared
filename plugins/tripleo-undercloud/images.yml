@@ -94,6 +94,7 @@
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       multirhel_images_dir: "{{ ansible_user_dir }}/images/multirhel/"
+      multirhel_dnf_repos_dir: "{{ ansible_user_dir }}/multirhel_dnf_repos"
   pre_tasks:
       - setup:
         tags:
@@ -250,7 +251,7 @@
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ --os-image-name overcloud-minimal.qcow2 --image-type os
         when: minimal_images
 
-      - name: Upload computerhel8/multirhel images (overcloud-rhel8.qcow2)
+      - name: Upload computerhel8/multirhel images (overcloud-rhel8.qcow2) (openstack overcloud image upload)
         shell: |
             set -exuo pipefail
             source ~/stackrc
