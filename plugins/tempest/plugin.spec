@@ -306,6 +306,12 @@ subparsers:
                       type: Bool
                       help: Install crudini on all controller nodes (required by some tests).
                       default: no
+                  volume-multiattach-type:
+                      type: Value
+                      help: |
+                        A multiattach volume type to be created to run volume multiattach tests.
+                        In addition, multiattach is configured in tempest.conf
+                      default: ''
             - title: ansible facts
               options:
                   collect-ansible-facts:
