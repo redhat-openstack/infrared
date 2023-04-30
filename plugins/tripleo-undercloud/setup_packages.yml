@@ -11,6 +11,23 @@
       undercloud_extra_repos: []
   tags: install
   tasks:
+      - name: install custom CA if needed
+        become: yes
+        become_user: root
+        when:
+          - install.tls.ca != ''
+        block:
+          - name: "fetch {{ install.tls.ca }}"
+            get_url:
+              url: "{{ install.tls.ca }}"
+              dest: /etc/pki/ca-trust/source/anchors/custom-ssl-ca.crt
+              validate_certs: no
+            register: custom_ca
+
+          - name: update system trust store
+            when: custom_ca is changed
+            command: update-ca-trust
+
       - debug:
               msg: "{{ custom_script_url }}"
       - debug:
