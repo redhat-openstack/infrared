@@ -29,7 +29,7 @@
             oc_cdn_register: "{{ cdn_status.rc }}"
 
 - name: Update Overcloud repos
-  hosts: overcloud_nodes:!unused
+  hosts: overcloud_nodes:!unused:!computerhel8
   gather_facts: yes
   any_errors_fatal: true
   tags:
@@ -43,6 +43,49 @@
         build: "{{ install.build|default('latest') }}"
         mirror: "{{ install.mirror | default(omit) }}"
         rr_distro_version: "{{ install.osrelease|default(omit) }}"
+        enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
+        when:
+          - hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
+          - not install.cdn|default(False)
+        register: overcloud_nodes_rhos_release_exec
+  tasks:
+    - when: '"computerhel8" in groups'
+      tags:
+        - update
+        - update_repos
+        - update_repos_multirhel
+      block:
+      - name: Resolve the RHEL8 COMPOSE ID linked to current RHEL9 COMPOSE
+        become: true
+        shell: |
+          RHEL9_REPO_URL="$(dnf config-manager --dump rhelosp-17.1 | awk '/^baseurl/ {print $3}' | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/"$7"/"$8"/"}')"
+          curl -4 -L $RHEL9_REPO_URL/RHEL8_COMPOSE_ID
+        register: multirhel_rhel8_compose_id_raw
+        run_once: true
+        delegate_to: "{{ groups.overcloud_nodes[0] }}"
+
+      - set_fact:
+          multirhel_rhel8_compose_id: "{{ hostvars[groups.overcloud_nodes[0]]['multirhel_rhel8_compose_id_raw'].stdout }}"
+        run_once: true
+        delegate_to: localhost
+        delegate_facts: true
+
+- name: Update repos on *rhel8 (multirhel) Overcloud nodes
+  hosts: computerhel8:!unused
+  gather_facts: yes
+  any_errors_fatal: true
+  tags:
+      - update
+      - update_repos
+      - update_repos_multirhel
+  roles:
+      - role: rhos-release
+        rr_buildmods: "{{ install.buildmods }}"
+        release: "{{ (hostvars[groups['undercloud']|first].undercloud_version) }}"
+        director_build: "{{ install.get('director', {}).build|default(omit) }}"
+        build: "{{ hostvars['localhost']['multirhel_rhel8_compose_id'] }}"
+        mirror: "{{ install.mirror | default(omit) }}"
+        rr_distro_version: "8.4"
         enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
         when:
           - hostvars[groups['undercloud'][0]]['oc_cdn_register']|int == 1
