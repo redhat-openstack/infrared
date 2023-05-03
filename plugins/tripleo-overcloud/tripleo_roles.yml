@@ -87,7 +87,24 @@
           # we add it here and support for it inside the generate_baremetal_deployment_from_roles_data.py to enable support for user-defined images they may want to pass in their role files for multirhel machines
           shell: |
             set -x
-            {% for r in install.role.files.split(',') %}
+            {% set roles = install.role.files.split(',') %}
+            {% set roles_iter = [] %}
+            {% set saved_roles = [] %}
+
+            {% if roles|length == 1 %}
+            {% for host_name in groups.overcloud_nodes %}
+            {% set host_short_name = host_name is search(".*rhel8.*") | ternary(host_name.split('-')[-2], host_name.rstrip('1234567890-').split('-')[-1]) %}
+            {% set role_name = role_names_mapping.get(host_short_name, host_short_name|title) %}
+            {% if role_name not in saved_roles %}
+            {%- if roles_iter.append(role_name)%}{% endif %}
+            {%- if saved_roles.append(role_name)%}{% endif %}
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            {% set roles_iter = roles %}
+            {% endif %}
+
+            {% for r in roles_iter %}
             {% if r in multirhel_roles_map_inversed %}
             cat {{ install.heat.templates.basedir }}/roles/{{ multirhel_roles_map_inversed[r] }}.yaml | \
                 sed 's/name: {{ multirhel_roles_map_inversed[r] }}/name: {{ r }}/g' | \
@@ -192,6 +209,9 @@
         vars:
             role_file_path: "{{ template_base }}/roles/roles_data.yaml"
             generate_scheduler_hints: yes
+
+      - fail:
+          msg: failing wznoinsk debug
 
 - name: Deploy the Overcloud with composable roles
   import_playbook: "{{ overcloud_deploy | default('deploy.yml') }}"
