@@ -410,7 +410,7 @@ subparsers:
                   repos-urls:
                       type: ListValue
                       help: |
-                          Comma,separated list of URLs of YUM/DNF repo files to download to ``/etc/yum.repos.d``
+                          Comma,separated list of URLs of YUM/DNF repo files to download to ``/etc/yum.repos.d`` inside overcloud image.
                   repos-skip-release:
                       type: Bool
                       help: |
@@ -554,6 +554,13 @@ subparsers:
                         Example:
                           --multirhel-overcloud-image-url http://.../Packages/rhosp-director-images-uefi_x86_64-17.1-20230125.1.test.el8ost.noarch.rpm
                       ansible_variable: multirhel_overcloud_image_url
+
+                  multirhel-repos-urls:
+                      type: ListValue
+                      help: |
+                          Comma,separated list of URLs of YUM/DNF repo files to download to ``/etc/yum.repos.d`` inside MultiRHEL overcloud image.
+                          Note that you may need to specify more repo URLs than in the non-multirhel 'repos-url' param due to fact that non-multirhel nodes
+                          also get YUM/DNF repo files from undercloud while multirhel ones do not.
 
             - title: Undercloud Upgrade
               options:

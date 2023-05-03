@@ -205,9 +205,9 @@
         list_files: yes
     with_items: "{{ overcloud_images_17_1_rhel8_tar_files.files }}"
 
-  - name: "(multirhel) rename overcloud-*full*.qcow2 image file to overcloud-rhel8.qcow2"
+  - name: "(multirhel) rename overcloud-*full*.qcow2 image file to {{ overcloud_image_file_multirhel }}"
     shell: |
-      mv overcloud-*full*.qcow2 overcloud-rhel8.qcow2
+      mv overcloud-*full*.qcow2 {{ overcloud_image_file_multirhel }}
     args:
       chdir: "{{ multirhel_images_dir }}"
       executable: /bin/bash

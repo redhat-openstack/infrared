@@ -72,6 +72,12 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
 
+- name: (multirhel) Push repository to overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file_multirhel }} --copy-in {{ tmp_oc_repos_dir_multirhel }}:/etc/ --selinux-relabel"
+  when: multirhel_enabled
+
 - name: Patch amphora image
   become: yes
   block:
@@ -168,6 +174,15 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   register: image_packages
   when: install.images.packages|default(None) != None
+
+- name: Install packages in overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
+  register: image_packages
+  when:
+    - install.images.packages|default(None) != None
+    - multirhel_enabled
 
 - name: update packages on repos
   environment:
