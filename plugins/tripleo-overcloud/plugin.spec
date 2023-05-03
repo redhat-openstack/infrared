@@ -832,6 +832,7 @@ subparsers:
                         For MultiRHEL:
                         If some of the roles specified here do not exist in https://github.com/openstack/tripleo-heat-templates/tree/master/roles
                         then a RHEL9 -> RHEL8 role mapping is required. See multirhel-roles-map param for more info.
+                        The role names _are_ case sensitive, i.e.: computerhel8/ComputeRhel8 are not correct multirhel role names.
 
                   tht-roles:
                       type: Bool
@@ -1127,6 +1128,7 @@ subparsers:
 
                         NOTE: When using composable roles then each MultiRHEL role specified in this mapping has to be also included in 'role-files' parameter of this plugin.
                         NOTE2: If a MultiRHEL role already exists in /usr/share/openstack-tripleo-heat-templates/roles then do not include it in the mapping here.
+                        NOTE3: The role names _are_ case sensitive; they have to be written exactly as their files names in openstack-tripleo-heat-templates/roles folder; computerhel8/ComputeRhel8 are not correct multirhel role names.
                       ansible_variable: multirhel_roles_map
 
                   multirhel-overcloud-container-image-prepare-parameter-file:
