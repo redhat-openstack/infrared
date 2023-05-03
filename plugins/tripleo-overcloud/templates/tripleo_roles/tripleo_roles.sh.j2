@@ -1,14 +1,20 @@
 #!/bin/bash
 
+set -o errexit
+
+{%- set multirhel_roles_found = [] %}
+
 openstack overcloud roles generate -o {{ template_base }}/roles/roles_data.yaml \
 {% set roles = install.role.files.split(',') %}
 {# automatically detect roles from the inventory #}
 {% if roles|length == 1 %}
 {% for host_name in groups.overcloud_nodes %}
-{% set host_short_name = host_name.rstrip('1234567890-').split('-')[-1] %}
+{% set host_short_name = host_name is search(".*rhel8.*") | ternary(host_name.split('-')[-2], host_name.rstrip('1234567890-').split('-')[-1]) %}
 {% set role_name = role_names_mapping.get(host_short_name, host_short_name|title) %}
 {% if role_name not in multirhel_roles_map_inversed %}
     {{ role_name }} \
+{% else %}
+{%- if multirhel_roles_found.append(role_name)%}{%endif%}
 {% endif %}
 {% endfor %}
 {% else %}
@@ -16,17 +22,11 @@ openstack overcloud roles generate -o {{ template_base }}/roles/roles_data.yaml 
 {% for role_name in roles %}
 {% if role_name not in multirhel_roles_map_inversed %}
     {{ role_name }} \
+{% else %}
+{%- if multirhel_roles_found.append(role_name)%}{%endif%}
 {% endif %}
 {% endfor %}
 {% endif %}
-
-{%- set multirhel_roles_found = [] %}
-
-{% for role in roles %}
-{%- if role in multirhel_roles_map_inversed %}
-{%- if multirhel_roles_found.append(role)%}{%endif%}
-{%- endif -%}
-{%- endfor -%}
 
 {% if multirhel_roles_found | length >= 1 %}
 echo "generate roles_data_multirhel.yaml"
