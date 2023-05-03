@@ -55,6 +55,14 @@
   with_items: "{{ patched_rpms.results }}"
   when: item.stat.exists
 
+- name: (multirhel) Disable custom repository before first update
+  replace:
+    dest: "{{ tmp_oc_repos_dir_multirhel }}/{{ item.stat.path | basename }}"
+    regexp: 'enabled(\s)*=(\s)*1'
+    replace: "enabled=0"
+  with_items: "{{ patched_rpms.results }}"
+  when: item.stat.exists
+
 - name: Upload yum config with enabled custom repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
@@ -71,6 +79,16 @@
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
+
+- name: (multirhel) Push repository to overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file_multirhel }} --copy-in {{ tmp_oc_repos_dir_multirhel }}:/etc/ --selinux-relabel"
+  args:
+    chdir: "{{ multirhel_images_dir }}"
+  when:
+    - multirhel_enabled
+    - multirhel_repos_urls
 
 - name: Patch amphora image
   become: yes
@@ -140,6 +158,16 @@
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
   command: "virt-customize -a {{ overcloud_image_file }} --copy-in {{ tmp_oc_repos_dir }}:/etc/ --selinux-relabel"
 
+- name: (multirhel) Push repository to overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file_multirhel }} --copy-in {{ tmp_oc_repos_dir_multirhel }}:/etc/ --selinux-relabel"
+  args:
+    chdir: "{{ multirhel_images_dir }}"
+  when:
+    - multirhel_enabled
+    - multirhel_repos_urls != ''
+
 - name: Do package update inside of overcloud image with custom repository enabled
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
@@ -168,6 +196,17 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   register: image_packages
   when: install.images.packages|default(None) != None
+
+- name: (multirhel) Install packages in overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file_multirhel }} --install {{ install.images.packages }} --selinux-relabel"
+  register: image_packages_multirhel
+  args:
+    chdir: "{{ multirhel_images_dir }}"
+  when:
+    - install.images.packages|default(None) != None
+    - multirhel_enabled
 
 - name: update packages on repos
   environment:
@@ -207,3 +246,10 @@
   command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
   when:
       - image_repos is changed or image_packages is changed or image_remove_packages is changed or image_update is changed or image_selinux is changed
+
+- name: (multirhel) remove machine-id from overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
+  when:
+      - image_packages_multirhel is changed or image_remove_packages_multirhel is changed

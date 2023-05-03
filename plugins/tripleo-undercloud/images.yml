@@ -86,7 +86,9 @@
       minimal_images:  "{{ install.download.minimal.images == true | ternary(true, false) }}"
       minimal_tar_images: "{{ tar_files.minimal }}"
       tmp_oc_repos_dir: /tmp/oc_repos/yum.repos.d
+      tmp_oc_repos_dir_multirhel: /tmp/oc_repos/multirhel/yum.repos.d
       overcloud_image_file: "overcloud-{{overcloud_image_name}}.qcow2"
+      overcloud_image_file_multirhel: "overcloud-rhel8.qcow2"
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
@@ -176,6 +178,29 @@
         delay: 10
         tags: extra-repos
 
+      - when: multirhel_enabled
+        tags: multirhel_extra_repos
+        block:
+          - name: "ensure {{ tmp_oc_repos_dir_multirhel }} exists and it's empty"
+            file:
+              name: "{{ tmp_oc_repos_dir_multirhel }}"
+              state: "{{ item }}"
+            with_items:
+              - absent
+              - directory
+
+          - name: (multirhel) Downloading extra YUM/DNF repositories
+            get_url:
+                url: "{{ item }}"
+                dest: "{{ tmp_oc_repos_dir_multirhel }}"
+            # with_items: "{{ install.get('multirhel', {}).get('repos', {}).urls|default([]) }}"
+            with_items: "{{ multirhel_repos_urls }}"
+            when: (item|splitext)[-1] == ".repo"
+            register: extra_repos_get_url_multirhel
+            until: extra_repos_get_url_multirhel is not failed or extra_repos_get_url_multirhel.status_code | quote not in retry_http_codes
+            retries: 2
+            delay: 10
+
       - name: Copy previously enabled custom repos
         become: yes
         shell: |
@@ -191,6 +216,7 @@
         include_tasks: tasks/images/repos.yml
         # update is a func name (dict.update) so it must be used as str explicitly
         when: install.images.packages|default('') or install.images['update'] or install.images.remove|default('')
+        tags: multirhel_repos_urls
 
       # Trigger only when update kernel flag is specified and new packages installed inside overcloud image
       - name: update default overcloud kernel from modified overcloud image
@@ -227,8 +253,7 @@
             source ~/stackrc
             openstack overcloud image upload --update-existing {% if overcloud_image_name == "hardened-uefi-full" or overcloud_image_name == "hardened-uefi-full-fips" or multirhel_enabled %}--whole-disk{% endif %}
         tags: skip_ansible_lint
-        when:
-          - not multiarch_images
+        when: not multiarch_images
 
       - name: Upload ppc64le images to glance
         shell: |
@@ -251,7 +276,7 @@
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ --os-image-name overcloud-minimal.qcow2 --image-type os
         when: minimal_images
 
-      - name: Upload computerhel8/multirhel images
+      - name: Upload computerhel8/multirhel image ({{ overcloud_image_file_multirhel }}) (openstack overcloud image upload)
         shell: |
             set -exuo pipefail
             source ~/stackrc
