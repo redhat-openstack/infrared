@@ -43,17 +43,17 @@
   become_user: "{{ install.user.name }}"
   become: yes
   block:
-    - name: extract the URL of current RHEL9 COMPOSE
+    - name: (multirhel) extract the URL of current RHEL9 COMPOSE
       shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1 rhosp-director-images | grep http | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/"$7"/"$8"/"}'
       register: osp17_1rhel9_compose_url
 
-    - name: get RHEL8 COMPOSE ID
+    - name: (multirhel) get RHEL8 COMPOSE ID
       uri:
         url: "{{ osp17_1rhel9_compose_url.stdout + '/RHEL8_COMPOSE_ID' }}"
         return_content: yes
       register: osp17_1rhel8_compose_id
 
-    - name: "ensure {{ multirhel_dnf_repos_dir }} directory exists and it's empty"
+    - name: "(multirhel) ensure {{ multirhel_dnf_repos_dir }} directory exists and it's empty"
       become: true # rhos-release role acts as root, this dir has to be there available for it
       file:
         path: "{{ multirhel_dnf_repos_dir }}"
@@ -62,7 +62,7 @@
         - absent
         - directory
 
-    - name: add RHEL8 dnf repos based on RHEL8 COMPOSE ID
+    - name: (multirhel) add RHEL8 dnf repos based on RHEL8 COMPOSE ID
       include_role:
         name: rhos-release
       vars:
@@ -74,7 +74,7 @@
         mirror: "{{ install.mirror | default(omit) }}"
         rr_target_directory: "{{ multirhel_dnf_repos_dir }}"
 
-    - name: discover available 17.1 RHEL8 rhosp-director-images
+    - name: (multirhel) discover available 17.1 RHEL8 rhosp-director-images
       shell: dnf download --setopt=reposdir={{ multirhel_dnf_repos_dir }} --url rhosp-director-images* | grep rhosp-director-images-uefi-x86_64
 
     - name: "(multirhel) Ensure {{ multirhel_images_dir }} exists and it's empty"
@@ -193,7 +193,7 @@
     register: overcloud_images_17_1_rhel8_tar_files
 
   - debug:
-      var: overcloud_hardened_uefi_full_17_1_tar_file
+      var: overcloud_images_17_1_rhel8_tar_files
 
   - name: (multirhel) untar the images - computerhel8/multirhel deployment
     unarchive:
@@ -205,9 +205,9 @@
         list_files: yes
     with_items: "{{ overcloud_images_17_1_rhel8_tar_files.files }}"
 
-  - name: "(multirhel) rename overcloud-*full*.qcow2 image file to overcloud-rhel8.qcow2"
+  - name: "(multirhel) rename overcloud-*full*.qcow2 image file to {{ overcloud_image_file_multirhel }}"
     shell: |
-      mv overcloud-*full*.qcow2 overcloud-rhel8.qcow2
+      mv overcloud-*full*.qcow2 {{ overcloud_image_file_multirhel }}
     args:
       chdir: "{{ multirhel_images_dir }}"
       executable: /bin/bash
