@@ -59,6 +59,7 @@
             enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
             without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
             skip_remove_repo: "{{ install.get('skip', {}).get('remove', {}).repo|default(omit) }}"
+            rr_extra_ceph_version: "{{ install.ceph.extra.version | default(omit) }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)

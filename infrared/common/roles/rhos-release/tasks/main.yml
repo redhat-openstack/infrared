@@ -99,6 +99,7 @@
                   discover_build: "{{ rr_discover_build }}"
                   enable_testing_repos: "{{ enable_testing_repos|default(omit) }}"
                   without_ceph: "{{ without_ceph|default(omit) }}"
+                  extra_ceph_version: "{{ rr_extra_ceph_version|default(omit) }}"
               register: command_result
               until: command_result.stderr.find('Connection reset by peer') == -1
               retries: 40
@@ -121,6 +122,7 @@
                   source_hostname: "{{ (selected_mirror|default({})).get('stdout', '')|trim }}"
                   discover_build: "{{ rr_discover_build }}"
                   without_ceph: "{{ without_ceph|default(omit) }}"
+                  extra_ceph_version: "{{ rr_extra_ceph_version|default(omit) }}"
               register: command_result
               ignore_errors: yes
 
