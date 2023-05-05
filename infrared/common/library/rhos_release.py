@@ -86,6 +86,10 @@ options:
         description:
             - List of flags that will be enabled. only works with pin puddle,
               flea-repos, unstable and cdn
+    extra_ceph_version:
+        description:
+            - Enables also the ceph repositories for the requested ceph version,
+              if they are available
 notes:
     - requires rhos-release version 1.0.23
 requirements: [ rhos-release ]
@@ -178,8 +182,10 @@ def _parse_output(module, cmd, stdout):
 
     filenames = set(f["file"] for f in filenames)
 
+    # exclude lines which deploys "just" ceph
     release_lines = [line for line in stdout.splitlines() if
-                     line.startswith("# rhos-release ")]
+                     line.startswith("# rhos-release ") and
+                     not line.startswith("# rhos-release ceph-")]
 
     installed_releases = map(released, release_lines)
     ret_dict = dict(
@@ -284,6 +290,7 @@ def main():
             discover_build=dict(type='bool', default=False),
             enable_testing_repos=dict(),
             without_ceph=dict(type='bool', default=False),
+            extra_ceph_version=dict(),
         )
     )
     base_cmd = 'rhos-release'
@@ -303,6 +310,7 @@ def main():
     discover_build = module.params['discover_build']
     enable_testing_repos = module.params['enable_testing_repos']
     without_ceph = module.params['without_ceph']
+    extra_ceph_version = module.params['extra_ceph_version']
 
     repo_args = ['-t', str(repo_directory)] if repo_directory and \
         repo_directory != DEFAULT_TARGET_DIR else[]
@@ -321,6 +329,7 @@ def main():
     one_shot_mode = ['-O'] if module.boolean(one_shot_mode) else []
     enable_testing_repos = ['-T', str(enable_testing_repos)] if enable_testing_repos else []
     without_ceph = ['--without-ceph'] if module.boolean(without_ceph) else []
+    extra_ceph_version = ['ceph-{}'.format(str(extra_ceph_version))] if extra_ceph_version else []
 
     mods = {
         'pin': '-P',
@@ -372,6 +381,7 @@ def main():
             cmd.extend(enable_testing_repos)
             cmd.extend(repo_args)
             cmd.extend(without_ceph)
+            cmd.extend(extra_ceph_version)
             cmd.append(';')
 
     _run_command(module, ['sh', '-c', ' '.join(cmd)])
