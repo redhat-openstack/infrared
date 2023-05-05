@@ -51,6 +51,7 @@
             enable_testing_repos: "{{ install.get('enable', {}).get('testing', {}).repos|default(omit) }}"
             without_ceph: "{{ not install.get('ceph', {}).repos|default(omit) }}"
             skip_remove_repo: "{{ install.get('skip', {}).get('remove', {}).repo|default(omit) }}"
+            rr_extra_ceph_version: "{{ install.ceph.extra.version | default(omit) }}"
         when:
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
@@ -138,21 +139,6 @@
         when:
             - ansible_distribution == 'RedHat'
             - ansible_distribution_version is version('9.2', '<')
-            - "install.version|openstack_distribution == 'OSP'"
-            - not install.cdn|default(False)
-            - cdn_status.rc != 0
-            - not skip_release
-        tags: rhos-release
-
-      - name: Enable extra repo (crb) for vbmc dependencies (RHEL9.2) before GA
-        become: yes
-        shell: |
-            set -ex
-            dnf config-manager --save --setopt rhosp-rhel-9.2-beta-crb.includepkgs=libvirt-devel
-            dnf config-manager --set-enabled rhosp-rhel-9.2-beta-crb
-        when:
-            - ansible_distribution == 'RedHat'
-            - ansible_distribution_version is version('9.2', '==')
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
             - cdn_status.rc != 0
