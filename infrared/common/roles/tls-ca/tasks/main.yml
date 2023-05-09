@@ -1,0 +1,7 @@
+---
+- set_fact:
+       certs:  "{{ tlsca.split(',') if ',' in tlsca else [tlsca] }}"
+
+- include_tasks: deploy.yml
+  with_items:
+   - "{{ certs }}"
