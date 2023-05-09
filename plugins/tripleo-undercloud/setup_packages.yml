@@ -3,6 +3,7 @@
   hosts: undercloud
   gather_facts: yes
   become: yes
+  become_user: root
   vars:
       custom_repos: "{{ install.repos|default({}) }}"
       custom_script_url: "{{ install.get('custom', {}).get('sources', {}).get('script', {}).get('url', {})|default('') }}"
@@ -18,6 +19,13 @@
       # FIXME(yfried): figure why this is required in gate only
       - name: gather undercloud facts since sometimes they are missing
         setup:
+
+      - name: Install custom CA if needed
+        include_role:
+            name: tls-ca
+        vars:
+            tlsca: "{{ install.tls.ca }}"
+        when: install.tls.ca != ''
 
       - name: load rdo overrides
         include_vars: "{{ install.rdo.override }}"
