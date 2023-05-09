@@ -1,0 +1,39 @@
+---
+- set_fact:
+    counter: "{{ counter|int + 1 }}"
+
+- block:
+    - name: "fetch {{ item }}"
+      get_url:
+        url: "{{ item }}"
+        dest: "/etc/pki/ca-trust/source/anchors/custom-ssl-ca-{{counter}}.crt"
+        validate_certs: no
+      register: custom_ca
+
+    - set_fact:
+        item_url: True
+
+  when: item is regex("^http.*|^https.*|^ftp.*")
+
+- block:
+    - debug:
+       msg: "This is file"
+
+    - name: "Check if path exists"
+      stat:
+        path: "{{ item }}"
+      register: result
+
+    - name: "Copy {{ item }}"
+      copy:
+        src: "{{ item }}"
+        dest: "/etc/pki/ca-trust/source/anchors/custom-ssl-ca-{{counter}}.crt"
+        owner: root
+        group: root
+      register: custom_ca
+      when: result.stat.exists|default(false)
+
+  when: not item_url|default(false)
+
+- name: update system trust store
+  command: update-ca-trust
