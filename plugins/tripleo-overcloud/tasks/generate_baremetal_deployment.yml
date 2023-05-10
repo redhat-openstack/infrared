@@ -30,7 +30,9 @@
         src: "files/ansible_playbook/Controller.sssd_selinux.yaml.j2"
         dest: "ansible_playbook/Controller.sssd_selinux.yaml"
         mode: 0644
-      when: install.container.extra.repos is defined
+      when: >
+        install.container.extra.repos is defined or
+        (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 17)
 
     - name: Find out the number of nodes per role
       roles_node_count:
