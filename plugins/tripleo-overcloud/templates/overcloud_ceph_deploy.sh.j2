@@ -10,4 +10,5 @@ openstack overcloud ceph deploy \
 {% if install.ceph.cluster.name and install.ceph.cluster.name|length > 0 %}--cluster {{ install.ceph.cluster.name }}{% endif %} \
 --network-data "{{ template_base }}/network/network_data_v2.yaml" \
 {% if roles_data_file.stat.exists %}--roles-data {{ roles_data_file.stat.path }}{% endif %} \
+{% if install.ntp.pool|default(False) %}--ntp-server {{ install.ntp.pool }}{% elif install.ntp.server|default(False) %}--ntp-server {{ install.ntp.server }} {% endif %} \
 /home/stack/templates/overcloud-baremetal-deployed.yaml
