@@ -105,7 +105,9 @@
           copy:
             src: templates/sssd_selinux_workaround.yaml
             dest: '{{ template_base }}/playbooks/sssd_selinux_workaround.yaml'
-        when: install.container.extra.repos is defined
+        when: >
+          install.container.extra.repos is defined or
+          (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 17)
 
 
       - name: Create the network_data.yaml
