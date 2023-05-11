@@ -137,22 +137,6 @@
             version_escaped: "{{ ansible_distribution_version | replace('.', '\\.') }}"
         when:
             - ansible_distribution == 'RedHat'
-            - ansible_distribution_version is version('9.2', '<')
-            - "install.version|openstack_distribution == 'OSP'"
-            - not install.cdn|default(False)
-            - cdn_status.rc != 0
-            - not skip_release
-        tags: rhos-release
-
-      - name: Enable extra repo (crb) for vbmc dependencies (RHEL9.2) before GA
-        become: yes
-        shell: |
-            set -ex
-            dnf config-manager --save --setopt rhosp-rhel-9.2-beta-crb.includepkgs=libvirt-devel
-            dnf config-manager --set-enabled rhosp-rhel-9.2-beta-crb
-        when:
-            - ansible_distribution == 'RedHat'
-            - ansible_distribution_version is version('9.2', '==')
             - "install.version|openstack_distribution == 'OSP'"
             - not install.cdn|default(False)
             - cdn_status.rc != 0
