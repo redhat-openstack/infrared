@@ -3,7 +3,13 @@
   gather_facts: yes
   any_errors_fatal: true
   tags: tls-everywhere
+  become: yes
+  become_user: root
   roles:
+      - role: tls-ca
+        tlsca: "{{ install.tls.ca }}"
+        when: install.tls.ca != ''
+
       - role: rhos-release
         release: "{{ install.version }}"
         rr_buildmods: "{{ install.buildmods }}"
