@@ -1,5 +1,5 @@
 - name: Ensure that time is right everywhere
-  hosts: "undercloud:overcloud_nodes"
+  hosts: "undercloud:overcloud_nodes:!unused"
   gather_facts: false
   any_errors_fatal: true
   tasks:
@@ -132,8 +132,8 @@
           {{ _ceph_cmd_prefix }} status
         changed_when: false
         register: _ceph_health
-        until: _ceph_health.stdout.find("HEALTH_OK") > -1
-        retries: 15
+        until: _ceph_health.stdout.find("HEALTH_OK") > -1 or _ceph_health.stdout.find("HEALTH_WARN mons are allowing insecure global_id reclaim")
+        retries: 5
         delay: 60
         failed_when: (_ceph_health.stdout.find("HEALTH_OK") == -1) and
                      (_ceph_health.stdout.find("HEALTH_WARN") == -1)
@@ -220,7 +220,7 @@
         exit ${return_code}
         {%- endraw %}
       delegate_to: "{{ item }}"
-      loop: "{{ groups['overcloud_nodes'] }}"
+      loop: "{{ groups['overcloud_nodes'] | difference(groups['unused']) }}"
       register: _restart_services
       changed_when: _restart_services.rc == 2
       failed_when: _restart_services.rc not in [0,2]
