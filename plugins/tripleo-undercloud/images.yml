@@ -36,6 +36,15 @@
           - overcloud_image_name is not defined
           - install.fips.mode
 
+      - name: Set multirhel overcloud_image_name OSP>=17.1
+        set_fact:
+          overcloud_image_name: "overcloud-full-multirhel"
+          overcloud_image_rpm_name: "rhosp-director-images-multirhel-x86_64"
+        when:
+          - install.version|default(undercloud_version) | openstack_release >= 17.1
+          - overcloud_image_name is not defined
+          - multirhel_enabled
+
       - name: Set overcloud_image_extension
         set_fact:
           overcloud_image_extension: "tar"
@@ -78,9 +87,8 @@
               - "ironic-python-agent-latest-{{ undercloud_version }}-s390x.tar"
           minimal:
               - "overcloud-minimal-latest-{{ undercloud_version }}.tar"
-          computerhel8: # the filename of rhosp-director-images-uefi-x86_64*.tar files differs from compose to compose, can't fix it here - it's discovered at runtime
-              # - "ironic-python-agent.tar"
-              # - "overcloud-full-latest-16.1.tar"
+          computerhel8: 
+              - "overcloud-full-multirhel-{{ undercloud_version }}-x86_64.tar"
           # Any higher version defaults to 8
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
@@ -95,6 +103,7 @@
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
       multirhel_images_dir: "{{ ansible_user_dir }}/images/multirhel/"
       multirhel_dnf_repos_dir: "{{ ansible_user_dir }}/multirhel_dnf_repos"
+      multirhel_tar_images: "{{ tar_files.computerhel8 }}"
   pre_tasks:
       - setup:
         tags:
@@ -256,7 +265,7 @@
             set -exuo pipefail
             source ~/stackrc
             openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --whole-disk --os-image-name overcloud-rhel8.qcow2
-        when: multirhel_enabled
+        when: multirhel_enabled or multirhel_enabled_legacy
         tags: multirhel_images
 
       - name: check for existing nodes ( OS <= 10 )
@@ -320,7 +329,7 @@
           overcloud_image_name == "hardened-uefi-full" or
           overcloud_image_name == "hardened-uefi-full-fips" or
           install.images.task == "import"
-          
+
       - name: remove downloaded images directory for multiarch deployments
         file:
             path: "~{{ install.user.name }}/images"
