@@ -38,224 +38,224 @@
       network_environment_file: "network-environment{{ ((install.version|default(undercloud_version)|openstack_release >= 17)) | ternary('_v2' ,\
            ((install.network.protocol == 'ipv6') | ternary('-v6','')) + ((install.network.protocol == 'ipv6-all') | ternary('-v6-all','') ))}}.yaml"
   tasks:
-      - name: Gather data to create a unique ID (machine-id, current date)
-        shell: |
-            echo "$(cat /etc/machine-id)-$(date +%s)"
-        register: machineid_date
+     - name: Gather data to create a unique ID (machine-id, current date)
+       shell: |
+           echo "$(cat /etc/machine-id)-$(date +%s)"
+       register: machineid_date
 
-      - name: Compute a unique host ID to be used as part of the NFS ID
-        set_fact:
-            deployment_unique_id: "{{ machineid_date.stdout|to_uuid }}"
+     - name: Compute a unique host ID to be used as part of the NFS ID
+       set_fact:
+           deployment_unique_id: "{{ machineid_date.stdout|to_uuid }}"
 
-      - name: read all flavors
-        shell: |
-            source ~/stackrc
-            openstack flavor list | awk  'FNR>3 {print $4}' | sed '/^\s*$/d'
-        register: existing_flavors
-        tags: skip_ansible_lint
+     - name: read all flavors
+       shell: |
+           source ~/stackrc
+           openstack flavor list | awk  'FNR>3 {print $4}' | sed '/^\s*$/d'
+       register: existing_flavors
+       tags: skip_ansible_lint
 
-      - name: Create template base folder
-        file:
-            path: '{{ template_base }}'
-            state: directory
-            mode: u=rwX,g=rX,o=rX
+     - name: Create template base folder
+       file:
+           path: '{{ template_base }}'
+           state: directory
+           mode: u=rwX,g=rX,o=rX
 
-      - name: Delete the symlink to exclude the failure when reapplying the symlink to another dir
-        file:
-          path: '__oc_templates_folder'
-          state: absent
+     - name: Delete the symlink to exclude the failure when reapplying the symlink to another dir
+       file:
+         path: '__oc_templates_folder'
+         state: absent
 
-      - name: Create a stable symlink to the template base folder
-        file:
-            src: '{{ template_base }}'
-            dest: '__oc_templates_folder'
-            state: link
+     - name: Create a stable symlink to the template base folder
+       file:
+           src: '{{ template_base }}'
+           dest: '__oc_templates_folder'
+           state: link
 
-      - name: Ensure deployment folder nested structure exists
-        file:
-            path: '{{ template_base }}/{{ item.path }}'
-            state: directory
-        with_filetree: '{{ source_dir }}'
-        when: item.state == 'directory'
+     - name: Ensure deployment folder nested structure exists
+       file:
+           path: '{{ template_base }}/{{ item.path }}'
+           state: directory
+       with_filetree: '{{ source_dir }}'
+       when: item.state == 'directory'
 
-      # Ensure to include external loadbalancer IP addresses before the creation of vip_data.yaml and
-      # baremetal_deployment.yaml
-      - name: Include loadbalancer configuration vars
-        include_vars:
-          file: "vars/loadbalancer/external-{{ (install.network.protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
-        when: "'loadbalancer' in groups"
+     # Ensure to include external loadbalancer IP addresses before the creation of vip_data.yaml and
+     # baremetal_deployment.yaml
+     - name: Include loadbalancer configuration vars
+       include_vars:
+         file: "vars/loadbalancer/external-{{ (install.network.protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
+       when: "'loadbalancer' in groups"
 
-      # consider all the files as templates
-      - name: Copy deployment folder
-        vars:
-            nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
-        template:
-            src: '{{ item.src }}'
-            dest: '{{ template_base }}/{{ item.path | regex_replace("\.j2$", "") }}'
-        with_filetree: '{{ source_dir }}'
-        when: item.state == 'file'
+     # consider all the files as templates
+     - name: Copy deployment folder
+       vars:
+           nics_subfolder: "{{ (install.version|default(undercloud_version)|openstack_release > 10) | ternary('', 'legacy') }}"
+       template:
+           src: '{{ item.src }}'
+           dest: '{{ template_base }}/{{ item.path | regex_replace("\.j2$", "") }}'
+       with_filetree: '{{ source_dir }}'
+       when: item.state == 'file'
 
-      - block:
-        - name: Create playbooks directory
-          file:
-            state: directory
-            path: '{{ template_base }}/playbooks'
+     - block:
+       - name: Create playbooks directory
+         file:
+           state: directory
+           path: '{{ template_base }}/playbooks'
 
-        - name: Copy sssd_selinux_workaround.yaml.j2 to overcloud
-          copy:
-            src: templates/sssd_selinux_workaround.yaml
-            dest: '{{ template_base }}/playbooks/sssd_selinux_workaround.yaml'
-        when: >
-          install.container.extra.repos is defined or
-          (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 17)
+       - name: Copy sssd_selinux_workaround.yaml.j2 to overcloud
+         copy:
+           src: templates/sssd_selinux_workaround.yaml
+           dest: '{{ template_base }}/playbooks/sssd_selinux_workaround.yaml'
+       when: >
+         install.container.extra.repos is defined or
+         (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 17)
 
 
-      - name: Create the network_data.yaml
-        template:
-            src: 'templates/network_data{{ (install.network.protocol == "ipv6") | ternary("-v6","") }}.yaml.j2'
-            dest: '{{ template_base }}/network/network_data.yaml'
-        when: use_network_data|bool
+     - name: Create the network_data.yaml
+       template:
+           src: 'templates/network_data{{ (install.network.protocol == "ipv6") | ternary("-v6","") }}.yaml.j2'
+           dest: '{{ template_base }}/network/network_data.yaml'
+       when: use_network_data|bool
 
-      - name: inject debug.yaml so it will be auto discovered with user templates
-        template:
-            src: templates/debug.yaml.j2
-            dest: "{{ template_base }}/debug.yaml"
-        when: install.overcloud.debug
+     - name: inject debug.yaml so it will be auto discovered with user templates
+       template:
+           src: templates/debug.yaml.j2
+           dest: "{{ template_base }}/debug.yaml"
+       when: install.overcloud.debug
 
-      - name: set parameter_defaults for config_heat.yaml
-        set_fact:
-            config_heat_yaml:
-                parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
-        when: install.get('config', {}).get('heat', {})
+     - name: set parameter_defaults for config_heat.yaml
+       set_fact:
+           config_heat_yaml:
+               parameter_defaults: "{{ install.get('config', {}).get('heat', {}) }}"
+       when: install.get('config', {}).get('heat', {})
 
-      - name: set resource_registry for config_heat.yaml
-        vars:
-            config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
-        set_fact:
-            config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
-        when: install.get('config', {}).get('resource', {})
+     - name: set resource_registry for config_heat.yaml
+       vars:
+           config_resource: "{{ install.get('config', {}).get('resource', {}) }}"
+       set_fact:
+           config_heat_yaml: "{{ config_heat_yaml | default({}) | combine({'resource_registry': config_resource}) }}"
+       when: install.get('config', {}).get('resource', {})
 
-      - name: Create a custom environment file - NTP Pool
-        copy:
-          dest: "{{ template_base }}/ntp_pool.yaml"
-          content: |
-            parameter_defaults:
-               NtpPool: {{ install.ntp.pool }}
-               #NOTE(gfidente): We want MinPoll/MaxPoll set for 13 jobs
-               MinPoll: 4
-               MaxPoll: 5
-        when:
-            - install.version|default(undercloud_version)|openstack_release >= 13
-            - install.get('ntp', {}).pool is defined
-            - install.ntp.pool
+     - name: Create a custom environment file - NTP Pool
+       copy:
+         dest: "{{ template_base }}/ntp_pool.yaml"
+         content: |
+           parameter_defaults:
+              NtpPool: {{ install.ntp.pool }}
+              #NOTE(gfidente): We want MinPoll/MaxPoll set for 13 jobs
+              MinPoll: 4
+              MaxPoll: 5
+       when:
+           - install.version|default(undercloud_version)|openstack_release >= 13
+           - install.get('ntp', {}).pool is defined
+           - install.ntp.pool
 
-      - name: inject config_heat.yaml so it will be auto discovered with user templates
-        copy:
-            dest: "{{ template_base }}/config_heat.yaml"
-            content: "{{ config_heat_yaml | to_nice_yaml }}"
-        when: config_heat_yaml is defined
+     - name: inject config_heat.yaml so it will be auto discovered with user templates
+       copy:
+           dest: "{{ template_base }}/config_heat.yaml"
+           content: "{{ config_heat_yaml | to_nice_yaml }}"
+       when: config_heat_yaml is defined
 
-      - name: "check if custom overcloud_deploy.sh already exists in {{ template_base }}"
-        stat:
-            path: "{{ template_base }}/overcloud_deploy.sh"
-        register: deploy_script
+     - name: "check if custom overcloud_deploy.sh already exists in {{ template_base }}"
+       stat:
+           path: "{{ template_base }}/overcloud_deploy.sh"
+       register: deploy_script
 
-      - name: copy overcloud deployment script if provided by the user at the command line
-        copy:
-            src: "{{ install.overcloud.script }}"
-            dest: "~/{{ install.overcloud.script | basename }}"
-            mode: 0755
-            force: yes
-        when: install.overcloud.script|default('')
+     - name: copy overcloud deployment script if provided by the user at the command line
+       copy:
+           src: "{{ install.overcloud.script }}"
+           dest: "~/{{ install.overcloud.script | basename }}"
+           mode: 0755
+           force: yes
+       when: install.overcloud.script|default('')
 
-      - set_fact:
-            overcloud_deploy_script: "{{ install.overcloud.script|default('') or deploy_script.stat.path|default('') | basename }}"
+     - set_fact:
+           overcloud_deploy_script: "{{ install.overcloud.script|default('') or deploy_script.stat.path|default('') | basename }}"
 
-      - name: create the base overcloud deploy script
-        template:
-            src: "{{ deploy_script_template | default('templates/overcloud_deploy.sh.j2') }}"
-            dest: "~/overcloud_deploy.sh"
-            mode: 0755
-        when: not overcloud_deploy_script|default('')
+     - name: create the base overcloud deploy script
+       template:
+           src: "{{ deploy_script_template | default('templates/overcloud_deploy.sh.j2') }}"
+           dest: "~/overcloud_deploy.sh"
+           mode: 0755
+       when: not overcloud_deploy_script|default('')
 
-      - name: copy initial ceph conf to undercloud
-        template:
-          src: "{{ install.ceph.initial.conf.file }}"
-          dest: "{{ ansible_user_dir }}/initial-ceph.conf"
-          mode: 0644
-          force: yes
-        when:
-          - install.ceph.initial.conf.file|default('')
-          - install.version|default(undercloud_version) | openstack_release >= 17
-          - install.storage.backend|default('') == 'ceph'
+     - name: copy initial ceph conf to undercloud
+       template:
+         src: "{{ install.ceph.initial.conf.file }}"
+         dest: "{{ ansible_user_dir }}/initial-ceph.conf"
+         mode: 0644
+         force: yes
+       when:
+         - install.ceph.initial.conf.file|default('')
+         - install.version|default(undercloud_version) | openstack_release >= 17
+         - install.storage.backend|default('') == 'ceph'
 
-      - name: copy OSD spec file to undercloud
-        template:
-          src: "{{ install.ceph.osd.spec.file }}"
-          dest: "{{ ansible_user_dir }}/osd-spec.yml"
-          mode: 0644
-          force: yes
-        when:
-          - install.ceph.osd.spec.file|default('')
-          - install.version|default(undercloud_version) | openstack_release >= 17
-          - install.storage.backend|default('') == 'ceph'
+     - name: copy OSD spec file to undercloud
+       template:
+         src: "{{ install.ceph.osd.spec.file }}"
+         dest: "{{ ansible_user_dir }}/osd-spec.yml"
+         mode: 0644
+         force: yes
+       when:
+         - install.ceph.osd.spec.file|default('')
+         - install.version|default(undercloud_version) | openstack_release >= 17
+         - install.storage.backend|default('') == 'ceph'
 
-      - name: Enable external network access through newly created vlan interface on undercloud
-        include_tasks: tasks/undercloud-ext-vlan.yml
-        tags:
-            - ext_vlan
-        vars:
-            undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
-        when:
-            - "'hypervisor' not in groups or install.hybrid|default(false)"
-            - undercloud_public_ip|string
+     - name: Enable external network access through newly created vlan interface on undercloud
+       include_tasks: tasks/undercloud-ext-vlan.yml
+       tags:
+           - ext_vlan
+       vars:
+           undercloud_public_ip: "{{ install.public.get('vlan', {}).get('ip', '') }}"
+       when:
+           - "'hypervisor' not in groups or install.hybrid|default(false)"
+           - undercloud_public_ip|string
 
-      - block:
-          - name: Output directory for generated environments
-            ansible.builtin.file:
-               state: directory
-               path: /home/stack/templates
-               mode: '0755'
-          - name: Create nets
-            shell: |
-                source ~/stackrc
-                set -o pipefail
-                openstack overcloud network provision {{ template_base }}/network/network_data_v2.yaml -o /home/stack/templates/overcloud-networks-deployed.yaml 2>&1 | tee -a /home/stack/overcloud_provision_01_net.log
-          - name: reserve VIPs
-            shell: |
-                source ~/stackrc
-                set -o pipefail
-                openstack overcloud network vip provision --stack {{ install.overcloud.stack }} {{ template_base }}/network/vip_data.yaml -o /home/stack/templates/overcloud-vip-deployed.yaml 2>&1 | \
-                tee -a /home/stack/overcloud_provision_02_vip.log
-        when:
-            - (install.version|default(undercloud_version) | openstack_release >= 17)
+     - block:
+         - name: Output directory for generated environments
+           ansible.builtin.file:
+              state: directory
+              path: /home/stack/templates
+              mode: '0755'
+         - name: Create nets
+           shell: |
+               source ~/stackrc
+               set -o pipefail
+               openstack overcloud network provision {{ template_base }}/network/network_data_v2.yaml -o /home/stack/templates/overcloud-networks-deployed.yaml 2>&1 | tee -a /home/stack/overcloud_provision_01_net.log
+         - name: reserve VIPs
+           shell: |
+               source ~/stackrc
+               set -o pipefail
+               openstack overcloud network vip provision --stack {{ install.overcloud.stack }} {{ template_base }}/network/vip_data.yaml -o /home/stack/templates/overcloud-vip-deployed.yaml 2>&1 | \
+               tee -a /home/stack/overcloud_provision_02_vip.log
+       when:
+           - (install.version|default(undercloud_version) | openstack_release >= 17)
 
-      # ensure we have all envs/roles referenced in deploy script for container image preparation
-      - include_tasks: tasks/append_script.yml
-        when:
-            - not overcloud_deploy_script|default('')
-            - install.containers|default('')
-            - install.version|default(undercloud_version)|openstack_release >= 12
+     # ensure we have all envs/roles referenced in deploy script for container image preparation
+     - include_tasks: tasks/append_script.yml
+       when:
+           - not overcloud_deploy_script|default('')
+           - install.containers|default('')
+           - install.version|default(undercloud_version)|openstack_release >= 12
 
-      - name: append extra templates provided by user
-        include_tasks: tasks/environment_templates.yml
-        with_items: "{{ install.overcloud.templates|default([]) }}"
-        loop_control:
-            loop_var: templates_list_file
-        # avoid empty strings
-        when: "templates_list_file != ''"
+     - name: append extra templates provided by user
+       include_tasks: tasks/environment_templates.yml
+       with_items: "{{ install.overcloud.templates|default([]) }}"
+       loop_control:
+           loop_var: templates_list_file
+       # avoid empty strings
+       when: "templates_list_file != ''"
 
-      - name: append templates for ironic enabled OC
-        include_tasks: tasks/ironic_environment_templates.yml
-        when: install.ironic or install.ironic_inspector
+     - name: append templates for ironic enabled OC
+       include_tasks: tasks/ironic_environment_templates.yml
+       when: install.ironic or install.ironic_inspector
 
-      - name: append templates for nova nfs backend
-        include_tasks: tasks/storage/nova-nfs.yml
-        when: install.nova.nfs.backend|default(False)
+     - name: append templates for nova nfs backend
+       include_tasks: tasks/storage/nova-nfs.yml
+       when: install.nova.nfs.backend|default(False)
 
       - name: Setup Multirhel THT roles
         include_tasks: tasks/multirhel.yml
-        when: multirhel_enabled
+        when: "install.multirhel_enabled|default(False) or install.multirhel_enabled_legacy|default(False)"
 
       - include_role:
             name: cdn_registery
