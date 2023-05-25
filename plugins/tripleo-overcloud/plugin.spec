@@ -1111,9 +1111,20 @@ subparsers:
 
             - title: MultiRHEL options
               options:
+                  multirhel-enabled-legacy:
+                      type: Bool
+                      help: |
+                        Whether to prepare MultiRHEL files to use when deploying Overcloud. Supported only in OSP17.1.
+                        This enables the older variant of the feature that uses hardened images.
+                      default: false
+                      ansible_variable: multirhel_enabled_legacy
+                      required_when: multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-namespace != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''
+
                   multirhel-enabled:
                       type: Bool
-                      help: Whether to prepare MultiRHEL files to use when deploying Overcloud. Supported only in OSP17.1.
+                      help: |
+                        Whether to prepare MultiRHEL files to use when deploying Overcloud. Supported only in OSP17.1.
+                        This enables the newer variant of the feature that uses non-hardened images.
                       default: false
                       ansible_variable: multirhel_enabled
                       required_when: multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-namespace != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''
