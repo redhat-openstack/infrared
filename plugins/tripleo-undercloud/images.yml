@@ -78,9 +78,6 @@
               - "ironic-python-agent-latest-{{ undercloud_version }}-s390x.tar"
           minimal:
               - "overcloud-minimal-latest-{{ undercloud_version }}.tar"
-          computerhel8: # the filename of rhosp-director-images-uefi-x86_64*.tar files differs from compose to compose, can't fix it here - it's discovered at runtime
-              # - "ironic-python-agent.tar"
-              # - "overcloud-full-latest-16.1.tar"
           # Any higher version defaults to 8
       tar_images: "{{ install.images.files | default(install.download.ppc64le.images | ternary(tar_files.ppc64le, tar_files[undercloud_version|openstack_release])) | default(tar_files[8]) }}"
       multiarch_images: "{{ install.download.ppc64le.images == true | ternary(true, false) }}"
@@ -93,7 +90,8 @@
       amphora_image_file: "/usr/share/openstack-octavia-amphora-images/octavia-amphora.qcow2"
       amphora_image_rpm: octavia-amphora-image
       rhos_release_rpm: "https://url.corp.redhat.com/rhos-release-latest-rpm"
-      multirhel_images_dir: "{{ ansible_user_dir }}/images/multirhel/"
+      multirhel_tar_images: "overcloud-full-multirhel-latest.tar"
+      multirhel_images_dir: "{{ ansible_user_dir }}/images/multirhel"
       multirhel_dnf_repos_dir: "{{ ansible_user_dir }}/multirhel_dnf_repos"
   pre_tasks:
       - setup:
@@ -226,9 +224,10 @@
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --update-existing {% if overcloud_image_name == "hardened-uefi-full" or overcloud_image_name == "hardened-uefi-full-fips" %}--whole-disk{% endif %}
+            openstack overcloud image upload --update-existing {% if overcloud_image_name == "hardened-uefi-full" or overcloud_image_name == "hardened-uefi-full-fips" or multirhel_enabled %}--whole-disk{% endif %}
         tags: skip_ansible_lint
-        when: not multiarch_images
+        when:
+          - not multiarch_images
 
       - name: Upload ppc64le images to glance
         shell: |
@@ -251,12 +250,20 @@
             openstack overcloud image upload --image-path ~{{ install.user.name }}/images/ --os-image-name overcloud-minimal.qcow2 --image-type os
         when: minimal_images
 
-      - name: Upload computerhel8/multirhel images (overcloud-rhel8.qcow2) (openstack overcloud image upload)
+      - name: Upload computerhel8/multirhel images
         shell: |
             set -exuo pipefail
             source ~/stackrc
-            openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --whole-disk --os-image-name overcloud-rhel8.qcow2
+            openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --os-image-name overcloud-rhel8.qcow2
         when: multirhel_enabled
+        tags: multirhel_images
+
+      - name: Upload computerhel8/multirhel images - the legacy way (hardened)
+        shell: |
+            set -exuo pipefail
+            source ~/stackrc
+            openstack overcloud image upload --update-existing --image-path {{ multirhel_images_dir }} --os-image-name overcloud-rhel8.qcow2 --whole-disk
+        when: multirhel_enabled_legacy
         tags: multirhel_images
 
       - name: check for existing nodes ( OS <= 10 )
@@ -320,7 +327,7 @@
           overcloud_image_name == "hardened-uefi-full" or
           overcloud_image_name == "hardened-uefi-full-fips" or
           install.images.task == "import"
-          
+
       - name: remove downloaded images directory for multiarch deployments
         file:
             path: "~{{ install.user.name }}/images"
