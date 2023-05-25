@@ -110,6 +110,11 @@
 {% if compute_type == 'computerhel8' %}
     image:
       href: 'file:///var/lib/ironic/images/overcloud-rhel8.raw'
+{# Newer rhel8 images for multirhel are not hardened, so include vmlinuz and initrd explicitely #}
+{% if multirhel_enabled|default(False) %}
+      kernel: 'file:///var/lib/ironic/images/overcloud-rhel8.vmlinuz'
+      ramdisk: 'file:///var/lib/ironic/images/overcloud-rhel8.initrd'
+{% endif %}
 {% endif %}
     network_config:
 {% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}

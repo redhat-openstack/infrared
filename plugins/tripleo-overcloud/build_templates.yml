@@ -255,7 +255,7 @@
 
       - name: Setup Multirhel THT roles
         include_tasks: tasks/multirhel.yml
-        when: multirhel_enabled
+        when: "multirhel_enabled|default(False) or multirhel_enabled_legacy|default(False)"
 
       - include_role:
             name: cdn_registery
