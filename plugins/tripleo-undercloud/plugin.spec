@@ -532,7 +532,7 @@ subparsers:
                       help: |
                           Use the FIPS images for the OverCloud
                       default: no
-        
+
                   download-minimal-images:
                       type: Bool
                       help: |
@@ -541,12 +541,24 @@ subparsers:
 
             - title: MultiRHEL options
               options:
+                  multirhel-enabled-legacy:
+                      type: Bool
+                      help: |
+                        Whether to prepare files and overcloud images required for MultiRHEL/Mixed-RHEL Overcloud deployments.
+                        The container-image-prepare-parameter YAML file and overcloud*.tar/qcow2 files are generated
+                        and processed automatically unless overridden by below multirhel-* options. Supported only in OSP17.1.
+                        This enables the older variant of the feature that uses hardened images.
+                      default: false
+                      ansible_variable: multirhel_enabled_legacy
+                      required_when: "multirhel-overcloud-image-urls != '' or multirhel-overcloud-image-urls != '' or multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''"
+
                   multirhel-enabled:
                       type: Bool
                       help: |
                         Whether to prepare files and overcloud images required for MultiRHEL/Mixed-RHEL Overcloud deployments.
                         The container-image-prepare-parameter YAML file and overcloud*.tar/qcow2 files are generated
                         and processed automatically unless overridden by below multirhel-* options. Supported only in OSP17.1.
+                        This enables the newer varian of the feature that uses non-hardened images.
                       default: false
                       ansible_variable: multirhel_enabled
                       required_when: "multirhel-overcloud-image-urls != '' or multirhel-overcloud-image-urls != '' or multirhel-overcloud-container-image-prepare-parameter-file != '' or multirhel-overcloud-container-image-prepare-parameter-tag != ''"

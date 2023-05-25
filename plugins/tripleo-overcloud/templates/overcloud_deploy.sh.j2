@@ -29,6 +29,6 @@ openstack overcloud deploy \
 {# rhbz#2020590 - network_data_v2.yaml has to be part of both, the "network provision" step also the OC deployment from now on  #}
 --networks-file {{ template_base }}/network/network_data_v2.yaml \
 {% endif %}
-{% if multirhel_enabled %}
+{% if multirhel_enabled or multirhel_enabled_legacy %}
 --roles-file {{ template_base }}/roles/roles_data_multirhel.yaml \
 {% endif %}
