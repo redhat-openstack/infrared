@@ -72,7 +72,7 @@
             {%- endfor -%}
             }
 
-      - when: multirhel_enabled
+      - when: "multirhel_enabled|default(False) or multirhel_enabled_legacy|default(False)"
         block:
         - name: "ensure {{ template_base }}/roles/multirhel exists"
           file:
