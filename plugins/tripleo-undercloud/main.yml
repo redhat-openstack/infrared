@@ -2,44 +2,44 @@
 - name: Update Undercloud in the inventory
   import_playbook: "{{ update_inventory | default('update_inventory.yml') }}"
 
-- name: Perform validations
-  import_playbook: "{{ validate_undercloud | default('validate.yml') }}"
-  when: install.validate|default('')
-  tags:
-      - validation
+#- name: Perform validations
+#  import_playbook: "{{ validate_undercloud | default('validate.yml') }}"
+#  when: install.validate|default('')
+#  tags:
+#      - validation
+#
+#- name: Deploy the Undercloud
+#  import_playbook: "{{ install_undercloud | default('undercloud.yml') }}"
+#  when: install.version|default('')
+#
+#- name: Including post provision tasks
+#  import_playbook: "{{ undercloud_post | default('post.yml') }}"
+#  when: install.post|default('')
+#
+#- name: Create an undercloud backup image (for undercloud snapshot)
+#  import_playbook: "{{ install_backup | default('backup.yml') }}"
+#  when: install.snapshot.backup|default('')
+#
+#- name: Restore an undercloud from image (using undercloud snapshot) osp 14 and below
+#  import_playbook: "{{ install_restore | default('restore.yml') }}"
+#  when:
+#    - install.snapshot.restore|default('')
+#    - install.version|int < 15
 
-- name: Deploy the Undercloud
-  import_playbook: "{{ install_undercloud | default('undercloud.yml') }}"
-  when: install.version|default('')
-
-- name: Including post provision tasks
-  import_playbook: "{{ undercloud_post | default('post.yml') }}"
-  when: install.post|default('')
-
-- name: Create an undercloud backup image (for undercloud snapshot)
-  import_playbook: "{{ install_backup | default('backup.yml') }}"
-  when: install.snapshot.backup|default('')
-
-- name: Restore an undercloud from image (using undercloud snapshot) osp 14 and below
-  import_playbook: "{{ install_restore | default('restore.yml') }}"
-  when:
-    - install.snapshot.restore|default('')
-    - install.version|int < 15
-
-- name: Restore an undercloud from image (using undercloud snapshot) osp 15 and above
-  import_playbook: "{{ install_restore | default('restore_containerized.yml') }}"
-  when:
-    - install.snapshot.restore|default('')
-    - install.version|int > 14
-
-- name: Undercloud Upgrade
-  import_playbook: "{{ upgrade_undercloud | default('upgrade.yml') }}"
-  when: install.upgrade|default('') or install.get('update', {}).undercloud|default('')
+#- name: Restore an undercloud from image (using undercloud snapshot) osp 15 and above
+#  import_playbook: "{{ install_restore | default('restore_containerized.yml') }}"
+#  when:
+#    - install.snapshot.restore|default('')
+#    - install.version|int > 14
+#
+#- name: Undercloud Upgrade
+#  import_playbook: "{{ upgrade_undercloud | default('upgrade.yml') }}"
+#  when: install.upgrade|default('') or install.get('update', {}).undercloud|default('')
 
 - name: Setup Overcloud images on the undercloud
   import_playbook: "{{ install_images | default('images.yml') }}"
   when:
     - install.images.task|default('')
 
-- name: Post installation messages
-  import_playbook: post-install.yml
+#- name: Post installation messages
+#  import_playbook: post-install.yml
