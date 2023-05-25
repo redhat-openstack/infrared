@@ -36,15 +36,51 @@
   delay: 100
   when: >
     overcloud_image_name == "hardened-uefi-full" or
-    overcloud_image_name == "hardened-uefi-full-fips"
+    overcloud_image_name == "hardened-uefi-full-fips" or
+    multirhel_enabled
 
-- when: multirhel_enabled
-  tags: multirhel_images
+- name: "(multirhel) Ensure {{ multirhel_images_dir }} exists and it's empty"
+  file:
+    path: "{{ multirhel_images_dir }}"
+    state: "{{ item }}"
+  with_items:
+    - absent
+    - directory
+  when:
+    - multirhel_enabled or multirhel_enabled_legacy
+
+- name: Handle the multi-rhel images (>=RHOS-17.1-RHEL-8-20230525.n.1)
+  block:
+    - name: install the RPM with the pre-built multirhel overcloud images
+      become: yes
+      package:
+          name: "rhosp-director-images-multirhel-x86_64"
+          state: latest
+      register: yum_install
+      until: "yum_install is not failed or not yum_install.msg | regex_search('Operation too slow')"
+      retries: 2
+      delay: 100
+
+    - name: untar the images - multirhel deployment
+      unarchive:
+          src: "/usr/share/rhosp-director-images/{{ item }}"
+          dest: "{{ multirhel_images_dir }}"
+          copy: no
+          owner: "{{ install.user.name }}"
+          group: "{{ install.user.name }}"
+          list_files: yes
+      register: image_files
+      with_items: "{{ multirhel_tar_images }}"
+
+  when: multirhel_enabled
+
+- name: Handle the multi-rhel images the legacy way (PRE RHOS-17.1-RHEL-8-20230525.n.1)
   become_user: "{{ install.user.name }}"
   become: yes
+  tags: multirhel_images
   block:
     - name: extract the URL of current RHEL9 COMPOSE
-      shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1 rhosp-director-images | grep http | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/"$7"/"$8"/"}'
+      shell: dnf download --url --disablerepo=* --enablerepo rhelosp-17.1 rhosp-director-images | grep http | awk -F '/' '{print $1"/"$2"/"$3"/"$4"/"$5"/"$6"/"$7"/"$8}'
       register: osp17_1rhel9_compose_url
 
     - name: get RHEL8 COMPOSE ID
@@ -77,14 +113,6 @@
     - name: discover available 17.1 RHEL8 rhosp-director-images
       shell: dnf download --setopt=reposdir={{ multirhel_dnf_repos_dir }} --url rhosp-director-images* | grep rhosp-director-images-uefi-x86_64
 
-    - name: "(multirhel) Ensure {{ multirhel_images_dir }} exists and it's empty"
-      file:
-        path: "{{ multirhel_images_dir }}"
-        state: "{{ item }}"
-      with_items:
-        - absent
-        - directory
-
     - name: "(multirhel) set fact to user-defined rhosp-director-images.* RPM URLs"
       set_fact:
           multirhel_overcloud_images: "{{ multirhel_overcloud_image_url.split(',') | join(' ') }}"
@@ -107,6 +135,28 @@
           curl -L $url | rpm2cpio | cpio -idmv
         done
 
+    - name: (multirhel) Find .tar files containing osp17.1/rhel8 rhosp-director-images
+      find:
+        path: "{{ multirhel_images_dir }}"
+        patterns: "*"
+        recurse: true
+      register: overcloud_images_17_1_rhel8_tar_files
+
+    - debug:
+        var: overcloud_hardened_uefi_full_17_1_tar_file
+
+    - name: (multirhel) untar the images - computerhel8/multirhel deployment
+      unarchive:
+          src: "{{ item.path }}"
+          dest: "{{ multirhel_images_dir }}"
+          copy: no
+          owner: "{{ install.user.name }}"
+          group: "{{ install.user.name }}"
+          list_files: yes
+      with_items: "{{ overcloud_images_17_1_rhel8_tar_files.files }}"
+
+  when: multirhel_enabled_legacy
+
 - name: create multiarch image directory structure
   become_user: "{{ install.user.name }}"
   become: yes
@@ -126,7 +176,7 @@
       - ppc64le
   when: multiarch_images
 
-# todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
+#todo(yfried): investigate gtar error "Warning: Cannot stat: No such file or directory")'
 - name: untar the images
   become: yes
   unarchive:
@@ -141,7 +191,7 @@
   when:
     - not multiarch_images
     - not fips_images
-  
+
 - name: untar the FIPS images
   become: yes
   unarchive:
@@ -180,37 +230,25 @@
   with_items: "{{ minimal_tar_images }}"
   when: minimal_images
 
-- when: multirhel_enabled
-  tags: multirhel_images
+- name: Rename multirhel images for clarity
   become_user: "{{ install.user.name }}"
   become: yes
+  tags: multirhel_images
   block:
-  - name: (multirhel) Find .tar files containing osp17.1/rhel8 rhosp-director-images
-    find:
-      path: "{{ multirhel_images_dir }}"
-      patterns: "*"
-      recurse: true
-    register: overcloud_images_17_1_rhel8_tar_files
+    - name: "(multirhel) reuse previously downloaded non-RHEL8 ironic-python-agent* files"
+      shell: "cp ~{{ install.user.name }}/ironic-python-agent* {{ multirhel_images_dir }}/"
 
-  - debug:
-      var: overcloud_hardened_uefi_full_17_1_tar_file
+    - find:
+        paths: "{{ multirhel_images_dir }}"
+        patterns: ".*.qcow2,.*.vmlinuz,.*.initrd"
+        use_regex: true
+      register: found_files
 
-  - name: (multirhel) untar the images - computerhel8/multirhel deployment
-    unarchive:
-        src: "{{ item.path }}"
-        dest: "{{ multirhel_images_dir }}"
-        copy: no
-        owner: "{{ install.user.name }}"
-        group: "{{ install.user.name }}"
-        list_files: yes
-    with_items: "{{ overcloud_images_17_1_rhel8_tar_files.files }}"
+    - name: Rename these files to the overcloud-rhel8* format used later
+      shell: "cp {{ multirhel_images_dir }}/{{ item.0 }} {{ multirhel_images_dir }}/overcloud-rhel8.{{ item.1 }}"
+      with_together:
+        - "{{ found_files['files'] | map(attribute='path') | map('regex_replace','^.*/(.*)$','\\1') | list }}"
+        - "{{ found_files['files'] | map(attribute='path') | map('regex_replace','^.*/.*\\.(.*)$','\\1') | list }}"
 
-  - name: "(multirhel) rename overcloud-*full*.qcow2 image file to overcloud-rhel8.qcow2"
-    shell: |
-      mv overcloud-*full*.qcow2 overcloud-rhel8.qcow2
-    args:
-      chdir: "{{ multirhel_images_dir }}"
-      executable: /bin/bash
+  when: multirhel_enabled or multirhel_enabled_legacy
 
-  - name: "(multirhel) reuse previously downloaded non-RHEL8 ironic-python-agent* files"
-    shell: cp ~{{ install.user.name }}/ironic-python-agent* {{ multirhel_images_dir }}/
