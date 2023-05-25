@@ -4,27 +4,27 @@
   import_playbook: hypervisor.yml
   when: "'hypervisor' in groups"
 
-- import_playbook: init.yml
-  tags: init
+#- import_playbook: init.yml
+#  tags: init
+#
+## FIXME(yfried): dump facts?
 
-# FIXME(yfried): dump facts?
+#- import_playbook: setup_packages.yml
+#  tags: install
+#
+## Need to setup virtualenv on shade node after undercloud has got repos configured
+#- import_playbook: shade.yml
+#  tags: shade
+#
+#- import_playbook: configure.yml
+#  tags: configure
 
-- import_playbook: setup_packages.yml
-  tags: install
-
-# Need to setup virtualenv on shade node after undercloud has got repos configured
-- import_playbook: shade.yml
-  tags: shade
-
-- import_playbook: configure.yml
-  tags: configure
-
-- import_playbook: tls_everywhere.yml
-  tags: configure
-  when:
-      - install.tls.everywhere|default(False)
-      - install.version|openstack_release >= 12
-      - (install.version|openstack_distribution) == 'OSP'
+#- import_playbook: tls_everywhere.yml
+#  tags: configure
+#  when:
+#      - install.tls.everywhere|default(False)
+#      - install.version|openstack_release >= 12
+#      - (install.version|openstack_distribution) == 'OSP'
 
 - import_playbook: deploy.yml
   tags: deploy
