@@ -9,6 +9,7 @@
   args:
     executable: /bin/bash
   delegate_to: localhost
+  when: infrared_host_name['value']['ansible_host'] != 'NA'
   register: _wait_boot_complete
   delay: 60
   retries: 30
@@ -29,6 +30,7 @@
     -i {{ infrared_host_name['value']['ansible_ssh_private_key_file'] }}
     {{ infrared_host_name['value']['ansible_user'] }}@{{ infrared_host_name['value']['ansible_host'] }}
     'tee -a ~/.ssh/authorized_keys' < {{ item }}
+  when: infrared_host_name['value']['ansible_host'] != 'NA'
   args:
     executable: /bin/bash
   delegate_to: localhost
