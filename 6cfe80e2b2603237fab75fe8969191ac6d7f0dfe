@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0aa70e53_80ab58a6",
+        "filename": "plugins/tempest/vars/tests/barbican-full.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1009116
+      },
+      "writtenOn": "2023-05-29T16:30:10Z",
+      "side": 0,
+      "message": "grep in rhos-qe-jenkins repo didn\u0027t show any usage of this file, it should be safe to remove\n\ngrep -r \"barbican-full\" jobs/",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 3
+      },
+      "revId": "6cfe80e2b2603237fab75fe8969191ac6d7f0dfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5d624a5b_63b83a6a",
+        "filename": "plugins/tempest/vars/tests/barbican.yml",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1009116
+      },
+      "writtenOn": "2023-05-29T16:30:10Z",
+      "side": 0,
+      "message": "this might be tricky as there are multiple jobs using this test set .. all those jobs will suddenly run also the scenario tests. I\u0027m not saying we shouldn\u0027t do this, we just should be ready to propose a follow up patch to rhos-qe-jenkins repo and exclude unwanted tests\n\n[master][rhos-qe-jenkins]$ grep -r \"barbican\" jobs/ | grep jp_tempest_tests\njobs//compact/jobs_unified_iscsinetapp.yaml:          jp_tempest_tests: \u0027barbican,compute,image,object_storage,volume,downstream_storage_plugin\u0027\njobs//compact/jobs_unified_ceph-nfs-ganesha.yml:    jp_tempest_tests: \u0027barbican,compute,image,manila,object_storage,volume,downstream_storage_plugin\u0027\njobs//compact/jobs_unified_ceph-nfs-ganesha.yml:          jp_tempest_tests: \u0027barbican,compute,image,manila,network,object_storage,volume,downstream_storage_plugin\u0027\njobs//compact/jobs_unified_lvm.yaml:      jp_tempest_tests: \u0027barbican,compute,identity,image,neutron,object_storage,octavia,volume,downstream_storage_plugin\u0027\njobs//compact/jobs_unified_netapp.yaml:          jp_tempest_tests: \u0027barbican,compute,image,manila,object_storage,volume,downstream_storage_plugin\u0027\njobs//compact/jobs_unified_ceph-native.yaml:      jp_tempest_tests: \u0027barbican,compute,image,manila,object_storage,volume,downstream_storage_plugin\u0027\njobs//compact/jobs_unified_06_zeta.yaml:          jp_tempest_tests: \u0027barbican,compute,image,object_storage,volume,downstream_storage_plugin,neutron,neutron_single_threaded,neutron_disruptive\u0027\njobs//compact/jobs_experimental.yaml:          jp_tempest_tests: \u0027volume,image,object_storage,compute,manila,barbican,downstream_storage_plugin\u0027",
+      "range": {
+        "startLine": 4,
+        "startChar": 43,
+        "endLine": 4,
+        "endChar": 58
+      },
+      "revId": "6cfe80e2b2603237fab75fe8969191ac6d7f0dfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
