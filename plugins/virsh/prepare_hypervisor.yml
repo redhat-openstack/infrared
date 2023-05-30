@@ -48,6 +48,16 @@
               data_net: "{{ (data_net_list|max)|int+10 }}"
           set_fact:
               deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }}) }}"
+          when: not (provision.net_subnet is defined and provision.data_subnet is defined)
+
+        - name: generate deployment info dict with predefined values
+          vars:
+              id: "{{ prefix }}"
+              net_prefix: "{{ provision.net_subnet }}"
+              data_net: "{{ provision.data_subnet }}"
+          set_fact:
+              deployments_info: "{{ deployments_info|default({})| combine( {id:{'net': net_prefix, 'data_net': data_net }}) }}"
+          when: provision.net_subnet is defined and provision.data_subnet is defined
 
         - name: Create running deployment custom fact
           template:
