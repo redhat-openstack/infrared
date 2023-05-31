@@ -25,6 +25,21 @@
   command: "virt-customize --selinux-relabel -a ~/tempest_image --run-command \"yum-config-manager --disable patched-rpms\""
   failed_when: false
 
+- name: Download Certs
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "curl https://certs.corp.redhat.com/certs/2022-IT-Root-CA.pem -O;curl https://certs.corp.redhat.com/certs/2015-IT-Root-CA.pem -O"
+
+- name: Copy certs
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-copy-in -i -a ~/tempest_image 2015-IT-Root-CA.pem /etc/pki/ca-trust/source/anchors/;virt-copy-in -i -a ~/tempest_image 2022-IT-Root-CA.pem /etc/pki/ca-trust/source/anchors/"
+
+- name: Update CA trust
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a ~/tempest_image --run-command 'update-ca-trust'"
+
 - name: Install packages in guest image tempest will use for testing
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
