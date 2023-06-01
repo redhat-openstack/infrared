@@ -1,3 +1,10 @@
 ---
 tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/fips.yaml"
+
+custom_templates:
+    parameter_defaults:
+        ExtraConfig:
+            tripleo::haproxy::haproxy_member_options: ['check', 'inter 6000', 'rise 2', 'fall 5']
+            tripleo::haproxy::mysql_member_options: ['backup', 'port 9200', 'on-marked-down shutdown-sessions', 'check', 'inter 6s']
+            tripleo::profile::pacemaker::clustercheck::post_status_wait: 6
