@@ -28,6 +28,17 @@
         set_fact:
             oc_cdn_register: "{{ cdn_status.rc }}"
 
+- name: Install Custom CA
+  hosts: overcloud_nodes:!unused:!computerhel8
+  gather_facts: yes
+  become: yes
+  become_user: root
+  any_errors_fatal: true
+  roles:
+      - role: tls-ca
+        tlsca: "{{ install.tls.ca }}"
+        when: install.tls.ca != ''
+
 - name: Update Overcloud repos
   hosts: overcloud_nodes:!unused:!computerhel8
   gather_facts: yes
