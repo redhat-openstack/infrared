@@ -34,6 +34,10 @@ ARGS="${ARGS} --cluster {{ install.ceph.cluster.name }}"
 ARGS="${ARGS} --roles-data {{ roles_data_file.stat.path }}"
 {% endif %}
 
+{% if install.overcloud.tls_everywhere|default(False) %}
+ARGS="${ARGS} --tld redhat.local"
+{% endif %}
+
 {% if install.ntp.pool|default(False) %}
 NTP_ARGS="--ntp-server {{ install.ntp.pool }}"
 {% elif install.ntp.server|default(False) %}
