@@ -33,6 +33,29 @@
       "message": "openstack_release only returns the major version.\nAnd this breaks the deployment of older composes, should that be needed.",
       "revId": "24dc30dcd523a007942d61ecc0657f6d9a70d883",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "87bea8ee_27223a02",
+        "filename": "plugins/tripleo-overcloud/templates/overcloud_ceph_deploy.sh.j2",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1017989
+      },
+      "writtenOn": "2023-06-07T13:01:08Z",
+      "side": 1,
+      "message": "please change install.tls.everywhere to install.overcloud.tls-everywhere\n\nI tested this patchset here:\nhttps://rhos-ci-staging-jenkins.lab.eng.tlv2.redhat.com/job/DFG-all-unified-17.1_d-rhel-vhost-3cont_2comp_3ceph_1freeipa-ipv4-geneve-ceph-nfs-ganesha-alfrgarc-ceph-6_1-testing/51/artifact/.sh/06-ospd_overcloud_all.log\n\nThe overcloud is failing with:\nTASK [create ceph deploy script]\nAnsibleUndefinedVariable: \u0027dict object\u0027 has no attribute \u0027tls\u0027",
+      "range": {
+        "startLine": 37,
+        "startChar": 57,
+        "endLine": 37,
+        "endChar": 79
+      },
+      "revId": "24dc30dcd523a007942d61ecc0657f6d9a70d883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
