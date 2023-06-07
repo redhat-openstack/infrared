@@ -350,6 +350,11 @@ subparsers:
                       default: yes
                       help: Skips the ceph repository configuration in he Undercloud during rhos-release execution if set to false.
 
+                  ceph-extra-version:
+                      type: Value
+                      help: |
+                          Set up also the repositories for the requested ceph version, if supported by rhos-release (for example: 5.3, 6.0, 6.1).
+
                   validate:
                       type: Bool
                       default: yes
