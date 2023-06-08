@@ -1,6 +1,12 @@
 - name: Install Repo
   become: yes
+  become_user: root
   block:
+    - include_role:
+        name: tls-ca
+      vars:
+        tlsca: "{{ provision.tls.ca }}"
+
     - include_role:
         name: rhos-release
       vars:

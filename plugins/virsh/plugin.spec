@@ -220,6 +220,17 @@ subparsers:
                       Usefull for special cases when one may want to override specific
                       options used for spawning vms (memballoon, rng and such).
                     default: ''
+
+                  tls-ca:
+                    type: Value
+                    help: |
+                        Specifies the custom CA public key. Might be URL or a link to local file.
+                        Might be several certificates provided, separated with coma
+                        Example:
+                              --tls-ca=https://foo.com/ca.pem,http://bar.org/cert.pem
+                              --tls-ca=/foo/bar/ca.pem
+                    default: ''
+                    
             - title: External VNC Mode
               options:
                   vnc-external:
