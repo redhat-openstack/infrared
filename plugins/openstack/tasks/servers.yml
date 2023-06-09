@@ -127,21 +127,16 @@
         retries: 300
   when: "'ceph' in topology_node.groups"
 
-- name: Create floating IPs
-  os_floating_ip:
-      cloud: "{{ provision.cloud | default(omit) }}"
-      network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
-      nat_destination: "{{ prefix }}{{ topology_node.external_network }}"
-      server: "{{ item.id }}"
-      state: present
-      reuse: yes
-      # always wait for floating ip
-      wait: yes
-      timeout: "{{ provision.os.server.timeout | int }}"
-  register: floating_ips
-  retries: 3
-  until: floating_ips is success
+- name: Create floating IPs and generate fip_dict
+  vars:
+    os_cloud: "{{ provision.cloud is defined | ternary('--os-cloud ' + provision.cloud, '') }}"
+    public_network: "{{ (provision.provider|default({})).network|default(openstack_networks[0].id) }}"
+    private_network: "{{ prefix }}{{ topology_node.external_network }}"
+    timeout: "{{ provision.os.server.timeout | int }}"
+  include_tasks: create_fips.yml
   with_items: "{{ server_list }}"
+  loop_control:
+    loop_var: server
 
 - name: Get flavor facts
   os_flavor_facts:
@@ -153,12 +148,12 @@
 - name: Wait for hosts to be reachable (all but ovb)
   wait_for:
       port: 22
-      host: "{{ item.floating_ip.floating_ip_address }}"
+      host: "{{ item.value }}"
       search_regex: OpenSSH
       delay: 10
       sleep: 3
       timeout: 500
-  with_items: "{{ floating_ips.results }}"
+  with_dict: "{{ fip_dict }}"
   when: "'ovb' not in topology_node.groups"
 
 - name: Detect the python interpreter
@@ -166,25 +161,25 @@
       sshopts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o BatchMode=yes"
   shell: |
       ssh {{ sshopts }} -i {{ provision.key.file }} \
-      {{ topology_node.get('image', {}).ssh_user | default(provision.username) }}@{{ item.floating_ip.floating_ip_address }} \
+      {{ topology_node.get('image', {}).ssh_user | default(provision.username) }}@{{ item.value }} \
       'command -v python python3 /usr/libexec/platform-python|head -n1'
   register: py_interpreter
-  with_items: "{{ floating_ips.results }}"
+  with_dict: "{{ fip_dict }}"
   when: "'ovb' not in topology_node.groups"
 
 - name: Add created servers to inventory
   vars:
       instance_flavor: "{{ openstack_flavors | first }}"
   add_host:
-      # item.item is the server object
-      name: "{{ item.item.name }}"
-      ansible_host: "{{ item.floating_ip.floating_ip_address }}"
+      # item.key is the server name
+      name: "{{ item.key }}"
+      ansible_host: "{{ item.value }}"
       groups: "{{ topology_node.groups | join(',') }}"
       ansible_ssh_private_key_file: "{{ provision.key.file | expanduser }}"
-      ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.item.name', 'equalto', item.item.name) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
+      ansible_python_interpreter: "{{ ( ( py_interpreter.results | selectattr('item.key', 'equalto', item.key) | first | default(None) )['stdout'] | default('') ) | trim | default(omit, true) }}"
       ansible_user: "{{ topology_node.get('image', {}).ssh_user | default(provision.username) }}"
 #      eth1_interface_ip: "{{ item.item.addresses[data_network.name][0].addr }}"
       ram: "{{ instance_flavor.ram }}"
       disk: "{{ instance_flavor.disk }}"
       vcpus: "{{ instance_flavor.vcpus }}"
-  with_items: "{{ floating_ips.results }}"
+  with_dict: "{{ fip_dict }}"
