@@ -5,9 +5,11 @@
 # tripleclient package.
 # Fixme: Switch to install.version in the future.
 ntp_args_requires="20230505010953"
+tld_args_requires="20230416001030"
 tripleo_client_str=$(rpm -qa python3-tripleoclient | cut -d '.' -f 4)
 
 NTP_ARGS=""
+TLD_ARGS=""
 
 ARGS="-o /home/stack/templates/overcloud-ceph-deployed.yaml"
 ARGS="${ARGS} --container-image-prepare {{ containers_home_dir }}/containers-prepare-parameter.yaml"
@@ -40,8 +42,16 @@ NTP_ARGS="--ntp-server {{ install.ntp.pool }}"
 NTP_ARGS="--ntp-server {{ install.ntp.server }}"
 {% endif %}
 
+{% if install.tls.everywhere | default(False) %}
+TLD_ARGS="--tld {{ install.freeipa.domain }}"
+{% endif %}
+
 if [ $tripleo_client_str -ge $ntp_args_requires ] ; then
     ARGS="${ARGS} ${NTP_ARGS}"
+fi
+
+if [ $tripleo_client_str -ge $tld_args_requires ] ; then
+    ARGS="${ARGS} ${TLD_ARGS}"
 fi
 
 openstack overcloud ceph deploy ${ARGS} /home/stack/templates/overcloud-baremetal-deployed.yaml
