@@ -54,6 +54,9 @@
         -m {{ name }} {{ mapped_name }} \
         {% endfor %}
         -a ansible_playbook \
+        {% if multirhel_enabled %}
+        -x enabled \
+        {% endif %}
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
