@@ -292,7 +292,9 @@
           - install.overcloud.fencing|default(False)
 
       - include_tasks: tasks/generate_baremetal_deployment.yml
-        tags: deploy
+        tags:
+          - deploy
+          - generate_baremetal_deployment
         when: install.version|default(undercloud_version)|openstack_release >= 17
 
       - name: set overcloud_deploy script
