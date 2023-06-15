@@ -197,6 +197,19 @@
         chdir: "/home/stack"
         executable: /bin/bash
 
+    - name: Set groups_unused
+      set_fact:
+          groups_unused: groups['unused']
+      when:
+        - groups is defined
+        - groups['unused'] is defined
+
+    - name: Set groups_unused at []
+      set_fact:
+          groups_unused: []
+      when:
+        - groups is not defined or groups['unused'] is not defined
+
     - name: Force some services to reinitiate RabbitMQ connectivity
       become: true
       shell: |-
@@ -220,7 +233,7 @@
         exit ${return_code}
         {%- endraw %}
       delegate_to: "{{ item }}"
-      loop: "{{ groups['overcloud_nodes'] | difference(groups['unused']) }}"
+      loop: "{{ groups['overcloud_nodes'] | difference(groups_unused) }}"
       register: _restart_services
       changed_when: _restart_services.rc == 2
       failed_when: _restart_services.rc not in [0,2]
