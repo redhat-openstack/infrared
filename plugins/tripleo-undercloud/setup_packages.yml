@@ -196,6 +196,14 @@
             name: "*"
         register: update
 
+      #Apply patch to tripleo templates after installation
+      - name: Apply patch to tht
+        become: yes
+        shell: |
+          yum -y install patch
+          curl -L -o /tmp/tht.patch curl -o /tmp/tht.patch http://pastebin.test.redhat.com/pastebin.php?dl=1102767
+          patch -p1 -d /usr/share/openstack-tripleo-heat-templates/ </tmp/tht.patch
+
       - name: Set FIPS mode on the undercloud
         command: fips-mode-setup --enable
         register: fips_mode_status
