@@ -220,7 +220,7 @@
         exit ${return_code}
         {%- endraw %}
       delegate_to: "{{ item }}"
-      loop: "{{ groups['overcloud_nodes'] | difference(groups['unused']) }}"
+      loop: "{{ groups['overcloud_nodes'] | difference( groups['unused'] is defined | ternary( groups['unused'] , [] ) ) }}"
       register: _restart_services
       changed_when: _restart_services.rc == 2
       failed_when: _restart_services.rc not in [0,2]
