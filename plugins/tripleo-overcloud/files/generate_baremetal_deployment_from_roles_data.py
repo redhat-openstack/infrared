@@ -138,7 +138,9 @@ class BaremetalRoleData():
             defaults['networks'] = networks
 
         if self._image:
-            defaults['image'] = {'href': self._image}
+            defaults['image'] = {'href': self._image, \
+            'kernel': 'file:///var/lib/ironic/images/overcloud-rhel8.vmlinuz', \
+            'ramdisk': 'file:///var/lib/ironic/images/overcloud-rhel8.initrd'}
 
         if defaults:
             out['defaults'] = defaults
