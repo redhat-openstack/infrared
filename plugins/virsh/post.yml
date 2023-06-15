@@ -63,3 +63,11 @@
               state: absent
 
       when: provision.prefix is defined
+
+
+- name: configure loadbalancer nodes
+  hosts: "{{ (_run_condition | bool) | ternary('loadbalancer', 'none') }}"
+  any_errors_fatal: true
+  gather_facts: yes
+  tasks:
+    - import_tasks: repo_install.yml
