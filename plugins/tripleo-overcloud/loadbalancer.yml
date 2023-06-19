@@ -10,6 +10,11 @@
   pre_tasks:
       - include_vars: "{{ external_lb_network_template_file }}"
   roles:
+    - role: tls-ca
+      tlsca: "{{ install.tls.ca }}"
+      become: yes
+      become_user: root
+      when: install.tls.ca != ''
     - name: Set up loadbalancer's rhos-release
       role: rhos-release
       release: "{{ install.version|default(undercloud_version) }}"
