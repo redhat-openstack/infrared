@@ -84,6 +84,7 @@ class BaremetalRoleData():
 
     def __init__(self, role_data: Dict, networks_data: Dict,
                  ansible_playbook_dict: Dict,
+                 multirhel_mode: Dict,
                  enable_profiles: bool = False) -> None:
         self.name = role_data.get('name')
         self.roles_count = role_data.get('CountDefault', 0)
@@ -97,6 +98,7 @@ class BaremetalRoleData():
         self._enable_profiles = enable_profiles
         self.ansible_playbook_dict = ansible_playbook_dict
         self._image = role_data.get('ImageDefault', '')
+        self._multirhel_mode = multirhel_mode
 
     def to_baremetal_format(self, network_templates_dir: Path):
         out = {}
@@ -140,6 +142,10 @@ class BaremetalRoleData():
         if self._image:
             defaults['image'] = {'href': self._image}
 
+            if self._multirhel_mode == 'enabled':
+                defaults['image']['kernel'] = 'file:///var/lib/ironic/images/overcloud-rhel8.vmlinuz'
+                defaults['image']['ramdisk'] = 'file:///var/lib/ironic/images/overcloud-rhel8.initrd'
+
         if defaults:
             out['defaults'] = defaults
 
@@ -156,12 +162,13 @@ def convert_role_data(roles_data: Dict, networks_data: Dict,
                       network_templates_dir: Path,
                       roles_count: Dict,
                       ansible_playbook_dict: Dict,
+                      multirhel_mode: Dict,
                       enable_profiles: bool = False,
-                      nodes_mapping: Dict = {} ) -> None:
+                      nodes_mapping: Dict = {}) -> None:
     all_roles = []
     for role_data in roles_data:
         role_obj = BaremetalRoleData(role_data, networks_data,
-                                     ansible_playbook_dict, enable_profiles)
+                                     ansible_playbook_dict, multirhel_mode, enable_profiles)
         nc = 0
         try:
             nc = int(roles_count.get(role_obj.name))
@@ -206,6 +213,11 @@ def parse_opts(argv):
                         help='Path to a directory with Ansible playbook files '
                              'that contain one or more Ansible '
                              'playbook(s) to add to each role for execution')
+    parser.add_argument('-x', '--multirhel-mode',
+                        metavar='MULTIRHEL_MODE',
+                        help='Whether to enable the MultiRHEL configurations. Choices: disabled, enabled, legacy. "enabled" sets paths for kernel and ramdisk file paths along with image ref (if provided in roles_data). "legacy" (hardened uefi) does not set kernel and ramdisk file paths.',
+                        default='disabled',
+                        choices=['disabled', 'enabled', 'legacy'])
     # FIXME: add parameter to set the firstboot options
     opts = parser.parse_args(argv[1:])
     return opts
@@ -242,8 +254,8 @@ def main():
 
     networks_data = parse_networks_names(networks_data_file)
     convert_role_data(roles_data, networks_data, opts.network_templates,
-                      roles_count, ansible_playbook_dict, opts.enable_profiles,
-                      mapping)
+                      roles_count, ansible_playbook_dict, opts.multirhel_mode,
+                      opts.enable_profiles, mapping)
 
 
 if __name__ == '__main__':
