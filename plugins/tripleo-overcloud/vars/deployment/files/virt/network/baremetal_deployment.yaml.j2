@@ -55,10 +55,17 @@
       subnet: tenant_subnet
 {% endfor %}
 {% else %}
+{% if (install.controller|default({})).nodes|default(0)|int > 0 %}
+{% for controller_count in range(install.controller.nodes|int) %}
+  - hostname: {{ groups.controller[controller_count] }}
+    name: {{ groups.controller[controller_count] }}
+{% endfor %}
+{% else %}
 {% for host_name in groups.controller|sort %}
   - hostname: {{ host_name }}
     name: {{ host_name }}
 {% endfor %}
+{% endif %}
 {% endif %}
 {% else %}
   instances:
