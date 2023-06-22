@@ -228,6 +228,7 @@
         state: running
       loop: "{{ _virsh_snapshot_manifest_content.servers | selectattr('state', 'equalto', 'running') | list }}"
       loop_control:
+        pause: 15
         label: "{{ item.name }}"
 
     - name: Discover the list of workspace public ssh keys to be imported
