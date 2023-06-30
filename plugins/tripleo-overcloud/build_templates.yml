@@ -90,6 +90,11 @@
           file: "vars/loadbalancer/external-{{ (install.network.protocol == 'ipv4') | ternary('ipv4','ipv6') }}.yml"
         when: "'loadbalancer' in groups"
 
+      - name: Include predictable ips in configuration vars
+        include_vars:
+          file: "vars/deployment/files/virt/network/predictable-ips.yaml"
+        when: install.predictable.ips
+
       # consider all the files as templates
       - name: Copy deployment folder
         vars:

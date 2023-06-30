@@ -66,6 +66,7 @@
   when:
      - install.predictable.ips
      - install.version|default(undercloud_version) | openstack_release >= 10
+     - install.version|default(undercloud_version) | openstack_release < 17
 
 - name: Custom network names
   import_tasks: network/custom_network_names.yml

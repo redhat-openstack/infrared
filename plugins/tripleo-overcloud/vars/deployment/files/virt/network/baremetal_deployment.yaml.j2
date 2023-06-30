@@ -21,7 +21,7 @@
 {% else %}
       template: /home/stack/virt/network/three-nics-vlans/controller{{ ('ipv6' in install.network.protocol) | ternary('-v6','') }}.j2
 {% endif %}
-{% if not install.splitstack|default(false) %}
+{% if not install.splitstack|default(false) and not install.predictable.ips|default(false) %}
     networks:
     - network: ctlplane
       vif: true
@@ -70,6 +70,28 @@
 {% else %}
   instances:
 {% for host_name in groups.controller|sort %}
+{% if install.predictable.ips|default(false) %}
+  - hostname: {{ host_name }}
+    name: {{ host_name }}
+    networks:
+      - network: ctlplane
+        vif: true
+      - network: storage
+        fixed_ip: {{ parameter_defaults.ControllerIPs.storage[loop.index0] }}
+        subnet: storage_subnet
+      - network: storage_mgmt
+        fixed_ip: {{ parameter_defaults.ControllerIPs.storage_mgmt[loop.index0] }}
+        subnet: storage_mgmt_subnet
+      - network: internal_api
+        fixed_ip: {{ parameter_defaults.ControllerIPs.internal_api[loop.index0] }}
+        subnet: internal_api_subnet
+      - network: tenant
+        fixed_ip: {{ parameter_defaults.ControllerIPs.tenant[loop.index0] }}
+        subnet: tenant_subnet
+      - network: external
+        fixed_ip: {{ parameter_defaults.ControllerIPs.external[loop.index0] }}
+        subnet: external_subnet
+{% else %}
   - hostname: {{ host_name }}
     managed: false
     networks:
@@ -80,6 +102,7 @@
       - network: internal_api
       - network: tenant
       - network: external
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if ((install.storage|default({})).backend != 'ceph' and not (install.splitstack|default(false))) or
@@ -139,7 +162,7 @@
       template: /home/stack/virt/network/three-nics-vlans/compute.j2
 {% endif -%}
 {% endif %}
-{% if not install.splitstack|default(false) %}
+{% if not install.splitstack|default(false) and not install.predictable.ips|default(false) %}
     networks:
     - network: ctlplane
       vif: true
@@ -161,6 +184,24 @@
     name: {{ host_name }}
 {% endfor %}
 {% endif %}
+{% endif %}
+{% if install.predictable.ips|default(false) %}
+  instances:
+{% for host_name in groups[compute_type]|sort %}
+  - hostname: {{ host_name }}
+    name: {{ host_name }}
+    networks:
+      - network: storage
+        fixed_ip: {{ parameter_defaults.ComputeIPs.storage[loop.index0] }}
+      - network: internal_api
+        fixed_ip: {{ parameter_defaults.ComputeIPs.internal_api[loop.index0] }}
+      - network: tenant
+        fixed_ip: {{ parameter_defaults.ComputeIPs.tenant[loop.index0] }}
+{% if install.network.dvr|bool or install.network.force.compute.dvr|bool %}
+      - network: external
+        fixed_ip: {{ parameter_defaults.ComputeIPs.external[loop.index0] }}
+{% endif %}
+{% endfor %}
 {% endif %}
 {% if install.splitstack|default(false) %}
   instances:
@@ -193,7 +234,7 @@
 {% else %}
       template: /home/stack/virt/network/three-nics-vlans/ceph-storage.j2
 {% endif %}
-{% if not install.splitstack|default(false) %}
+{% if not install.splitstack|default(false) and not install.predictable.ips|default(false) %}
     networks:
     - network: ctlplane
       vif: true
@@ -205,6 +246,18 @@
     name: {{ host_name }}
 {% endfor %}
 {% endif -%}
+{% if install.predictable.ips|default(false) %}
+  instances:
+{% for host_name in groups.ceph|sort %}
+  - hostname: {{ host_name }}
+    name: {{ host_name }}
+    networks:
+      - network: storage
+        fixed_ip: {{ parameter_defaults.CephStorageIPs.storage[loop.index0] }}
+      - network: storage_mgmt
+        fixed_ip: {{ parameter_defaults.CephStorageIPs.storage_mgmt[loop.index0] }}
+{% endfor %}
+{% endif %}
 {% if install.splitstack|default(false) %}
   instances:
 {% for host_name in groups.ceph|sort %}
