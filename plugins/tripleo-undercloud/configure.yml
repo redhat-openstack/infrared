@@ -160,7 +160,7 @@
               name: patch
               state: present
 
-          - name: download workarounds file
+          - name: Download workarounds file
             get_url:
                 url: "{{ install.workarounds }}"
                 dest: "{{ inventory_dir }}/workarounds.yml"
@@ -168,6 +168,24 @@
                 force: yes
                 validate_certs: no
             delegate_to: localhost
+            when: install.workarounds is regex("^http.*|^https.*")
+
+          - block:
+                - name: "Check if path exists"
+                  stat:
+                    path: "{{ install.workarounds }}"
+                  register: result
+
+                - name: "Copy workaround file"
+                  copy:
+                    src: "{{ install.workarounds }}"
+                    dest: "{{ inventory_dir }}/workarounds.yml"
+                    register: custom_ca
+                  delegate_to: localhost
+                  when: result.stat.exists|default(false)
+
+            when: install.workarounds is not regex("^http.*|^https.*")
+
 
           - name: load workarounds vars
             include_vars: "{{ lookup('first_found', possible_files) }}"
