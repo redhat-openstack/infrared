@@ -238,6 +238,13 @@ subparsers:
                           Use "ports" definition instead of "mac" in instackenv.json file.
                           This option is available since Rocky (also see RHBZ#1909010).
 
+                  baremetal-deployment-file:
+                      type: Value
+                      help: |
+                          The path to a customized baremetal_deployment.yaml file for provisioning
+                          overcloud nodes.
+                      ansible_variable: custom_baremetal_deployment_file
+
                   controller-nodes:
                       type: Value
                       help: The amount of controller nodes to deploy
