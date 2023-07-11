@@ -362,5 +362,6 @@ subparsers:
                   bgp-topology-mode:
                       type: Value
                       help: |
-                          BGP topology can be deployed with different modes
-                          process.
+                          BGP topology can be deployed with different modes.
+                          This option is not set by default.
+                      choices: ['basic']
