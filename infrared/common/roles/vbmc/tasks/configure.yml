@@ -48,7 +48,7 @@
       set_fact:
           vbmc_management_address: "{{ ('undercloud_hypervisors' in groups) | ternary(hostvars[vbmc_hypervisor][management_net].ipv4.address, hostvars[vbmc_hypervisor]['ansible_default_ipv4']['address']) }}"
       when: vbmc_host == 'hypervisor'
-    when: vbmc_management_address is not defined
+    when: vbmc_management_address == ''
 
   - name: Set external network name
     set_fact:
