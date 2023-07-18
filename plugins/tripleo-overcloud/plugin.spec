@@ -295,11 +295,6 @@ subparsers:
                       help: Specifies if ppc64le nodes are being utilized in this overcloud deployment
                       default: false
 
-                  bgp:
-                      type: Bool
-                      help: Specifies if OSP setup includes BGP configuration
-                      default: false
-
             - title: Overcloud Options
               options:
                   overcloud-predeploy-action:
@@ -1168,4 +1163,16 @@ subparsers:
                   collect-ansible-facts:
                       type: Bool
                       help: Save ansible facts as json file(s)
+                      default: False
+
+            - title: BGP
+              options:
+                  bgp-enabled:
+                      type: Bool
+                      help: |
+                          This flag should be enabled when installing an OSP environment with BGP functionality enabled.
+                          When it is set to True, some changes are applied to the overcloud configuration.
+                          - The list of dns_serverss configured when TLS-everywhere is enabled includes an external DNS (internal Red Hat DNS)
+                          - The "overcloud network vip provision" command is not executed before deploying the overcloud, as specified by the BGP documentation
+                          - The prepare_overcloud stage from the tls-everywhere role is skipped
                       default: False

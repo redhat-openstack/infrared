@@ -11,4 +11,4 @@
       - include_role:
             name: tls-everywhere
         vars:
-            stages: "{{ ((install.bgp|default(False)|bool) | ternary([], ['set_overcloud_dns']) + ['prepare_overcloud']) | list}}"
+            stages: "{{ ((install.bgp.enabled|default(False)|bool) | ternary([], ['set_overcloud_dns']) + ['prepare_overcloud']) | list}}"

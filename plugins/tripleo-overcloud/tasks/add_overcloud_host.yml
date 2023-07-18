@@ -69,7 +69,7 @@
                                    -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
                                    -W %h:%p -i {{ hostvars[groups['undercloud'][0]].ansible_ssh_private_key_file }} \
                                    {{ hostvars[hypervisor_group|first].ansible_user }}@{{ hypervisor_ip|default(hostvars[hypervisor_group|first].ansible_host) }}\""
-    when: not (install.bgp|default(False)|bool)
+    when: not (install.bgp.enabled|default(False)|bool)
   - name: add ssh common args for hypervisor (bgp)
     vars:
         proxy1_username: '{{ hostvars[hypervisor_group|first].ansible_user }}'
@@ -86,7 +86,7 @@
                 -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"
                 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W {{ proxy2_host }}:22 -i {{ proxy1_keyfile }} {{ proxy1_username }}@{{ proxy1_host }}\"
                 -W %h:%p -i {{ proxy2_keyfile }} {{ proxy2_username }}@{{ proxy2_host }}"
-    when: install.bgp|default(False)|bool
+    when: install.bgp.enabled|default(False)|bool
   when:
       - node_info.name != baremetal_name
       - "'hypervisor' in groups"
