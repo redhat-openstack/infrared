@@ -1,4 +1,12 @@
 ---
+- name: Copy custom baremetal deployment file
+  copy:
+      src: "{{ custom_baremetal_deployment_file }}"
+      dest: "{{ template_base }}/network/baremetal_deployment.yaml"
+      mode: 0644
+      force: True
+  when: custom_baremetal_deployment_file is defined
+
 - name: Check if the baremetal deployment file exists
   stat:
       path: "{{ template_base }}/network/baremetal_deployment.yaml"
