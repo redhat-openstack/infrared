@@ -76,13 +76,6 @@
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version is version("9", "<")
 
-  - name: Install Red Hat CA
-    become: yes
-    shell: |
-        update-ca-trust enable
-        curl https://password.corp.redhat.com/RH-IT-Root-CA.crt -o /etc/pki/ca-trust/source/anchors/2015-RH-IT-Root-CA.pem
-        update-ca-trust extract
-
   - name: Update repos
     become: yes
     command: yum -y update
@@ -311,4 +304,3 @@
       shell: nmcli connection up "System {{ freeipa_external_interface }}"
     when: freeipa_network_protocol != 'ipv4'
   delegate_to: "{{ freeipa_node }}"
-
