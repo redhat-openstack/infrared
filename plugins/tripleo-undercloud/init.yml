@@ -5,10 +5,15 @@
   become: yes
   any_errors_fatal: true
   tasks:
-    - name: Set selinux state
-      selinux:
-          policy: "targeted"
-          state: "{{ install.selinux|default('enforcing') }}"
+     # no task, because the task would require python3-libselinux
+     - name: Install python3-libselinux
+       command: "yum install -y {{ install.undercloud.pyselinux }}"
+       when: install.undercloud.pyselinux|default('')
+
+     - name: Set selinux state
+       selinux:
+           policy: "targeted"
+           state: "{{ install.selinux|default('enforcing') }}"
 
     - name: Ensure yum presence
       # ... helps with old/middle-aged fedora, possibly not needed
