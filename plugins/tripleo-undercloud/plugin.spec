@@ -251,6 +251,11 @@ subparsers:
 
             - title: Setup Undercloud Packages
               options:
+                  pyselinux:
+                      type: Value
+                      help: |
+                          URL of the python3-selinux package
+
                   mirror:
                       type: Value
                       help: |
