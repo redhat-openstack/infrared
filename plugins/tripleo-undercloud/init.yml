@@ -5,6 +5,11 @@
   become: yes
   any_errors_fatal: true
   tasks:
+    # no task, because the task would require python3-libselinux
+    - name: Install python3-libselinux
+      command: "yum install -y {{ install.pyselinux }}"
+      when: install.pyselinux|default('')
+
     - name: Set selinux state
       selinux:
           policy: "targeted"
