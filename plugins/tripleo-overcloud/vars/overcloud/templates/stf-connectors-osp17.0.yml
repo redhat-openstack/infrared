@@ -3,11 +3,12 @@ tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
     - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
     - "{{ install.heat.templates.basedir }}/environments/logging-environment-rsyslog.yaml"
-
 custom_templates:
   resource_registry:
     OS::TripleO::Services::Collectd: "{{ install.heat.templates.basedir }}/deployment/metrics/collectd-container-puppet.yaml"
   parameter_defaults:
+    ExtraHostFileEntries:
+      - '10.0.76.196 default-interconnect-5671-service-telemetry.apps.rhos-jenkins-cluster.rhos-d.infra.prod.upshift.rdu2.redhat.com'
     CollectdEnableSensubility: true
     ContainerHealthCheckDisabled: false
     CollectdSensubilityLogLevel: DEBUG
@@ -48,22 +49,22 @@ custom_templates:
       - name: sslProfile
         caCertFileContent: |
          -----BEGIN CERTIFICATE-----
-         MIIDUjCCAjqgAwIBAgIQO1fHnYFAvRuE0HYWmPz1/zANBgkqhkiG9w0BAQsFADBD
+         MIIDUjCCAjqgAwIBAgIQEQRt/3hDcGKOEKUHXy024zANBgkqhkiG9w0BAQsFADBD
          MUEwPwYDVQQDEzhkZWZhdWx0LWludGVyY29ubmVjdC5zZXJ2aWNlLXRlbGVtZXRy
-         eS5zdmMuY2x1c3Rlci5sb2NhbDAeFw0yMzA2MDEwOTAyMzZaFw0zMTA1MzAwOTAy
-         MzZaMEMxQTA/BgNVBAMTOGRlZmF1bHQtaW50ZXJjb25uZWN0LnNlcnZpY2UtdGVs
+         eS5zdmMuY2x1c3Rlci5sb2NhbDAeFw0yMzA4MDExNDQ1MTdaFw0zMTA3MzAxNDQ1
+         MTdaMEMxQTA/BgNVBAMTOGRlZmF1bHQtaW50ZXJjb25uZWN0LnNlcnZpY2UtdGVs
          ZW1ldHJ5LnN2Yy5jbHVzdGVyLmxvY2FsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-         MIIBCgKCAQEA326y7zJyBdfvZUHFrAuH6+9ZdnQKhPyPdkiTeTUNYMz3IxoElKzz
-         UQY5tn/lhd7m2N+oc7KIkK4h0Jl/he4prf6fxgEHvk3dj2enGnn9iCVjmoHQNduz
-         xYEv+gL94xmD5spcsWVGm2FJKTs7O5TdAQ3BbJ/2qqxdoEbjSZIqIkT3NR3ECU6T
-         F5PHCsrm31o7GKFKyfk+MRKoBbJ+ipDu3TwsT2DSt5YFQfI96o1JUU1vPrxqHH6c
-         Sp56rf29CzOZPfGTDf/lsHnmhH3uhAUaBtztHJ7qLbwnTCw3gd57znAg0gE1ksq7
-         6m2wcdrmqNFplMVwXJCsdAEmVPpTSLFvgwIDAQABo0IwQDAOBgNVHQ8BAf8EBAMC
-         AqQwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQU+J2vqWxckNMSNKE8G9EpubLq
-         zXYwDQYJKoZIhvcNAQELBQADggEBAIUHM36oAxBXI5baOKmJkdmQ94ueRflX3h/F
-         qXK6hMYastJ53Ch8nSpoR7DFcM8fIpLhKkRjf5yFxJ9WA/RFnl11ajQeD8fa+efb
-         yyyIefsGrttJYIV43h2kafckFln0VfknZ1RSrtxNd2SNHdCHqNsztROZSRoTJk8Z
-         pdWhqM2gKBTAOLL+Qy2condgtIf/o1vre6RE4XlK7zc3RIvF6yUrwFTa72FbnxWo
-         Trv3gUv5RS+ZKdF3di8Rh2y60MXDyS0YaVxFg7qnMRjMn3JFNFXOeGPV01UM6yRB
-         qjrLFWaNFAliwSrAi+B3JMmk3cWImIu5l4zgvujZW0I/8ig78F8=
+         MIIBCgKCAQEA5+y9T/ltkoPIBY3RhKk9q4zG79+UVVV+khDChBvMYATcM/jg3YsO
+         NVpSMEc4cNx3sdl2h9xUpGnV3KSPG1NDH7jWznauq6lFUnq3Qr3NZLaV+ezLl8et
+         NE9sQR60LXSPb7H/CcoJK516nsIoPTTgPKiIsQQzYowsvvYl0qXoAMDfd38NYJpk
+         Mz6OL+JJT0FMVa/WpRKuPUQljIHskQCKRFr3yAhRyaEuk+NlpOJxadw9p5wODu02
+         cu5C6RzKeeovOFq/30pxaB2zF1TKG+I02KkeUddyud5IskU/72R56EOQrYcOPtTv
+         TP26zbzbzSR7w3CkfONxO5ncbdyCBya1uwIDAQABo0IwQDAOBgNVHQ8BAf8EBAMC
+         AqQwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUmE/HJLERrHILb3SvF3Jtci8r
+         SDMwDQYJKoZIhvcNAQELBQADggEBAGwSmbRtmMGdWX+58d9Mv477xONXvIr514P6
+         QtCdW5LpGuT7+7djOiAmxz5cTmiIIbnfNGs/WFzQwW5LoJW3cZyMVs7PrWjXNLJk
+         dHy0Fej5ZGM5Hs/13SmZO7oYfBkYXgDsUID/EPc/zG9LMmYG93IgP4vGd9WkhHrL
+         GksjaXm+FtUOmwvyvk1oEDXi+IKhiTvGDK/Ynq2fPMdFZqDK/MqflXiyD1rsBneV
+         7Zag54njKy7wtlVzI2BqXT1nNGhVoC0KyV3qTB5hq3nP95KV7I4Rs5mUC4WF0POl
+         FBR7GWos6mGnWm9M76eLjYlbbkqxxtL2A0nfp0vq3/A3XqpZyvo=
          -----END CERTIFICATE-----
