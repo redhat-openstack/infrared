@@ -229,7 +229,7 @@
 {% if install.splitstack|default(false) %}
       template: {{ template_base }}/network/nic-configs/swift-storage.j2
 {% else %}
-      template: /home/stack/virt/network/templates/three-nics-vlans/swift-storage.j2
+      template: /home/stack/virt/network/three-nics-vlans/swift-storage.j2
 {% endif %}
 {% if not install.splittack|default(false) %}
     networks:
@@ -237,6 +237,7 @@
       vif: true
     - network: storage
     - network: storage_mgmt
+    - network: internal_api
   instances:
 {% for host_name in groups.swift|sort %}
   - hostname: {{ host_name }}
@@ -253,6 +254,7 @@
         fixed_ip: {{ hostvars[host_name]['ansible_eth0']['ipv4']['address'] }}
       - network: storage
       - network: storage_mgmt
+      - network: internal_api
 {% endfor %}
 {% endif %}
 {% endif -%}
