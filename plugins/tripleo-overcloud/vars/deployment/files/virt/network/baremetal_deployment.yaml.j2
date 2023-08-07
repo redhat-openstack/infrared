@@ -82,10 +82,13 @@
       - network: external
 {% endfor %}
 {% endif %}
-{% if ((install.storage|default({})).backend != 'ceph' and not (install.splitstack|default(false))) or
+{% if (not (install.splitstack|default(false))) or
       install.container.extra.repos is defined or
       (install.network.ovs and install.version|default(undercloud_version)|openstack_release >= 17) %}
   ansible_playbooks:
+    - playbook: /usr/share/ansible/tripleo-playbooks/cli-overcloud-node-kernelargs.yaml
+      extra_vars:
+        kernel_args: 'lpfc.blacklist=1 rd.driver.blacklist=lpfc'
 {% endif %}
 {# Workaround the rhbz#2066367 for the case where OSP17 is run on top of RHEL9 #}
 {% if (install.storage|default({})).backend != 'ceph' and not (install.splitstack|default(false)) %}
