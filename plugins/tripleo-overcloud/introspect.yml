@@ -207,14 +207,18 @@
             while openstack baremetal node list --fields provision_state | grep verifying; do
                sleep 0.5;
             done
+            {% if install.bgp.latency %}
+            openstack overcloud node introspect --provide --all-manageable --node-timeout 2000
+            {% else %}
             openstack overcloud node introspect --provide --all-manageable
+            {% endif %}
             {% endif %}
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
         register: bulk_intro_result
         poll: 50
-        async: 1000
+        async: "{{ install.bgp.latency | ternary(2000, 1000) }}"
         retries: 20
         delay: 90
         ignore_errors: yes
