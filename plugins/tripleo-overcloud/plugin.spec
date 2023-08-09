@@ -1183,3 +1183,11 @@ subparsers:
                           - The "overcloud network vip provision" command is not executed before deploying the overcloud, as specified by the BGP documentation
                           - The prepare_overcloud stage from the tls-everywhere role is skipped
                       default: False
+                  bgp-latency:
+                      type: Bool
+                      help: |
+                          This flag should be enabled when installing an OSP environment with BGP functionality enabled
+                          where latency has been simulated between the Openstack nodes.
+                          When it is set to True, some changes are applied during the overcloud installation:
+                          - The timeout for the overcloud node introspection is increased from 1000 to 2000 seconds
+                      default: False
