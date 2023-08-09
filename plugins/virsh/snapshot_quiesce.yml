@@ -119,7 +119,7 @@
           set -o pipefail
           {{ _ceph_osd_cmd_prefix }}
         register: _wait_for_all_osds_up
-        retries: 5
+        retries: 15 
         delay: 60
         changed_when: false
         until:
@@ -133,7 +133,7 @@
         changed_when: false
         register: _ceph_health
         until: _ceph_health.stdout.find("HEALTH_OK") > -1 or _ceph_health.stdout.find("HEALTH_WARN mons are allowing insecure global_id reclaim")
-        retries: 5
+        retries: 15
         delay: 60
         failed_when: (_ceph_health.stdout.find("HEALTH_OK") == -1) and
                      (_ceph_health.stdout.find("HEALTH_WARN") == -1)
@@ -150,7 +150,7 @@
             crm_mon -1 | grep -w 'Online:' | grep {{ inventory_hostname }}
           changed_when: false
           register: _pcs_status
-          retries: 5
+          retries: 15
           delay: 60
           until: _pcs_status is not failed
 
@@ -159,7 +159,7 @@
             crm_mon -1
           changed_when: false
           register: _bundle_status
-          retries: 5
+          retries: 15
           delay: 60
           until:
             - not(_bundle_status.stdout is search("Stopped.*" ~ inventory_hostname))
@@ -170,7 +170,7 @@
             crm_mon -s
           changed_when: false
           register: _pcs_health
-          retries: 5
+          retries: 15
           delay: 60
           until: _pcs_health.stdout.find("CLUSTER OK") > -1
           run_once: true
