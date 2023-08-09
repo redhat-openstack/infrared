@@ -220,6 +220,19 @@
           state: link
         when: fips_images
 
+      - name: install virt-customize and its deps
+        become: yes
+        package:
+            name:
+              - libguestfs-tools
+              - guestfs-tools
+            state: present
+
+      - name: workaround for the console kernel argument
+        environment:
+            LIBGUESTFS_BACKEND: "direct"
+        command: "virt-customize -a {{ overcloud_image_file }} --run-command 'grubby --remove-args=console --update-kernel=ALL' --selinux-relabel"
+
        #Need to fix  BZ1462703 to apply --os-cloud
       - name: upload the overcloud images to glance
         shell: |
