@@ -1,3 +1,9 @@
 ---
 tripleo_heat_templates:
     - "{{ install.heat.templates.basedir }}/environments/cinder-dellemc-sc-config.yaml"
+
+custom_templates:
+    parameter_defaults:
+        ControllerExtraConfig:
+            tripleo::profile::base::cinder::volume::cinder_enable_dellsc_backend: false
+            tripleo::profile::base::cinder::volume::cinder_enable_dellemc_sc_backend: true
