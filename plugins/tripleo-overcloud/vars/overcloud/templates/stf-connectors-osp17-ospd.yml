@@ -1,0 +1,70 @@
+tripleo_heat_templates:
+    - "{{ install.heat.templates.basedir }}/environments/metrics/qdr-edge-only.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/metrics/ceilometer-write-qdr.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/enable-legacy-telemetry.yaml"
+    - "{{ install.heat.templates.basedir }}/environments/logging-environment-rsyslog.yaml"
+custom_templates:
+  resource_registry:
+    OS::TripleO::Services::Collectd: "{{ install.heat.templates.basedir }}/deployment/metrics/collectd-container-puppet.yaml"
+  parameter_defaults:
+    ExtraHostFileEntries:
+      - '10.0.76.196 default-interconnect-5671-service-telemetry.apps.rhos-jenkins-cluster.rhos-d.infra.prod.upshift.rdu2.redhat.com'
+    CollectdEnableSensubility: true
+    ContainerHealthCheckDisabled: false
+    CollectdSensubilityLogLevel: DEBUG
+    CollectdSensubilityTransport: amqp1
+    CollectdSensubilityResultsChannel: sensubility/osp17-telemetry
+    CeilometerQdrEventsConfig:
+      driver: amqp
+      topic: osp17-event
+    CeilometerQdrMetricsConfig:
+      driver: amqp
+      topic: osp17-metering
+    CeilometerQdrPublishMetrics: true
+    RsyslogElasticsearchSetting:
+        allowunsignedcerts: 'on'
+        server: https://elastic-service-telemetry.apps.leonidcluster.lab.upshift.rdu2.redhat.com
+        skipverifyhost: 'on'
+        uid: elastic
+    CollectdAmqpInstances:
+      osp17-notify:
+        format: JSON
+        notify: true
+        presettle: false
+      osp17-telemetry:
+        format: JSON
+        presettle: false
+    MetricsQdrAddresses:
+      - distribution: multicast
+        prefix: collectd
+      - distribution: multicast
+        prefix: anycast/ceilometer
+    MetricsQdrConnectors:
+      - host: test.com
+        port: 443
+        role: edge
+        verifyHostname: false
+        sslProfile: sslProfile
+    MetricsQdrSSLProfiles:
+      - name: sslProfile
+        caCertFileContent: |
+         -----BEGIN CERTIFICATE-----
+         MIIDUjCCAjqgAwIBAgIQEQRt/3hDcGKOEKUHXy024zANBgkqhkiG9w0BAQsFADBD
+         MUEwPwYDVQQDEzhkZWZhdWx0LWludGVyY29ubmVjdC5zZXJ2aWNlLXRlbGVtZXRy
+         eS5zdmMuY2x1c3Rlci5sb2NhbDAeFw0yMzA4MDExNDQ1MTdaFw0zMTA3MzAxNDQ1
+         MTdaMEMxQTA/BgNVBAMTOGRlZmF1bHQtaW50ZXJjb25uZWN0LnNlcnZpY2UtdGVs
+         ZW1ldHJ5LnN2Yy5jbHVzdGVyLmxvY2FsMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+         MIIBCgKCAQEA5+y9T/ltkoPIBY3RhKk9q4zG79+UVVV+khDChBvMYATcM/jg3YsO
+         NVpSMEc4cNx3sdl2h9xUpGnV3KSPG1NDH7jWznauq6lFUnq3Qr3NZLaV+ezLl8et
+         NE9sQR60LXSPb7H/CcoJK516nsIoPTTgPKiIsQQzYowsvvYl0qXoAMDfd38NYJpk
+         Mz6OL+JJT0FMVa/WpRKuPUQljIHskQCKRFr3yAhRyaEuk+NlpOJxadw9p5wODu02
+         cu5C6RzKeeovOFq/30pxaB2zF1TKG+I02KkeUddyud5IskU/72R56EOQrYcOPtTv
+         TP26zbzbzSR7w3CkfONxO5ncbdyCBya1uwIDAQABo0IwQDAOBgNVHQ8BAf8EBAMC
+         AqQwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUmE/HJLERrHILb3SvF3Jtci8r
+         SDMwDQYJKoZIhvcNAQELBQADggEBAGwSmbRtmMGdWX+58d9Mv477xONXvIr514P6
+         QtCdW5LpGuT7+7djOiAmxz5cTmiIIbnfNGs/WFzQwW5LoJW3cZyMVs7PrWjXNLJk
+         dHy0Fej5ZGM5Hs/13SmZO7oYfBkYXgDsUID/EPc/zG9LMmYG93IgP4vGd9WkhHrL
+         GksjaXm+FtUOmwvyvk1oEDXi+IKhiTvGDK/Ynq2fPMdFZqDK/MqflXiyD1rsBneV
+         7Zag54njKy7wtlVzI2BqXT1nNGhVoC0KyV3qTB5hq3nP95KV7I4Rs5mUC4WF0POl
+         FBR7GWos6mGnWm9M76eLjYlbbkqxxtL2A0nfp0vq3/A3XqpZyvo=
+         -----END CERTIFICATE-----
