@@ -57,7 +57,7 @@
 - name: set vm's host ip
   set_fact:
       hypervisor_ip: "{{ hostvars[item].ansible_host }}"
-  when: "(node_info.name != baremetal_name) and ((hostvars[node_info.name].ansible_ssh_common_args is defined) and (hostvars[item].ansible_host in hostvars[node_info.name].ansible_ssh_common_args))"
+  when: "(node_info.name != baremetal_name) and ((hostvars[node_info.name].ansible_ssh_common_args is defined) and (hostvars[item].ansible_host|default('') in hostvars[node_info.name].ansible_ssh_common_args))"
   with_items: "{{ hypervisor_group }}"
 
 - block:

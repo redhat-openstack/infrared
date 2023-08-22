@@ -58,6 +58,7 @@
   when:
       - install.get('custom', {}).hostnames|default(False)
       - install.version|default(undercloud_version) | openstack_release >= 10
+      - install.version|default(undercloud_version) | openstack_release < 17
 
 - name: Generate the hostnames template
   include_tasks: hostname.yml

@@ -95,6 +95,12 @@
           file: "vars/deployment/files/virt/network/predictable-ips.yaml"
         when: install.predictable.ips
 
+      - name: Make a dictionary of custom hostnames
+        set_fact:
+            hostname_map: "{{ hostname_map | default({}) | combine ({ item.split('=')[0] : item.split('=')[1] }) }}"
+        with_items: "{{ install.custom.hostnames.split(',') }}"
+        when: install.custom.hostnames|default(false)
+
       # consider all the files as templates
       - name: Copy deployment folder
         vars:
