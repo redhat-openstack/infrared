@@ -47,6 +47,20 @@
           chronyc makestep
         changed_when: false
 
+    - name: Reinstall the same repositories
+      become: true
+      shell: >-
+        LATEST_INSTALLED=`cat /var/lib/rhos-release/latest-installed`
+        rhos-release -x $LATEST_INSTALLED
+
+    - name: Configure the mirror when is defined
+      become: true
+      shell: >-
+        /root/use_mirror.sh {{ install.mirror }}
+      when:
+        install.mirror is defined
+
+
 - name: Ensure that the Ceph cluster is up and healthy
   hosts: "{{ ('monitors' in groups) | ternary('monitors', ('serviceapi' in groups) | ternary('serviceapi', 'controller')) }}"
   gather_facts: false
