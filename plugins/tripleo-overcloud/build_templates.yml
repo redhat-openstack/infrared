@@ -188,27 +188,43 @@
             mode: 0755
         when: not overcloud_deploy_script|default('')
 
-      - name: copy initial ceph conf to undercloud
-        template:
-          src: "{{ install.ceph.initial.conf.file }}"
-          dest: "{{ ansible_user_dir }}/initial-ceph.conf"
-          mode: 0644
-          force: yes
-        when:
-          - install.ceph.initial.conf.file|default('')
-          - install.version|default(undercloud_version) | openstack_release >= 17
-          - install.storage.backend|default('') == 'ceph'
+      - block:
+          - name: copy initial ceph conf to undercloud
+            template:
+              src: "{{ install.ceph.initial.conf.file }}"
+              dest: "{{ ansible_user_dir }}/initial-ceph.conf"
+              mode: 0644
+              force: yes
+            when:
+              - install.ceph.initial.conf.file|default('')
 
-      - name: copy OSD spec file to undercloud
-        template:
-          src: "{{ install.ceph.osd.spec.file }}"
-          dest: "{{ ansible_user_dir }}/osd-spec.yml"
-          mode: 0644
-          force: yes
+          - name: copy OSD spec file to undercloud
+            template:
+              src: "{{ install.ceph.osd.spec.file }}"
+              dest: "{{ ansible_user_dir }}/osd-spec.yml"
+              mode: 0644
+              force: yes
+            when:
+              - install.ceph.osd.spec.file|default('')
+
+          - name: generate a default crush hierarchy
+            copy:
+              content: |
+                ---
+                {% for hostname in groups['ceph']|default([]) %}
+                {{ hostname }}:
+                  root: default
+                  rack: r{{ loop.index0 }}
+                {% endfor %}
+              dest: "{{ ansible_user_dir }}/crush_hierarchy.yml"
+              mode: 0644
+              force: yes
+            when:
+              - install.ceph.default.crush.hierarchy|default(False)
+
         when:
-          - install.ceph.osd.spec.file|default('')
-          - install.version|default(undercloud_version) | openstack_release >= 17
-          - install.storage.backend|default('') == 'ceph'
+            - install.version|default(undercloud_version) | openstack_release >= 17
+            - install.storage.backend|default('') == 'ceph'
 
       - name: Enable external network access through newly created vlan interface on undercloud
         include_tasks: tasks/undercloud-ext-vlan.yml
