@@ -357,6 +357,15 @@ subparsers:
                           correct state. This action must be done independently of the import process
                           because infrared will need to use the newly imported inventory.
                       default: False
+                  virsh-snapshot-quiesce-repositories:
+                      type: Bool
+                      help: |
+                          This is a flag to reinstall the repositories of the downloaded vms.
+                      default: True
+                  virsh-snapshot-quiesce-mirror:
+                      type: Value
+                      help: |
+                          This is a flag to reinstall the repositories of the downloaded vms.
             - title: BGP
               options:
                   bgp-topology-mode:
