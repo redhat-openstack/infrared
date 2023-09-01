@@ -35,3 +35,15 @@
     executable: /bin/bash
   delegate_to: localhost
   loop: "{{ _remote_ssh_public_keys_fetch.results | map(attribute='dest') | list }}"
+
+- name: Remove repositories of the nodes  
+  shell: >-
+    ssh
+    {{ infrared_host_name['value']['ansible_ssh_common_args'] }}
+    -i {{ infrared_host_name['value']['ansible_ssh_private_key_file'] }}
+    {{ infrared_host_name['value']['ansible_user'] }}@{{ infrared_host_name['value']['ansible_host'] }}
+    'sudo rm -rf /etc/yu,.repos.d/*.repo'
+  args:
+    executable: /bin/bash
+  delegate_to: localhost
+  when: infrared_host_name['value']['ansible_host'] != 'NA'
