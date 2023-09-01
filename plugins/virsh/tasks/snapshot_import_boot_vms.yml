@@ -35,3 +35,16 @@
     executable: /bin/bash
   delegate_to: localhost
   loop: "{{ _remote_ssh_public_keys_fetch.results | map(attribute='dest') | list }}"
+
+- name: Reinstall the repositories on the VMs
+  shell: >-
+    ssh
+    {{ infrared_host_name['value']['ansible_ssh_common_args'] }}
+    -i {{ infrared_host_name['value']['ansible_ssh_private_key_file'] }}
+    {{ infrared_host_name['value']['ansible_user'] }}@{{ infrared_host_name['value']['ansible_host'] }}
+    'if [ -f /var/lib/rhos-release/latest-installed ];  then   LATEST_INSTALLED=`cat /var/lib/rhos-release/latest-installed` && rhos-release -x $LATEST_INSTALLED ;  fi'
+  args:
+    executable: /bin/bash
+  delegate_to: localhost
+  when:
+    - infrared_host_name['value']['ansible_host'] != 'NA'
