@@ -328,6 +328,72 @@
           args:
             executable: /bin/bash
           delegate_to: localhost
+<<<<<<< HEAD   (3faef3 foreman: skip ssl cert validation)
         - name: Output the compose/puddle version
           debug:
             msg: "Build mark: core_puddle={{ _remote_compose_version.stdout }}"
+=======
+          register: _wait_boot_complete
+          delay: 60
+          retries: 30
+          until:
+            - _wait_boot_complete.rc == 0
+          loop: "{{ _running_servers }}"
+
+        - name: Update /etc/hosts with VM's details
+          lineinfile:
+            dest: /etc/hosts
+            line: "{{ _inventory[item.name]['ansible_host'] }}    {{ item.name }}.redhat.local {{ item.name }}"
+            regexp: ".*{{ item.name }}$"
+            state: present
+          loop: "{{ _running_servers }}"
+
+        - name: Fetch the remote hypervisor's public ssh key
+          fetch:
+            src: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_rsa.pub"
+            dest: "{{ src_workspace }}/"
+          register: _remote_ssh_public_key
+
+        - name: Copy the remote hypervisor's public ssh key into the VM authorized_keys
+          shell: >-
+            ssh
+            {{ _inventory[item.name]['ansible_ssh_common_args'] }}
+            -i {{ _inventory[item.name]['ansible_ssh_private_key_file'] }}
+            {{ _inventory[item.name]['ansible_user'] }}@{{ _inventory[item.name]['ansible_host'] }}
+            'tee -a ~/.ssh/authorized_keys' < {{ _remote_ssh_public_key['dest'] }}
+          args:
+            executable: /bin/bash
+          delegate_to: localhost
+          loop: "{{ _running_servers }}"
+
+       - name: Reinstall the repositories on the VMs
+         shell: >-
+           ssh
+           {{ infrared_host_name['value']['ansible_ssh_common_args'] }}
+           -i {{ infrared_host_name['value']['ansible_ssh_private_key_file'] }}
+           {{ infrared_host_name['value']['ansible_user'] }}@{{ infrared_host_name['value']['ansible_host'] }}
+           'if [ -f /var/lib/rhos-release/latest-installed ];  then   LATEST_INSTALLED=`cat /var/lib/rhos-release/latest-installed` && sudo rhos-release -x $LATEST_INSTALLED ;  fi'
+         args:
+           executable: /bin/bash
+         delegate_to: localhost
+         when:
+           - infrared_host_name['value']['ansible_host'] != 'NA'
+
+        - when: _inventory['undercloud-0'] is defined
+          block:
+            - name: Get the compose/puddle version from the undercloud
+              shell: >-
+                ssh
+                {{ _inventory['undercloud-0']['ansible_ssh_common_args'] }}
+                -i {{ _inventory['undercloud-0']['ansible_ssh_private_key_file'] }}
+                {{ _inventory['undercloud-0']['ansible_user'] }}@{{ _inventory['undercloud-0']['ansible_host'] }}
+                'cat ~/core_puddle_version || echo "not found"'
+              register: _remote_compose_version
+              args:
+                executable: /bin/bash
+              delegate_to: localhost
+
+            - name: Output the compose/puddle version
+              debug:
+                msg: "Build mark: core_puddle={{ _remote_compose_version.stdout }}"
+>>>>>>> CHANGE (25975e Reinstall the repos from the nodes on snapshot_quiesce)
