@@ -130,11 +130,21 @@
           - custom_repos_files is defined
           - install['upload']['extra']['repos']
 
+      # NOTE: Downloaded repositories are labeled with an SELinux label `unconfined_u:object_r:user_tmp_t:s0`
+      # This will cause container mounting volume `/etc/yum.repos.d` with :z to ignore the file(s)
       - name: Add extra repositories
         become: yes
         shell: |
           yum-config-manager --add-repo {{ item }}
         with_items: "{{ custom_repos.urls|default([]) }}"
+
+      # NOTE: Restores downloaded repositories to the apropraite SELinux content for this directory:
+      # `unconfined_u:object_r:system_conf_t:s0`
+      - name: Restore SELinux Context For Extra Repositories
+        become: yes
+        command: |
+          /sbin/restorecon -vr /etc/yum.repos.d/
+        when: "'urls' in custom_repos"
 
       - name: Enable extra repo (crb) for vbmc dependencies (RHEL9)
         become: yes
