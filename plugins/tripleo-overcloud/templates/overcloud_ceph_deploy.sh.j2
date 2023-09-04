@@ -24,6 +24,10 @@ ARGS="${ARGS} --config {{ ansible_user_dir }}/initial-ceph.conf"
 ARGS="${ARGS} --osd-spec {{ ansible_user_dir }}/osd-spec.yml"
 {% endif %}
 
+{% if install.ceph.default.crush.hierarchy %}
+ARGS="${ARGS} --crush-hierarchy {{ ansible_user_dir }}/crush_hierarchy.yml"
+{% endif %}
+
 {% if ceph_node_cnt|int < 3 %}
 ARGS="${ARGS} --single-host-defaults"
 {% endif %}
