@@ -1,0 +1,24 @@
+---
+custom_templates:
+  parameter_defaults:
+    CinderRbdPoolName: volumes
+    CinderRbdExtraPools: cinderfast
+    CephCrushRules:
+      - name: HDD
+        root: default
+        type: host
+        class: hdd
+        default: true
+      - name: SSD
+        root: default
+        type: host
+        class: ssd
+        default: true
+    CephPools:
+      - name: volumes
+        rule_name: HDD
+        application: rbd
+      - name: cinderfast
+        pg_num: 32
+        rule_name: SSD
+        application: rbd

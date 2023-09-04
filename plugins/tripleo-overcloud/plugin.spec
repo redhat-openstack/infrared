@@ -713,6 +713,14 @@ subparsers:
                           copied to the undercloud:/home/stack/osd-spec.yml
                           and passed to 'openstack overcloud ceph deploy --osd-spec'.
 
+                  ceph-default-crush-hierarchy:
+                      type: Bool
+                      default: False
+                      help: |
+                          Generates a default crush hierarchy file. It will be
+                          copied to the undercloud:/home/stack/osd-spec.yml
+                          and passed to 'openstack overcloud ceph deploy --crush-hierarchy'.
+
                   glance-backend:
                       type: Value
                       choices:
