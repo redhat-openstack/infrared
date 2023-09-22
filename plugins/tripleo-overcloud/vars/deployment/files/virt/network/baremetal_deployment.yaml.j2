@@ -62,7 +62,7 @@
 {% endfor %}
 {% else %}
 {% for host_name in groups.controller|sort %}
-  - hostname: {{ host_name }}
+  - hostname: {{ hostname_map[host_name] | default(host_name) }}
     name: {{ host_name }}
 {% endfor %}
 {% endif %}
@@ -71,7 +71,7 @@
   instances:
 {% for host_name in groups.controller|sort %}
 {% if install.predictable.ips|default(false) %}
-  - hostname: {{ host_name }}
+  - hostname: {{ hostname_map[host_name] | default(host_name) }}
     name: {{ host_name }}
     networks:
       - network: ctlplane
@@ -180,7 +180,7 @@
 {% endfor %}
 {% else %}
 {% for host_name in groups[compute_type]|sort %}
-  - hostname: {{ host_name }}
+  - hostname: {{ hostname_map[host_name] | default(host_name) }}
     name: {{ host_name }}
 {% endfor %}
 {% endif %}
@@ -188,7 +188,7 @@
 {% if install.predictable.ips|default(false) %}
   instances:
 {% for host_name in groups[compute_type]|sort %}
-  - hostname: {{ host_name }}
+  - hostname: {{ hostname_map[host_name] | default(host_name) }}
     name: {{ host_name }}
     networks:
       - network: storage
@@ -242,14 +242,14 @@
     - network: storage_mgmt
   instances:
 {% for host_name in groups.ceph|sort %}
-  - hostname: {{ host_name }}
+  - hostname: {{ hostname_map[host_name] | default(host_name) }}
     name: {{ host_name }}
 {% endfor %}
 {% endif -%}
 {% if install.predictable.ips|default(false) %}
   instances:
 {% for host_name in groups.ceph|sort %}
-  - hostname: {{ host_name }}
+  - hostname: {{ hostname_map[host_name] | default(host_name) }}
     name: {{ host_name }}
     networks:
       - network: storage
