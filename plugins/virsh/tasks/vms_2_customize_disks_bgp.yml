@@ -7,13 +7,9 @@
 - name: Customize disks from base images (virt-customize)
   vars:
     net_scripts: /etc/sysconfig/network-scripts
-  environment:
-      LIBGUESTFS_DEBUG: 1
   shell: |
     set -ex
-    {% set node_fullname = '-'.join((node_name, item | string())) %}
-    {# set default_bgp_packages = 'vim,frr,mtr,tcpdump,bind-utils' #}
-    virt-sysprep --selinux-relabel -a {{ base_image_path }}/{{ node_fullname }}.qcow2 --operations machine-id
+    {% set node_fullname = '-'.join((node_name, item | string(), 'disk1')) %}
     virt-customize -v -a {{ base_image_path }}/{{ node_fullname }}.qcow2 \
       --hostname "{{ node_fullname }}" \
       --run-command "rm -f /etc/sysconfig/network-scripts/ifcfg-e*" \
