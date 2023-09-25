@@ -4,19 +4,21 @@
     topology_node: "{{ node.value }}"
     node_name: "{{ node.key }}"
 
-- name: Create disks
+- name: Create disks from vm base image
   environment:
       LIBGUESTFS_DEBUG: 1
   shell: |
     set -ex
-    {% set node_fullname = '-'.join((node_name, item | string())) %}
-    qemu-img create -f qcow2 -o preallocation={{ topology_node.disks.disk1.preallocation }} {{ base_image_path }}/{{ node_fullname }}.qcow2 {{ topology_node.disks.disk1.size }}
-  loop: '{{ topology_node.node_indexes }}'
+    {% for num in topology_node.node_indexes %}
+    {% set node_fullname = '-'.join((node_name, num | string(), item.key)) %}
+    qemu-img create -f qcow2 -o preallocation={{ item.value.preallocation }} {{ base_image_path }}/{{ node_fullname }}.qcow2 {{ item.value.size }}
+    {% endfor %}
+  with_dict: "{{ topology_node.disks }}"
 
 - name: Create ifcfg files
   shell: |
     set -ex
-    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    {% set node_fullname = '-'.join((node_name, item | string(), 'disk1')) %}
     mkdir -p {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}
     echo -e "NETWORKING=yes\nNOZEROCONF=yes" > {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/network
 
@@ -45,7 +47,7 @@
   shell: |
     set -ex
     {% set image_name = provision.image.url | basename %}
-    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    {% set node_fullname = '-'.join((node_name, item | string(), 'disk1')) %}
     # Try to find the "root" partition or a first xfs partition. Defaults to /dev/sda1 else.
     partitions=`virt-filesystems --csv --long --no-title -a {{ base_image_path }}/{{ image_name }}`
     root_part=`awk -F "," '{ if ($4 == "root") {print $1; exit;} }' <<<"${partitions}"`
@@ -58,6 +60,9 @@
   async: 7200
   poll: 0
   loop: '{{ topology_node.node_indexes }}'
+  when:
+    - topology_node.deploy_os|default(True)
+    - topology_node.supports_libguestfs|default(True)
 
 - name: append value to vms_jobs dictionary
   set_fact:
