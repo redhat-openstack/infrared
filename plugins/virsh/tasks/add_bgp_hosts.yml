@@ -10,6 +10,7 @@
       search_regex: OpenSSH
       delay: 10
       sleep: 3
+  when: topology_node.deploy_os|default(True)
 
 - name: detect python interpreter
   vars:
@@ -21,7 +22,7 @@
       -o ProxyCommand="ssh {{ sshopts }} -W %h:%p -i {{ sshkey }} {{ proxyhost }}" \
       -i {{ sshkey }} root@{{ node_ip }} 'command -v python python3 /usr/libexec/platform-python|head -n1'
   delegate_to: localhost
-  when: (topology_node.deploy_os|default(True))
+  when: topology_node.deploy_os|default(True)
   register: py_interpreter
   retries: 10
   delay: 5
