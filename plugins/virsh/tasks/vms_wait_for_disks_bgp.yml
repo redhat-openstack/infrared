@@ -6,3 +6,4 @@
   until: vm_tasks.finished
   retries: 300
   with_items: "{{ vms_jobs[node.key]['results'] }}"
+  when: item.ansible_job_id is defined
