@@ -11,7 +11,7 @@
       LIBGUESTFS_DEBUG: 1
   shell: |
     set -ex
-    {% set node_fullname = '-'.join((node_name, item | string())) %}
+    {% set node_fullname = '-'.join((node_name, item | string(), 'disk1')) %}
     {# set default_bgp_packages = 'vim,frr,mtr,tcpdump,bind-utils' #}
     virt-sysprep --selinux-relabel -a {{ base_image_path }}/{{ node_fullname }}.qcow2 --operations machine-id
     virt-customize -v -a {{ base_image_path }}/{{ node_fullname }}.qcow2 \
