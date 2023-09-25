@@ -11,16 +11,16 @@
     set -ex
     {% set node_fullname = '-'.join((node_name, item | string())) %}
     virt-install --name "{{ node_fullname }}" \
-      --disk path="{{ base_image_path }}/{{ node_fullname }}.qcow2,device=disk,bus=virtio,format=qcow2,cache=unsafe" \
+      --disk path="{{ base_image_path }}/{{ node_fullname }}-disk1.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ topology_node.disks.disk1.cache }}" \
+    {% for disk_name, disk_values in topology_node.disks.items() %}
+    {% if disk_name != 'disk1' %}
+      --disk path="{{ base_image_path }}/{{ node_fullname }}-{{ disk_name }}.qcow2,device=disk,bus=virtio,format=qcow2,cache={{ disk_values.cache }}" \
+    {% endif %}
+    {% endfor %}
     {% if provision.bootmode == 'uefi' %}
       --boot {{ 'hd' if topology_node.deploy_os|default(True) else 'uefi' }} \
     {% else %}
       --boot {{ 'hd' if provision.bootmode == 'bios' else provision.bootmode }} \
-    {% endif %}
-    {% if 'ceph_additional_disks_count' in topology_node %}
-      {% for n in range(topology_node.ceph_additional_disks_count | int) %}
-      --disk path="{{ base_image_path }}/{{ node_fullname }}-ceph-{{ n + 1 }}.qcow2,device=disk,bus=virtio,format=qcow2,cache=unsafe" \
-      {% endfor %}
     {% endif %}
     {% for n in topology_node.interfaces[provision.bgp.topology.mode][item] %}
       {% if 'introspection_macs' in topology_node and topology_node.introspection_nets[provision.bgp.topology.mode][item] == n %}
