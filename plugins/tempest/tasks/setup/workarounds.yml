@@ -1,0 +1,30 @@
+- name: apply patch to enable support for ECDSA ssh keys in tempest (OSP16.1)
+  become: yes
+  shell: |
+    curl https://code.engineering.redhat.com/gerrit/changes/openstack-tempest~446768/revisions/5/patch?download |  base64 --decode | patch --forward -d /usr/lib/python3.6/site-packages -p1
+    ORIG_ECODE=$?
+    if [ $ORIG_ECODE -gt 1 ]; then
+      echo "ERROR: there was a problem applying the patch, exit code: $ORIG_ECODE"
+    else
+      echo "patch applied correctly (or was already applied before), exit code: $ORIG_ECODE"
+    fi
+  when: test.openstack.version|default(overcloud_version) is version('16.1', '==')
+
+- name: apply patch to enable support for ECDSA ssh keys in tempest (OSP16.2)
+  become: yes
+  shell: |
+    curl https://code.engineering.redhat.com/gerrit/changes/openstack-tempest~446779/revisions/2/patch?download |  base64 --decode | patch -d /usr/lib/python3.6/site-packages -p1
+  when: test.openstack.version|default(overcloud_version) is version('16.2', '==')
+
+
+- name: apply patch to enable support for ECDSA ssh keys in tempest (OSP16.2)
+  become: yes
+  shell: |
+    curl https://code.engineering.redhat.com/gerrit/changes/openstack-tempest~446779/revisions/2/patch?download |  base64 --decode | patch --forward -d /usr/lib/python3.6/site-packages -p1
+    ORIG_ECODE=$?
+    if [ $ORIG_ECODE -gt 1 ]; then
+      echo "ERROR: there was a problem applying the patch, exit code: $ORIG_ECODE"
+    else
+      echo "patch applied correctly (or was already applied before), exit code: $ORIG_ECODE"
+    fi
+  when: test.openstack.version|default(overcloud_version) is version('16.2', '==')
