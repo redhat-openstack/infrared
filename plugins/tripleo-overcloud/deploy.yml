@@ -94,6 +94,15 @@
         register: roles_data_file
 
       - block:
+          - name: apply route to ceph nodes when BGP is used
+            become: yes
+            delegate_to: "{{ item }}"
+            shell: |
+              RACK_NUMBER=$(hostname |cut -d. -f1 |cut -d- -f2)
+              ip route add 10.0.0.0/8 via 192.170.$RACK_NUMBER.1
+            with_items: "{{ groups.get('ceph', []}}"
+            when: install.bgp.enabled
+
           - name: create ceph deploy script
             template:
                 src: templates/overcloud_ceph_deploy.sh.j2
@@ -107,6 +116,15 @@
                 set -o pipefail
                 bash ~/overcloud_ceph_deploy.sh \
                   |& tee -a /home/stack/overcloud_ceph_deployment.log
+
+          - name: remove route from ceph nodes when BGP is used
+            become: yes
+            delegate_to: "{{ item }}"
+            shell: |
+              ip route del 10.0.0.0/8
+            with_items: "{{ groups.get('ceph', []}}"
+            when: install.bgp.enabled
+
         when:
             - (install.version|default(undercloud_version) | openstack_release >= 17.0)
             - install.storage.backend|default('') == 'ceph'
