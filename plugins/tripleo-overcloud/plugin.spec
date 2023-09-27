@@ -823,6 +823,14 @@ subparsers:
                           This is useful when tempest object_storage tests fail due to differences with swift.
                       default: false
 
+                  ceph-deploy-skipntp:
+                      type: Bool
+                      help: |
+                          Run the overcloud ceph deploy command with the --skip-ntp option.
+                          This is needed when routes to NTP servers are not available during the installation of ceph.
+                          For example, with BGP setups.
+                      default: False
+
             - title: Composable roles
               options:
                   role-files:
