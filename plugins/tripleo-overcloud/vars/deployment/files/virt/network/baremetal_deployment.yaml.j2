@@ -2,7 +2,9 @@
   count: {{ (install.controller|default({})).nodes|default(0) or groups.controller|default([])|length or '1' }}
   hostname_format: controller-%index%
   defaults:
+{% if not install.specific.node.ids|default(false) %}
     profile: control
+{% endif %}
     config_drive:
       cloud_config:
         # unique NFS ID
@@ -63,7 +65,12 @@
 {% else %}
 {% for host_name in groups.controller|sort %}
   - hostname: {{ hostname_map[host_name] | default(host_name) }}
+{% if not install.specific.node.ids|default(false) %}
     name: {{ host_name }}
+{% else %}
+    capabilities:
+        node: {{ host_name }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endif %}
@@ -72,7 +79,12 @@
 {% for host_name in groups.controller|sort %}
 {% if install.predictable.ips|default(false) %}
   - hostname: {{ hostname_map[host_name] | default(host_name) }}
+{% if not install.specific.node.ids|default(false) %}
     name: {{ host_name }}
+{% else %}
+    capabilities:
+        node: {{ host_name }}
+{% endif %}
     networks:
       - network: ctlplane
         vif: true
@@ -136,7 +148,9 @@
   count: {{ (install[compute_type]|default({})).nodes|default(0) or groups[compute_type]|default([])|length or (install.hybrid is defined)| ternary('1','0') }}
   hostname_format: {{ compute_type }}-%index%
   defaults:
+{% if not install.specific.node.ids|default(false) %}
     profile: {{ compute_type }}
+{% endif %}
 {# Following implies multirhel-enabled-legacy is used  #}
 {% if compute_type == 'computerhel8' %}
     image:
@@ -181,7 +195,12 @@
 {% else %}
 {% for host_name in groups[compute_type]|sort %}
   - hostname: {{ hostname_map[host_name] | default(host_name) }}
+{% if not install.specific.node.ids|default(false) %}
     name: {{ host_name }}
+{% else %}
+    capabilities:
+        node: {{ host_name }}
+{% endif %}
 {% endfor %}
 {% endif %}
 {% endif %}
@@ -189,7 +208,12 @@
   instances:
 {% for host_name in groups[compute_type]|sort %}
   - hostname: {{ hostname_map[host_name] | default(host_name) }}
+{% if not install.specific.node.ids|default(false) %}
     name: {{ host_name }}
+{% else %}
+    capabilities:
+        node: {{ host_name }}
+{% endif %}
     networks:
       - network: storage
         fixed_ip: {{ parameter_defaults.ComputeIPs.storage[loop.index0] }}
@@ -227,7 +251,9 @@
   count: {{ (install.storage.nodes|default(0)) or (groups['ceph']|default([])|length) or 1 }}
   hostname_format: ceph-%index%
   defaults:
+{% if not install.specific.node.ids|default(false) %}
     profile: ceph-storage
+{% endif %}
     network_config:
 {% if install.splitstack|default(false) %}
       template: {{ template_base }}/network/nic-configs/ceph-storage.j2
@@ -243,14 +269,24 @@
   instances:
 {% for host_name in groups.ceph|sort %}
   - hostname: {{ hostname_map[host_name] | default(host_name) }}
+{% if not install.specific.node.ids|default(false) %}
     name: {{ host_name }}
+{% else %}
+    capabilities:
+        node: {{ host_name }}
+{% endif %}
 {% endfor %}
 {% endif -%}
 {% if install.predictable.ips|default(false) %}
   instances:
 {% for host_name in groups.ceph|sort %}
   - hostname: {{ hostname_map[host_name] | default(host_name) }}
+{% if not install.specific.node.ids|default(false) %}
     name: {{ host_name }}
+{% else %}
+    capabilities:
+        node: {{ host_name }}
+{% endif %}
     networks:
       - network: storage
         fixed_ip: {{ parameter_defaults.CephStorageIPs.storage[loop.index0] }}
