@@ -309,6 +309,8 @@
     - name: Restart interface eth2
       become: yes
       shell: nmcli connection up "System {{ freeipa_external_interface }}"
-    when: freeipa_network_protocol != 'ipv4'
+    when: 
+      - freeipa_network_protocol != 'ipv4'
+      - not install.bgp.enabled
   delegate_to: "{{ freeipa_node }}"
 
