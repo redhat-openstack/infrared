@@ -146,6 +146,19 @@
   command: "virt-customize --selinux-relabel --update -a {{ overcloud_image_file }}"
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
+- name: Add the route as permanent
+  become: true
+  copy:
+    dest: ipmi_devintf.conf
+    mode: 0644
+    content: |
+      install ipmi_devintf /sbin/modprobe ipmi_si; /sbin/modprobe --ignore-install ipmi_devintf
+
+- name: Load ipmi_si
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --copy-in ipmi_devintf.conf:/etc/modprobe.d/ --selinux-relabel"
+
 - name: Uninstall packages from overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
