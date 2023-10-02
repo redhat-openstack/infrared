@@ -1,0 +1,82 @@
+---
+- name: Create networks for bgp setup
+  hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  gather_facts: yes
+  any_errors_fatal: true
+  tasks:
+    - name: Load bgp network vars
+      include_vars: "{{ playbook_dir }}/defaults/topology/network/bgp_networks.yml"
+
+    - name: create the networks for the topology
+      virt_net:
+        command: "define"
+        name: "{{ item.key }}"
+        xml: "{{ lookup('template', 'templates/network-bgp.xml.j2') }}"
+      with_dict: "{{ networks }}"
+
+    - name: set autostart to the created networks
+      virt_net:
+        autostart: "yes"
+        name: "{{ item.key }}"
+      with_dict: "{{ networks }}"
+
+    - name: check if network is active
+      virt_net:
+        name: "{{ item.key }}"
+        state: active
+      with_dict: "{{ networks }}"
+
+    - name: set IPv4 forwarding
+      #TODO(eolivare): cleanup this?
+      become: true
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: '1'
+        sysctl_set: yes
+        sysctl_file: /etc/sysctl.d/90-network.conf
+        state: present
+        reload: yes
+
+    - name: disable reverse path forwarding validation
+      #TODO(eolivare): cleanup this?
+      become: true
+      sysctl:
+        name: net.ipv4.conf.all.rp_filter
+        value: '0'
+        sysctl_set: yes
+        sysctl_file: /etc/sysctl.d/90-network.conf
+        state: present
+        reload: yes
+
+    - name: create forward and postrouting iptables rules for bgp
+      shell: |
+        if ! iptables -nvL FORWARD |grep -e "ACCEPT.{{ item.cidr }}"; then
+          iptables -I FORWARD -s {{ item.cidr }} -m comment --comment "Infrared: bgp_playground_rule" -j ACCEPT
+          iptables -I FORWARD -d {{ item.cidr }} -m comment --comment "Infrared: bgp_playground_rule" -j ACCEPT
+        fi
+        if ! iptables -t nat -nvL POSTROUTING | grep -e "MASQUERADE.{{ item.cidr }}"; then
+          iptables -t nat -A POSTROUTING --source {{ item.cidr }} -m comment --comment "Infrared: bgp_playground_rule" -j MASQUERADE
+        fi
+      loop: "{{ cidrs }}"
+
+    - name: create cleanup_bgp_routes directory
+      file:
+        state: directory
+        path: /tmp/cleanup_bgp_routes
+        mode: '0755'
+
+    - name: empty cleanup_bgp_routes.sh file
+      copy:
+        dest: /tmp/cleanup_bgp_routes/cleanup_bgp_routes.sh
+        content: ''
+        mode: '0755'
+
+    - name: create routes through spines
+      become: true
+      shell: |
+        if ! ip r | grep -q {{ item.cidr }}; then
+          ip r a {{ item.cidr }} via {{ item.hv_route }}
+          echo "ip r d {{ item.cidr }} via {{ item.hv_route }}" >> /tmp/cleanup_bgp_routes/cleanup_bgp_routes.sh
+        fi
+      when: item.get('hv_route', False)
+      loop: "{{ cidrs }}"
