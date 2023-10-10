@@ -1,0 +1,4 @@
+ name: apply patch to enable support for ECDSA ssh keys in tempest
+  become: yes
+  shell: |
+    curl https://code.engineering.redhat.com/gerrit/changes/openstack-tempest~447364/revisions/2/patch?download |  base64 --decode | patch -d /usr/lib/python3.6/site-packages -p1
