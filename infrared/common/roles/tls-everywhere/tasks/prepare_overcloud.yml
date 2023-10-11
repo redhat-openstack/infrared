@@ -34,6 +34,7 @@
         - "{{ freeipa_heat_templates_basedir }}/environments/ssl/enable-internal-tls.yaml"
         - "{{ freeipa_templates_basedir }}/cloud-names.yaml"
         - "{{ freeipa_templates_basedir }}/public_vip.yaml"
+    when: not install.bgp
 
   - name: Get last row of overcloud deploy script
     command: "tail -n 1 {{ freeipa_overcloud_deploy_script }}"
