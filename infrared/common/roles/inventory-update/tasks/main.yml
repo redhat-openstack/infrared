@@ -9,14 +9,10 @@
         src: inventory.j2
         force: yes
 
-  - name: Remove file before creating the link
-    file:
-        path: "{{ inventory_dir }}/hosts"
-        state: absent
-
   - name: update inventory file symlink
     file:
+        src: "{{ inventory_file_name }}"
         dest: "{{ inventory_dir }}/hosts"
         state: link
-        src: "{{ inventory_file_name }}"
+        force: yes
   delegate_to: localhost
