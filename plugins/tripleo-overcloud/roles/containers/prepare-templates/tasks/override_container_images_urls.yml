@@ -1,126 +1,256 @@
 ---
-- name: convert install_container_images_urls(string) into install_container_images_overrides(dict)
-  vars:
-    container_name: |-
-      {%- if item is string -%}
-        {%- if item.split('/')[2] is defined -%}
-      {{ item.split('/')[2].split(':')[0] }}
-        {%- elif item.split('/')[1] is defined and item.split('/')[1].split(':')[0] is defined -%}
-      {# because ceph images may have shorter URLs, i.e.: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhceph:3-25 #}
-      {{ item.split('/')[1].split(':')[0] }}
-        {%- endif -%}
-      {%- endif -%}
-  set_fact:
-    install_container_images_overrides: "{{ install_container_images_overrides | default({}) | combine({ container_name: { 'url': item } }) }}"
-  when: item != ""
-  with_items: "{{ install_container_images_urls }}"
-  no_log: true # each {{ item }} iteration displays the whole install_container_images_overrides content - unnecessarily
-  tags: container-images-urls
+- tags: container-images-urls
+  block:
+  # the below 'setup' task is required when testing 'container-images-urls' ansible tag in isolation
+  - setup:
+    tags:
+      - never
+      - container-images-urls
 
-- name: "read {{ template_base }}/docker-images.yaml (OSP<17)"
-  command: cat {{ template_base }}/docker-images.yaml
-  register: openstack_tripleo_container_image_prepare_output
-  when: install.version|default(undercloud_version)|openstack_release < 17
-
-- name: "read {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_ (OSP>=17)"
-  command: cat {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_
-  register: openstack_tripleo_container_image_prepare_output
-  when: install.version|default(undercloud_version)|openstack_release >= 17
-
-- name: convert output of previous command into Ansible dict
-  set_fact:
-    original_heat_docker_images: "{{ openstack_tripleo_container_image_prepare_output.stdout | from_yaml }}"
-
-- name: "print original heat docker images (before we add container image url overrides)"
-  debug:
-    var: original_heat_docker_images
-
-- name: print container images URLs which will override the original ones
-  debug:
-    var: install_container_images_overrides
-
-- name: "merge install_container_images_overrides into content original heat docker images "
-  vars:
-    install_container_images_output: {}
-    install_container_images_registries: {}
-  set_fact:
-    install_container_images_registries: >-
-      {
-      {% for k in install_container_images_overrides %}
-        {% set registry = install_container_images_overrides[k].url.split('/')[0] %}
-      "{{ registry }}": "",
-      {% endfor %}
-      }
-    install_container_images_output: >-
-      { 'parameter_defaults': {
-      {%- set insecure_registries = [] -%}
-      {%- for param_name,param_value in original_heat_docker_images.parameter_defaults.items() | list -%}
-        {%- set print_coma = 1 -%}
-        {%- set image_name = '' -%}
-        {%- if param_value is string -%}
-          {%- if param_value.split('/')[2] is defined -%}
-            {%- set image_name = param_value.split('/')[2].split(':')[0] | default('not_an_image_url') -%}
-          {%- elif param_value.split('/')[1] is defined and param_value.split('/')[1].split(':')[0] is defined -%}
-            {# because ceph images may have shorter URLs, i.e.: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhceph:3-25 #}
-            {%- set image_name = param_value.split('/')[1].split(':')[0] | default('not_an_image_url') -%}
+  - when: install_container_images_urls is defined
+    block:
+    - name: convert install_container_images_urls(string) into install_container_images_overrides(dict)
+      vars:
+        container_name: |-
+          {%- if item is string -%}
+            {%- if item.split('/')[2] is defined -%}
+          {{ item.split('/')[2].split(':')[0] }}
+            {%- elif item.split('/')[1] is defined and item.split('/')[1].split(':')[0] is defined -%}
+          {# because ceph images may have shorter URLs, i.e.: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhceph:3-25 #}
+          {{ item.split('/')[1].split(':')[0] }}
+            {%- endif -%}
           {%- endif -%}
+      set_fact:
+        install_container_images_overrides: "{{ install_container_images_overrides | default({}) | combine({ container_name: { 'url': item } }) }}"
+      when: item != ""
+      with_items: "{{ install_container_images_urls }}"
+      no_log: true # each {{ item }} iteration displays the whole install_container_images_overrides content - unnecessarily
+      tags: container-images-urls
+
+    - debug:
+        var: install_container_images_overrides
+
+  - when: install_multirhel_container_images_urls is defined
+    block:
+    - name: (multirhel) convert install_multirhel_container_images_urls(string) into install_multirhel_container_images_overrides(dict)
+      vars:
+        container_name: |-
+          {%- if item is string -%}
+            {%- if item.split('/')[2] is defined -%}
+          {{ item.split('/')[2].split(':')[0] }}
+            {%- elif item.split('/')[1] is defined and item.split('/')[1].split(':')[0] is defined -%}
+          {# because ceph images may have shorter URLs, i.e.: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhceph:3-25 #}
+          {{ item.split('/')[1].split(':')[0] }}
+            {%- endif -%}
+          {%- endif -%}
+      set_fact:
+        install_multirhel_container_images_overrides: "{{ install_multirhel_container_images_overrides | default({}) | combine({ container_name: { 'url': item } }) }}"
+      when: item != ""
+      with_items: "{{ install_multirhel_container_images_urls }}"
+      no_log: true # each {{ item }} iteration displays the whole install_multirhel_container_images_overrides content - unnecessarily
+      tags: multirhel-container-images-urls
+
+    - debug:
+        var: install_multirhel_container_images_overrides
+
+  - name: "read {{ template_base }}/docker-images.yaml (OSP<17)"
+    command: cat {{ template_base }}/docker-images.yaml
+    register: openstack_tripleo_container_image_prepare_output
+    when: install.version|default(undercloud_version)|openstack_release < 17
+
+  - name: "read {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_ (OSP>=17)"
+    command: cat {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_
+    register: openstack_tripleo_container_image_prepare_output
+    when: install.version|default(undercloud_version)|openstack_release >= 17
+
+  - name: convert output of previous command into Ansible dict
+    set_fact:
+      original_heat_docker_images: "{{ openstack_tripleo_container_image_prepare_output.stdout | from_yaml }}"
+
+  - name: "print original heat docker images (before we add container image url overrides)"
+    debug:
+      var: original_heat_docker_images
+
+  - name: invert original_heat_docker_images
+    set_fact:
+      original_heat_docker_images_inverted: >-
+        {
+        {%- for image_heat_name in original_heat_docker_images.parameter_defaults -%}
+        {%- if original_heat_docker_images.parameter_defaults[image_heat_name] is string -%}
+        {%- set image_name = original_heat_docker_images.parameter_defaults[image_heat_name].split('/')[2].split(':')[0] | default('not_an_image_url') -%}
+        "{{ image_name }}": "{{ image_heat_name }}",
         {%- endif -%}
-        {%- if install_container_images_overrides[image_name] is defined -%}
-      "{{ param_name }}": "{{ install_container_images_overrides[image_name].url }}"
-        {%- elif param_value | type_debug == 'list' -%}
-      "{{ param_name }}": {{ param_value | list }}
-        {%- else -%}
-      "{{ param_name }}": "{{ param_value }}"
-        {%- endif -%}
-        {%- if print_coma == 1 -%}
-      ,
-        {%- endif -%}
-      {%- endfor -%}
-      }
-      }
+        {%- endfor -%}
+        }
 
-- name: append insecure docker registry addresses to install_container_images_output
-  vars:
-    original_insecure_registry_adresses: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
-  set_fact:
-    install_container_images_output: >-
-      {{ install_container_images_output | combine({ 'parameter_defaults':
-      {'DockerInsecureRegistryAddress': original_insecure_registry_adresses + install_container_images_registries.keys() | list }}, recursive=True) }}
+  - debug:
+      var: original_heat_docker_images_inverted
 
-- name: print container images (including overrides)
-  debug:
-    var: install_container_images_output
+  - when: install_container_images_urls is defined
+    block:
+    - name: "merge install_container_images_overrides into content original heat docker images"
+      vars:
+        install_container_images_output: {}
+        install_container_images_registries: {}
+      set_fact:
+        install_container_images_registries: >-
+          {
+          {% for k in install_container_images_overrides %}
+            {% set registry = install_container_images_overrides[k].url.split('/')[0] %}
+          "{{ registry }}": "",
+          {% endfor %}
+          }
+        install_container_images_output: >-
+          { 'parameter_defaults': {
+          {%- set insecure_registries = [] -%}
+          {%- for param_name,param_value in original_heat_docker_images.parameter_defaults.items() | list -%}
+            {%- set print_coma = 1 -%}
+            {%- set image_name = '' -%}
+            {%- if param_value is string -%}
+              {%- if param_value.split('/')[2] is defined -%}
+                {%- set image_name = param_value.split('/')[2].split(':')[0] | default('not_an_image_url') -%}
+              {%- elif param_value.split('/')[1] is defined and param_value.split('/')[1].split(':')[0] is defined -%}
+                {# because ceph images may have shorter URLs, i.e.: brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhceph:3-25 #}
+                {%- set image_name = param_value.split('/')[1].split(':')[0] | default('not_an_image_url') -%}
+              {%- endif -%}
+            {%- endif -%}
+            {%- if install_container_images_overrides[image_name] is defined -%}
+          "{{ param_name }}": "{{ install_container_images_overrides[image_name].url }}"
+            {%- elif param_value | type_debug == 'list' -%}
+          "{{ param_name }}": {{ param_value | list }}
+            {%- else -%}
+          "{{ param_name }}": "{{ param_value }}"
+            {%- endif -%}
+            {%- if print_coma == 1 -%}
+          ,
+            {%- endif -%}
+          {%- endfor -%}
+          }
+          }
 
-- name: "save {{ template_base }}/openstack_tripleo_container_image_prepare_output_with_overrides.yaml file (including image urls and insecure registries overrides)"
-  copy:
-    content: "{{ install_container_images_output | to_nice_yaml(indent=2) }}"
-    dest: "{{ template_base }}/openstack_tripleo_container_image_prepare_output_with_overrides.yaml"
-    backup: yes
+    - name: append insecure docker registry addresses to install_container_images_output
+      vars:
+        original_insecure_registry_adresses: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
+      set_fact:
+        install_container_images_output: >-
+          {{ install_container_images_output | combine({ 'parameter_defaults':
+          {'DockerInsecureRegistryAddress': original_insecure_registry_adresses + install_container_images_registries.keys() | list }}, recursive=True) }}
 
-- debug:
-    msg: "Build mark: WARNING! some overcloud container images URLs overrides were applied"
+    - name: print container images (including overrides)
+      debug:
+        var: install_container_images_output
 
-- name: add insecure registries to /etc/sysconfig/docker (RHEL == 7)
-  replace:
-    dest: /etc/sysconfig/docker
-    regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-    replace: '\1 {{ item }} --insecure-registry'
-    backup: no
-  with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
-  when: ansible_distribution_major_version | int == 7
-  become: true
+  - when: install_multirhel_container_images_urls is defined
+    block:
+    - name: "(multirhel) map install_multirhel_container_images_overrides to the image variables (as understood by Heat)"
+      vars:
+        install_multirhel_container_images_registries: >-
+          {
+          {% for k in install_multirhel_container_images_overrides %}
+            {% set registry = install_multirhel_container_images_overrides[k].url.split('/')[0] %}
+          "{{ registry }}": "",
+          {% endfor %}
+          }
+      set_fact:
+        install_multirhel_container_images_output: >-
+          {'parameter_defaults': {'ComputeRHEL8Parameters': {
+          {%- for image_name in install_multirhel_container_images_overrides -%}
+          '{{ original_heat_docker_images_inverted[image_name] }}': '{{ install_multirhel_container_images_overrides[image_name].url }}',
+          {%- endfor -%}
+          'DockerInsecureRegistryAddress': {{ original_heat_docker_images.parameter_defaults.DockerInsecureRegistryAddress + install_multirhel_container_images_registries.keys() | list }}
+          }
+          }
+          }
 
-- name: add insecure registries to /etc/containers/registries.conf (RHEL >= 8)
-  become: true
-  blockinfile:
-    path: /etc/containers/registries.conf
-    block: |
-        [[registry]]
-        prefix = "{{ item }}"
-        insecure = true
-        location = "{{ item }}"
-    create: no
-    backup: yes
-    marker: "# {mark} ANSIBLE MANAGED BLOCK - added by override_container_images_urls.yml"
-  with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
-  when: ansible_distribution_major_version | int >= 8
+### old way where heat image names (i.e.; ContainerNovaLibvirtImage) are part of a list (this form is used by ComputeRHEL8ContainerImagePrepare)
+#  - when: install_multirhel_container_images_urls is defined
+#    block:
+#    - name: "(multirhel) map install_multirhel_container_images_overrides to the image variables (as understood by Heat)"
+#      vars:
+#        install_multirhel_container_images_registries: >-
+#          {
+#          {% for k in install_multirhel_container_images_overrides %}
+#            {% set registry = install_multirhel_container_images_overrides[k].url.split('/')[0] %}
+#          "{{ registry }}": "",
+#          {% endfor %}
+#          }
+#      set_fact:
+#        install_multirhel_container_images_output: >-
+#          {'parameter_defaults': {'ComputeRHEL8Parameters': [{'push_destination': true,
+#          {%- for image_name in install_multirhel_container_images_overrides -%}
+#          '{{ original_heat_docker_images_inverted[image_name] }}': '{{ install_multirhel_container_images_overrides[image_name].url }}',
+#          {%- endfor -%}
+#          'DockerInsecureRegistryAddress': {{ original_heat_docker_images.parameter_defaults.DockerInsecureRegistryAddress + install_multirhel_container_images_registries.keys() | list }}
+#          }
+#          ]
+#          }
+#          }
+
+    - name: (multirhel) print container images (including overrides)
+      debug:
+        var: install_multirhel_container_images_output
+
+#    - name: (multirhel) combine install_multirhel_container_images_output and container registries
+#      vars:
+#        original_insecure_registry_adresses: "{{ original_heat_docker_images.parameter_defaults.DockerInsecureRegistryAddress }}"
+#      set_fact:
+#        install_multirhel_container_images_output:
+#          parameter_defaults:
+#            ComputeRHEL8Parameters:
+#              - DockerInsecureRegistryAddress: "{{ original_insecure_registry_adresses + install_multirhel_container_images_registries.items()  }}"
+
+#{{ install_multirhel_container_images_output.parameter_defaults.ComputeRHEL8Parameters | first |
+
+
+#          {{ install_multirhel_container_images_output 'parameter_defaults': {'ComputeRHEL8Parameters': [{'a': true}]} } }}
+
+
+#          {{ install_multirhel_container_images_output | combine({'parameter_defaults': {'ComputeRHEL8Parameters': [{'push_destination': true,
+#          'DockerInsecureRegistryAddress': original_insecure_registry_adresses + install_multirhel_container_images_registries.keys() | list }]}}, recursive=True) }}
+
+
+
+
+  - name: merge install_container_images_output and install_multirhel_container_images_output
+    set_fact:
+      install_container_images_output: "{{ install_container_images_output | default({}) | combine(install_multirhel_container_images_output | default({})) }}"
+
+  - debug:
+      var: install_container_images_output
+
+  - name: "save {{ template_base }}/openstack_tripleo_container_image_prepare_output_with_overrides.yaml file (including image urls and insecure registries overrides)"
+    copy:
+      content: "{{ install_container_images_output | to_nice_yaml(indent=2) }}"
+      dest: "{{ template_base }}/openstack_tripleo_container_image_prepare_output_with_overrides.yaml"
+      backup: yes
+#
+#  - fail:
+#      msg: failing
+
+  - debug:
+      msg: "Build mark: WARNING! some overcloud container images URLs overrides were applied"
+
+  - name: add insecure registries to /etc/sysconfig/docker (RHEL == 7)
+    replace:
+      dest: /etc/sysconfig/docker
+      regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
+      replace: '\1 {{ item }} --insecure-registry'
+      backup: no
+    with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress }}"
+    when: ansible_distribution_major_version | int == 7
+    become: true
+
+  - name: add insecure registries to /etc/containers/registries.conf (RHEL >= 8)
+    become: true
+    blockinfile:
+      path: /etc/containers/registries.conf
+      block: |
+          [[registry]]
+          prefix = "{{ item }}"
+          insecure = true
+          location = "{{ item }}"
+      create: no
+      backup: yes
+      marker: "# {mark} ANSIBLE MANAGED BLOCK - added by override_container_images_urls.yml"
+    with_items: "{{ install_container_images_output.parameter_defaults.DockerInsecureRegistryAddress | default(install_container_images_output.parameter_defaults.ComputeRHEL8Parameters.DockerInsecureRegistryAddress) }}"
+    when: ansible_distribution_major_version | int >= 8
