@@ -7,15 +7,11 @@
 - name: Customize disks from base images (virt-customize)
   vars:
     net_scripts: /etc/sysconfig/network-scripts
-  environment:
-      LIBGUESTFS_DEBUG: 1
   shell: |
     set -ex
-    {% set node_fullname = '-'.join((node_name, item | string())) %}
-    {# set default_bgp_packages = 'vim,frr,mtr,tcpdump,bind-utils' #}
-    virt-sysprep --selinux-relabel -a {{ base_image_path }}/{{ node_fullname }}.qcow2 --operations machine-id
+    {% set node_fullname = '-'.join((node_name, item | string(), 'disk1')) %}
     virt-customize -v -a {{ base_image_path }}/{{ node_fullname }}.qcow2 \
-      --hostname "{{ node_fullname }}" \
+      --hostname "{{ node_name }}-{{ item }}" \
       --run-command "rm -f /etc/sysconfig/network-scripts/ifcfg-e*" \
       --run-command "dnf remove -y cloud-init" \
       --copy-in {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/network:/etc/sysconfig \
@@ -29,6 +25,9 @@
   register: vms_jobs1
   async: 7200
   poll: 0
+  when:
+    - topology_node.deploy_os|default(True)
+    - topology_node.supports_libguestfs|default(True)
 
 - name: append value to vms_jobs dictionary
   set_fact:
