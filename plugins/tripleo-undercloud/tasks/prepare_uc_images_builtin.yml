@@ -79,6 +79,16 @@
           file: "{{ containers_images_env_template_dest_file }}"
           name: container_env
 
+    # even when not skipping the metadata provided by the compose,
+    # we may want to override the container tag anyway (for example
+    # because the containers were refreshed.)
+    - name: Override the registry tag
+      vars:
+          new_tag: "{{ install.registry.tag }}"
+      set_fact:
+          container_env: "{{ container_env | combine({'container-image-prepare': { 'tag': new_tag }}, recursive=True) }}"
+      when: install.registry.tag is defined
+
   when: not install.registry.skip.puddle
 
 - name: determine final container registry host
