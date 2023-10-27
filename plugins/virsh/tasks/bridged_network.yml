@@ -27,6 +27,7 @@
       src: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_data.device }}"
       remote_src: yes
       force: no
+  ignore_errors: yes
 
 - name: Setting the MTU size of {{ provision.host.mtu.size }}
   nmcli:
@@ -75,6 +76,7 @@
         path: "/etc/sysconfig/network-scripts/ifcfg-{{ nic_settings['name'] }}"
         regexp: '^BOOTPROTO=.*'
         line: 'BOOTPROTO=none'
+      ignore_errors: yes
 
     # Network<Manager doesn't allow to disable DHCP, and will cause interface to go down if
     # it will fail to retrieve an IP address, set DHCP timeout to infinite
