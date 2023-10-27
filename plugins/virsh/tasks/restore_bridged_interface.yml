@@ -10,6 +10,7 @@
       dest: "/etc/sysconfig/network-scripts/ifcfg-{{ interface }}"
       remote_src: yes
       force: yes
+  ignore_errors: yes
   loop: "{{ ansible_facts[bridge_name | replace('-', '_')]['interfaces'] }}"
   loop_control:
     loop_var: interface
