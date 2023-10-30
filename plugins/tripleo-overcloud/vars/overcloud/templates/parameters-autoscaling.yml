@@ -1,0 +1,16 @@
+custom_templates:
+  parameter_defaults:
+    NotificationDriver: 'messagingv2'
+    GnocchiDebug: false
+    CeilometerEnableGnocchi: true
+    ManagePipeline: true
+    ManageEventPipeline: true
+
+    EventPipelinePublishers:
+      - gnocchi://?archive_policy=generic
+    PipelinePublishers:
+      - gnocchi://?archive_policy=generic
+
+    ManagePolling: true
+    ExtraConfig:
+      ceilometer::agent::polling::polling_interval: 60
