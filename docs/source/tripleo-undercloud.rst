@@ -256,9 +256,6 @@ To upgrade Undercloud run the following command::
 
 .. warning:: Currently, there is upgrade possibility from version 9 to version 10 only.
 
-.. warning:: Upgrading from version 11 to version 12 isn't supported via the tripleo-undercloud plugin anymore. Please
-     check the tripleo-upgrade plugin for 11 to 12 `upgrade instructions <tripleo_upgrade.html>`_.
-
 Undercloud Update
 ---------------------
 Update is discovering current Undercloud version and perform minor version update.
