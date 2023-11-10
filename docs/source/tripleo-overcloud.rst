@@ -368,9 +368,6 @@ Overcloud Upgrade
 -----------------
 .. warning:: Before Overcloud upgrade you need to perform upgrade of `Undercloud <tripleo-undercloud.html>`_
 
-.. warning:: Upgrading from version 11 to version 12 isn't supported via the tripleo-overcloud plugin anymore. Please
-     check the tripleo-upgrade plugin for 11 to 12 `upgrade instructions <tripleo_upgrade.html>`_.
-
 Upgrade will detect Undercloud version and will upgrade Overcloud to the same version.
 
 * ``--upgrade``: Bool
