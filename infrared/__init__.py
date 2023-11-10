@@ -236,12 +236,6 @@ PLUGINS_REGISTRY = {
         'desc': 'Install TripleO overcloud in standalone mode',
         'type': 'install'
     },
-    'tripleo-upgrade': {
-        'src': 'https://github.com/openstack/tripleo-upgrade.git',
-        'src_path': 'infrared_plugin',
-        'desc': 'Upgrade or update TripleO deployment',
-        'type': 'install'
-    },
     'virsh': {
         'src': 'plugins/virsh',
         'desc': 'Provision virtual machines on a single Hypervisor using libvirt',
