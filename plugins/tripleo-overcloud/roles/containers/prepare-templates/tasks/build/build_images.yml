@@ -173,7 +173,7 @@
           - install.version|default(undercloud_version)|openstack_release >= 14
 
   when:
-    - not install.overcloud.templates| default(False) | select('search', 'rhsm|overcloud_cdn|overcloud_satellite') | list | length > 0
+    - not install.overcloud.templates| default(False) | select('search', 'rhsm|overcloud_cdn') | list | length > 0
     - install.cdn is not defined or (cdn_status is defined and cdn_status.rc != 0)
 
 - block:
