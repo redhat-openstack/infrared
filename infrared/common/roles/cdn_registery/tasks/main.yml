@@ -34,21 +34,20 @@
 
 
       # running also if subscriptions are defined to avoid job breakages.
-
-    - name: Set correct modules for OSP > 16
-      become: true
-      vars:
-        repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
-        module_list: "{{ dnf_modules[(repo_version|float)] }}"
-        modules_list_disabled: "{{ module_list.disabled | join(' ') }}"
-        modules_list_enabled: "{{ module_list.enabled | join(' ') }}"
-      block:
-      - command: 'dnf module disable {{ modules_list_disabled }} -y'
-      - command: 'dnf module enable {{ modules_list_enabled }} -y'
-      when: install_version|default(openstack_release) is version('16', '>')
-
-
   when: (cdn_args_file != '' and cdn_creds.activationkey is undefined) or (subscriptions is defined and subscriptions|length > 0 )
+
+- name: Set correct modules for OSP > 16
+  become: true
+  vars:
+    repo_version: "{{ (install_version if install_version is defined else openstack_release)|string }}"
+    module_list: "{{ dnf_modules[(repo_version|float)] }}"
+    modules_list_disabled: "{{ module_list.disabled | join(' ') }}"
+    modules_list_enabled: "{{ module_list.enabled | join(' ') }}"
+  block:
+  - command: 'dnf module disable {{ modules_list_disabled }} -y'
+  - command: 'dnf module enable {{ modules_list_enabled }} -y'
+  when:
+    - install_version|default(openstack_release) is version('16', '>')
 
 - name: refresh yum cache
   package:
