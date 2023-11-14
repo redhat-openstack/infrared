@@ -6,7 +6,7 @@
 # Fixme: Switch to install.version in the future.
 ntp_args_requires="20230505010953"
 tld_args_requires="20230416001030"
-tripleo_client_str=$(rpm -qa python3-tripleoclient | cut -d '.' -f 4)
+tripleo_client_str=$(rpm -qa python3-tripleoclient | awk -F '.' '{print $(NF-3)}')
 
 NTP_ARGS=""
 TLD_ARGS=""
