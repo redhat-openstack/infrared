@@ -1,6 +1,7 @@
 ---
 - name: Create networks
   hosts: "{{ (_run_condition | bool) | ternary('hypervisor', 'none') }}"
+  debugger: always
   gather_facts: yes
   any_errors_fatal: true
   tasks:
@@ -54,6 +55,13 @@
           - item.value.ipv6 is defined
           - (ipv6_addr.rc != 0 or ipv6_sys.rc != 0 )
       with_dict: "{{ networks }}"
+
+    - name: Set IPv6INIT parameter to "yes"
+      lineinfile:
+        path: "/etc/sysconfig/network-scripts/ifcfg-{{ ansible_default_ipv6.interface }}"
+        regexp: '^IPV6INIT='
+        line: 'IPV6INIT=yes'
+      when: "'interface' in ansible_default_ipv6"
 
     - name: enable router advertisements
       sysctl:
