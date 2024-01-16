@@ -55,6 +55,14 @@
           - (ipv6_addr.rc != 0 or ipv6_sys.rc != 0 )
       with_dict: "{{ networks }}"
 
+    - name: Set IPv6INIT parameter to "yes"
+      lineinfile:
+        path: /etc/sysconfig/network-scripts/ifcfg-{{ item }}
+        regexp: '^IPV6INIT='
+        line: 'IPV6INIT=yes'
+      when: "'interface' in ansible_default_ipv6"
+      with_items: "{{ ansible_interfaces }}"
+
     - name: enable router advertisements
       sysctl:
         name: "net.ipv6.conf.all.accept_ra"
