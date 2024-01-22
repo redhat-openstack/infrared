@@ -1,0 +1,59 @@
+---
+# Doc origin
+# http://docs.openstack.org/developer/tripleo-docs/basic_deployment/basic_deployment_cli.html
+# This should run as non-root
+
+- debug:
+    var:  install.cdn
+
+- name: fetch cdn creds from file
+  include_vars:
+      file: "{{ install.cdn }}"
+      name: cdn_creds
+  # file may contain passwords. Don't print its content to console
+  no_log: yes
+
+- name: Get repolist
+  shell: "i=$(yum repolist | awk '{print $1}' | grep ^Default | grep -vi satellite); echo $i"
+  register: rhos_repolist
+
+- debug:
+    var: rhos_repolist
+
+- name: Download guest image for build
+  # Keep "private" here in case someone doesn't understand why it's gone
+  # images_source: private.images.base_url + '/rhel-guest-image-latest.qcow2'
+  get_url:
+      dest: "{{ images_dest }}"
+      url: "{{ install.images.url }}"
+      # don't download image if it's already here
+      force: no
+  register: images_get_url
+  until: images_get_url is not failed or images_get_url.status_code | quote not in retry_http_codes
+  retries: 2
+  delay: 10
+  # TODO(yfried): add to pre-run verification:
+  # Image source is mandatory for OSP so we should fail if it's missing
+  when: images_source or install.version|default(undercloud_version)|openstack_distribution == 'OSP'
+
+# TODO: Move environment to a file / template so a user can make customize it
+- name: Build full-disk image (RHOS)
+  tags: backup
+  shell: "source ~/stackrc; openstack overcloud image build --image-name overcloud-hardened-uefi-full \
+         --config-file /usr/share/openstack-tripleo-common/image-yaml/overcloud-hardened-images-uefi-python3.yaml \
+         --config-file /usr/share/openstack-tripleo-common/image-yaml/overcloud-hardened-images-uefi-rhel8.yaml > openstack-build-images.log"
+  environment:
+      DIB_LOCAL_IMAGE: "{{ images_dest }}"
+      REG_METHOD: 'satellite'
+      REG_ACTIVATION_KEY: "{{ cdn_creds.activationkey }}"
+      REG_ORG: "{{ cdn_creds.org_id}}"
+      REG_SAT_URL: "{{ cdn_creds.server_hostname }}"
+      REG_REPOS: "{{ rhos_repolist }}"
+  when: install.version|default(undercloud_version)|openstack_distribution == 'OSP'
+
+- name: Tar our images
+  tags:
+      - backup
+      - skip_ansible_lint
+  shell: "tar -cf {{ item }} {{ item | splitext | first }}.*"
+  with_items: "{{ tar_images }}"
