@@ -45,8 +45,8 @@
           overcloud_image_extension: "qcow2"
         when:
           - overcloud_image_name == "hardened-uefi-full"
-          - install.images.task == "import"
-
+          - install.images.task == "import" or install.images.task == "full_image"
+          
 - name: Preparing the images
   hosts: undercloud
   gather_facts: yes
