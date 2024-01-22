@@ -465,6 +465,7 @@ subparsers:
                           - rpm
                           - import
                           - build
+                          - full_image
 
                   images-url:
                       type: Value
@@ -693,6 +694,6 @@ subparsers:
                       help: |
                           This flag should be enabled when installing the undercloud node
                           on an OSP environment with BGP functionality enabled.
-                          When it is set to True, the undercloud configuration is adapted 
+                          When it is set to True, the undercloud configuration is adapted
                           to the BGP functionality.
                       default: False
