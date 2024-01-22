@@ -43,9 +43,12 @@
       - name: Set overcloud_image_extension when images-task is import
         set_fact:
           overcloud_image_extension: "qcow2"
-        when:
-          - overcloud_image_name == "hardened-uefi-full"
-          - install.images.task == "import"
+        when: install.images.task == "full_image" or ( overcloud_image_name == "hardened-uefi-full" and install.images.task == "import" )
+
+
+
+
+          install.images.task == "full_image"
 
 - name: Preparing the images
   hosts: undercloud
