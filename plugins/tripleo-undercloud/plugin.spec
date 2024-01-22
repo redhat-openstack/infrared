@@ -465,6 +465,7 @@ subparsers:
                           - rpm
                           - import
                           - build
+                          - full_image
 
                   images-url:
                       type: Value
