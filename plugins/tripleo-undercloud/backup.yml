@@ -55,6 +55,12 @@
                 mode: "0400"
             when: install.dest|default({})
 
+          - name: Create a directory if it does not exist
+            shell: | 
+                ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
+                ~/backup_server_auth_key {{ install.dest.user }}@{{ install.dest.address }} \
+                "[ -d {{ install.dest.path }} ] || mkdir -p {{ install.dest.path }} && chown rhos-ci:rhos-ci {{ install.dest.path }} && chmod 0755 {{ install.dest.path }}"
+
           - name: copy the image to remote server
             shell: |
                 scp -o Compression=yes -o StrictHostKeyChecking=no -o PreferredAuthentications=publickey -o UserKnownHostsFile=/dev/null -i \
