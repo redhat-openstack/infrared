@@ -8,8 +8,10 @@ function apply_patch {
     local patch_dir=$1
     local patch_id=$2
     local patch_level=$3
+    local patch_revision=$4
+    local gerrit_url=$5
 
-    curl -L -4 https://review.opendev.org/changes/${patch_id}/revisions/current/patch?download | \
+    curl -L -4 ${gerrit_url}/changes/${patch_id}/revisions/${patch_revision}/patch?download | \
         base64 -d > /tmp/patch.txt
 
     if sudo patch --dry-run --reverse --force -d ${patch_dir} -p${patch_level} < /tmp/patch.txt >/dev/null 2>&1
@@ -30,7 +32,12 @@ echo {{ key }}
 {% else %}
 {% set plevel = 1 %}
 {% endif %}
-apply_patch {{ value.basedir }} {{ value.id }} {{ plevel }}
+{% if 'gerrit_url' in value and value.gerrit_url is string %}
+{% set gerrit_url = value.gerrit_url %}
+{% else %}
+{% set gerrit_url = 'https://review.opendev.org' %}
+{% endif %}
+apply_patch {{ value.basedir }} {{ value.id }} {{ plevel }} {{ gerrit_url }}
 {% else %}
 {{ value.command }}
 
@@ -48,7 +55,12 @@ echo {{ key }}
 {% else %}
 {% set plevel = 1 %}
 {% endif %}
-apply_patch {{ value.basedir }} {{ value.id }} {{ plevel }}
+{% if 'gerrit_url' in value and value.gerrit_url is string %}
+{% set gerrit_url = value.gerrit_url %}
+{% else %}
+{% set gerrit_url = 'https://review.opendev.org' %}
+{% endif %}
+apply_patch {{ value.basedir }} {{ value.id }} {{ plevel }} {{ gerrit_url }}
 {% else %}
 {{ value.command }}
 
