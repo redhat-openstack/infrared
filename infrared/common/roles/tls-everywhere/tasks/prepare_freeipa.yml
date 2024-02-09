@@ -102,11 +102,10 @@
       - ansible_distribution_major_version is version("9", "<")
     block:
       - name: Download freeipa setup script (RHEL<9)
-        get_url:
-           url: "{{ freeipa_setup_script }}"
+        copy:
+           src: "freeipa_setup.sh"
            dest: "{{ freeipa_working_dir }}/freeipa_setup.sh"
            mode: 775
-           validate_certs: "{{ ansible_facts['distribution_version'] is version('7.9', '>=') }}"
 
       - name: Generate freeipa environment file (RHEL<9)
         template:
