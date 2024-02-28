@@ -89,7 +89,7 @@ subparsers:
                       type: ListValue
                       help: |
                           Comma,separated list of container images URLs. These URLs have to point at images in docker/podman registry.
-                          Images from URLs in this container-images-urls option override the default images URLs normally retrieved form puddle/compose.
+                          Images from URLs in this container-images-urls option override the default images URLs normally retrieved from puddle/compose.
                           Example:
                               --container-images-urls brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-compute:13.0-92.1564415447,brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-libvirt:13.0-95.1564415448
 
@@ -1180,6 +1180,17 @@ subparsers:
                         NOTE2: Compressed "...yaml.gz" files are supported as well.
                         Example: http://rhos-ci-logs/.../undercloud-0/home/stack/container-image-prepare-parameter-multirhel.yaml.gz
                       ansible_variable: multirhel_overcloud_container_image_prepare_parameter_file
+
+                  multirhel-container-images-urls:
+                      type: ListValue
+                      help: |
+                          Comma,separated list of container images URLs. These URLs have to point at images in docker/podman registry.
+                          Images from URLs in this multirhel-container-images-urls option override the default images URLs normally retrieved from puddle/compose for the RHEL8 nodes:
+                          NOTE: This parameter is only applicable for MultiRHEL deployments. To override container images URLS for regular OSP deployments (i.e.: OSP16.x on RHEL8) use the non-multirhel version of this param.
+                          Example:
+                              --multirhel-container-images-urls brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-compute:13.0-92.1564415447,brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888/rhosp13/openstack-nova-libvirt:13.0-95.1564415448
+
+                      ansible_variable: 'install_multirhel_container_images_urls'
 
             - title: ansible facts
               options:
