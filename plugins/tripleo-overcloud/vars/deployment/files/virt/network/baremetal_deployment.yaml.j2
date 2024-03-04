@@ -309,7 +309,7 @@
 {% endif %}
 {% endif -%}
 {%- if install.storage.backend == 'swift' %}
-- name: SwiftStorage
+- name: ObjectStorage
   count: {{ (install.storage.nodes|default(0)) or (groups['swift']|default([])|length) or 1 }}
   hostname_format: swift-%index%
   defaults:
