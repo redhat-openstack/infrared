@@ -102,6 +102,9 @@
   subnets:
     external_subnet:
 {% if 'ipv6' not in install.network.protocol %}
+      routes:
+        - destination: 172.16.0.0/24
+          nexthop: 192.168.24.1
       allocation_pools:
       - end: 10.0.0.149
         start: 10.0.0.101
