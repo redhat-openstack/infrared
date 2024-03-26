@@ -105,6 +105,9 @@
             shell: |
                 source ~/stackrc
                 set -o pipefail
+
+                # we want to see the content of 'overcloud_ceph_deploy.sh' when it's bein run hence 'set -x' below
+                set -x
                 bash ~/overcloud_ceph_deploy.sh \
                   |& tee -a /home/stack/overcloud_ceph_deployment.log
         when:
