@@ -169,12 +169,17 @@
   register: image_packages
   when: install.images.packages|default(None) != None
 
-- name: update packages on repos
+- name: update packages excluding kernel
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
       LIBGUESTFS_DEBUG: 1
       LIBGUESTFS_TRACE: 1
-  command: "virt-customize -a {{ overcloud_image_file }} --update --memsize {{ requested_mem }} --smp {{ (ansible_processor_vcpus/2)|round|int }} --selinux-relabel"
+  command: |
+    virt-customize -a {{ overcloud_image_file }} \
+      --run-command "echo exclude=kernel* | tee -a /etc/dnf/dnf.conf" \
+      --update --memsize {{ requested_mem }} \
+      --smp {{ (ansible_processor_vcpus/2)|round|int }} \
+      --selinux-relabel
   register: image_update
   vars:
       available_mem: "{{ [ansible_memory_mb.nocache.free, (ansible_memtotal_mb/2)|round|int] | min }}"
