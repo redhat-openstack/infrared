@@ -169,6 +169,23 @@
   register: image_packages
   when: install.images.packages|default(None) != None
 
+- name: exclude kernel update
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      LIBGUESTFS_DEBUG: 1
+      LIBGUESTFS_TRACE: 1
+  command: |
+    virt-customize -a {{ amphora_image_file }} \
+      --run-command "sed -i '$aexclude=kernel*,python3-perf' /etc/dnf/dnf.conf" \
+      --selinux-relabel
+  vars:
+      available_mem: "{{ [ansible_memory_mb.nocache.free, (ansible_memtotal_mb/2)|round|int] | min }}"
+      # don't overreach
+      safe_mem: "{{ (available_mem|int * 0.6)|round|int }}"
+      # don't ask lower than virt-customize default:
+      requested_mem: "{{ [safe_mem|int, 500] | max }}"
+  when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
 - name: update packages on repos
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
