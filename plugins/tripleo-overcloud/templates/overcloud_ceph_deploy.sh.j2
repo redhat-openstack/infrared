@@ -8,7 +8,15 @@ set -x
 # Fixme: Switch to install.version in the future.
 ntp_args_requires="20230505010953"
 tld_args_requires="20230416001030"
-tripleo_client_str=$(rpm -qa python3-tripleoclient | awk -F '.' '{print $(NF-3)}')
+
+# determine tripleo_client RPM version; the below needs to support multiple variation of the NVR of this RPM, e.g.:
+# python3-tripleoclient-16.5.1-17.1.20230927000827.f3599d0.el9ost.noarch
+# python3-tripleoclient-16.5.1-17.1.20230927000828.el9ost.noarch
+# python3-tripleoclient-16.5.1-1.20230505010955...
+
+IFS='.' read -r -a tripleo_client_array <<< "$(rpm -qa python3-tripleoclient)"
+tripleo_client_str=$(for f in ${tripleo_client_array[@]}; do if [[ "$f" =~ [0-9]{14} ]] ; then echo "$f"; fi ; done)
+
 
 NTP_ARGS=""
 TLD_ARGS=""
