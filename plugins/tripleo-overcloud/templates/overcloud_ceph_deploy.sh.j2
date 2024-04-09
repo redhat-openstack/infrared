@@ -72,4 +72,8 @@ if [ $tripleo_client_str -ge $tld_args_requires ] ; then
     ARGS="${ARGS} ${TLD_ARGS}"
 fi
 
+{% if ipv6_args.stat.exists %}
+ARGS="${ARGS} --force --ansible-extra-vars {{ ipv6_args.stat.path }}"
+{% endif %}
+
 openstack overcloud ceph deploy ${ARGS} /home/stack/templates/overcloud-baremetal-deployed.yaml

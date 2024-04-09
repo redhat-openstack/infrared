@@ -93,6 +93,11 @@
           path: "{{ template_base }}/roles/roles_data.yaml"
         register: roles_data_file
 
+      - name: Detect presence of ceph_extra_args.yaml
+        stat:
+          path: "{{ template_base }}/roles/ceph_extra_args.yaml"
+        register: ipv6_args
+
       - block:
           - name: create ceph deploy script
             template:
