@@ -102,7 +102,7 @@
     with_dict: "{{ vbmc_ports }}"
 
   - name: Setting nodes power status using ipmitool
-    command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} chassis power on"
+    command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} -N 20 -R 20 chassis power on"
     with_dict: "{{ vbmc_ports }}"
     register: command_result
     until: command_result.rc == 0
@@ -110,7 +110,7 @@
     delay: 5
 
   - name: Get vbmc VMs power status using ipmitool
-    command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} power status"
+    command: "ipmitool -I lanplus -U {{ install.vbmc.username }} -P {{ install.vbmc.password }} -H {{ vbmc_management_address }} -p {{ item.value }} -N 20 -R 20 power status"
     register: ipmitool_results
     with_dict: "{{ vbmc_ports }}"
     until: ipmitool_results.rc == 0
