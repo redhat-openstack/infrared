@@ -67,7 +67,7 @@
       file:
         path: "{{ item }}"
         state: directory
-        mode: 0640
+        mode: 0655
         owner: root
         group: root
       with_items:
@@ -76,11 +76,12 @@
 
     - name: Create virtualbmc configuration file
       copy:
-        mode: 0640
+        mode: 0655
         dest: "/etc/virtualbmc/virtualbmc.conf"
         content: |
           [default]
           config_dir= {{ vbmc_config_dir }}
+          server_response_timeout=20000
           [log]
           logfile=/var/log/virtualbmc/virtualbmc.log
           debug=True
