@@ -1,0 +1,23 @@
+---
+tripleo_heat_templates:
+    []
+
+custom_templates:
+custom_templates:
+  parameter_defaults:
+    # do I need these two here?
+    IronicEnabledBootInterfaces: [ramdisk, ipxe, pxe, fake]
+    IronicEnabledDeployInterfaces: [ramdisk, iscsi, direct, fake]
+# One of two ways to configure the Controller to enable the ramdisk interface
+# the first one sets the value directly in service_configs.json
+# the second sets a template value to be imported
+# commenting one at a time to see which one works
+# ------  START FIRST ------
+#    ControllerExtraConfig:
+#      ironic::drivers::interfaces::enabled_deploy_interfaces: ramdisk,direct,ansible
+# ------  END FIRST ------
+# ------  START SECOND ------
+    ControllerExtraConfig:
+      IronicEnabledBootInterfaces: [ramdisk, ipxe, pxe, fake]
+      IronicEnabledDeployInterfaces: [ramdisk, iscsi, direct, fake]
+# ------  END SECOND ------
