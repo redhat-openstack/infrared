@@ -56,3 +56,7 @@ parameter_defaults:
 {% if install.version|default(undercloud_version) | openstack_release > 14 and install.image.download.source == 'http' %}
   IronicImageDownloadSource: http
 {% endif %}
+{% if 'ironic_iso' in ir_tempest_tests %}
+  ControllerExtraConfig:
+      ironic::drivers::interfaces::enabled_deploy_interfaces: 'ramdisk direct ansible'
+{% endif %}
