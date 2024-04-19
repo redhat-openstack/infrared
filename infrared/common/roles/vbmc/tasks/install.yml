@@ -87,6 +87,14 @@
           [ipmi]
           session_timout=20
 
+    - name: Create default config file
+      copy:
+        mode: 0640
+        dest: "{{ vbmc_config_dir }}/virtualbmc.conf"
+        content: |
+          [default]
+          server_response_timeout={{ vbmc_server_response_timeout }}
+
     - name: Restart virtualbmc service
       service:
         name: virtualbmc
