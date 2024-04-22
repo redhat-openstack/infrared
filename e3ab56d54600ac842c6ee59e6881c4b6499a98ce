@@ -16,6 +16,23 @@
       "message": "Just FYI, after each -R attempt one second is added to the delay for retrying. So -N 20 -R 20 will result in a 210 second timeout.",
       "revId": "e3ab56d54600ac842c6ee59e6881c4b6499a98ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5e14e3bf_1c190508",
+        "filename": "infrared/common/roles/vbmc/tasks/configure.yml",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1003797
+      },
+      "writtenOn": "2024-04-22T20:40:49Z",
+      "side": 1,
+      "message": "OK, we (HardProv DFG) talking about this task and whether it is really necessary to turn on all nodes at this point. Our opinion is that switching on nodes here causes a significant spike in load which would explain some of these failures. The BIOS loading of each VM itself causes CPU load, for example.\n\nChecking the power status should be sufficient to verify that the nodes are being managed by vbmc.\n\nRHOSINFRA-5561 mentions later failures by ironic calling ipmitool, this suggests the machine may be under powered for the workload which it is running. Setting hiera_override.yaml ironic::drivers::ipmi::use_ipmitool_retries: true may help but if UDP packets are being dropped because of general load issues there is really not much to be done other than provide more resources to the job.",
+      "revId": "e3ab56d54600ac842c6ee59e6881c4b6499a98ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
