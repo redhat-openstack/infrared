@@ -4,6 +4,8 @@
   gather_facts: no
   tasks:
     - name: Get the host ID from Foreman
+      vars:
+        ansible_python_interpreter: "/var/tmp/venv_shade/bin/python"
       uri:
         url: "{{ provision.url }}/api/v2/hosts/{{ provision.host.address }}"
         url_username: "{{ provision.user }}"
