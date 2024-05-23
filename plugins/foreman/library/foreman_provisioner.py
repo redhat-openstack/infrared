@@ -163,6 +163,7 @@ class ForemanManager(object):
                             "is not supported at the moment".format(version))
 
         self.session = requests.Session()
+        self.session.verify = False
         self.session.auth = (username, password)
 
         headers = {'Accept': 'application/json',
