@@ -1,0 +1,29 @@
+  resource_registry:
+    OS::TripleO::Services::AodhApi: "{{ install.heat.templates.basedir }}/deployment/aodh/aodh-api-container-puppet.yaml"
+    OS::TripleO::Services::AodhEvaluator: "{{ install.heat.templates.basedir }}/deployment/aodh/aodh-evaluator-container-puppet.yaml"
+    OS::TripleO::Services::AodhListener: "{{ install.heat.templates.basedir }}/deployment/aodh/aodh-listener-container-puppet.yaml"
+    OS::TripleO::Services::AodhNotifier: "{{ install.heat.templates.basedir }}/deployment/aodh/aodh-notifier-container-puppet.yaml"
+    OS::TripleO::Services::CeilometerAgentCentral: "{{ install.heat.templates.basedir }}/deployment/ceilometer/ceilometer-agent-central-container-puppet.yaml"
+    OS::TripleO::Services::CeilometerAgentNotification: "{{ install.heat.templates.basedir }}/deployment/ceilometer/ceilometer-agent-notification-container-puppet.yaml"
+    OS::TripleO::Services::ComputeCeilometerAgent: "{{ install.heat.templates.basedir }}/deployment/ceilometer/ceilometer-agent-compute-container-puppet.yaml"
+    OS::TripleO::Services::GnocchiApi: "{{ install.heat.templates.basedir }}/deployment/gnocchi/gnocchi-api-container-puppet.yaml"
+    OS::TripleO::Services::GnocchiMetricd: "{{ install.heat.templates.basedir }}/deployment/gnocchi/gnocchi-metricd-container-puppet.yaml"
+    OS::TripleO::Services::GnocchiStatsd: "{{ install.heat.templates.basedir }}/deployment/gnocchi/gnocchi-statsd-container-puppet.yaml"
+    OS::TripleO::Services::HeatApi: "{{ install.heat.templates.basedir }}/deployment/heat/heat-api-container-puppet.yaml"
+    OS::TripleO::Services::HeatApiCfn: "{{ install.heat.templates.basedir }}/deployment/heat/heat-api-cfn-container-puppet.yaml"
+    OS::TripleO::Services::HeatApiCloudwatch: "{{ install.heat.templates.basedir }}/deployment/heat/heat-api-cloudwatch-disabled-puppet.yaml"
+    OS::TripleO::Services::HeatEngine: "{{ install.heat.templates.basedir }}/deployment/heat/heat-engine-container-puppet.yaml"
+    OS::TripleO::Services::Redis: "{{ install.heat.templates.basedir }}/deployment/database/redis-container-puppet.yaml"
+  parameter_defaults:
+    NotificationDriver: 'messagingv2'
+    GnocchiDebug: false
+    CeilometerEnableGnocchi: true
+    ManagePipeline: true
+    ManageEventPipeline: true
+    EventPipelinePublishers:
+      - gnocchi://?archive_policy=generic
+    PipelinePublishers:
+      - gnocchi://?archive_policy=generic
+    ManagePolling: true
+    ExtraConfig:
+      ceilometer::agent::polling::polling_interval: 60
