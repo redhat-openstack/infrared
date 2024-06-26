@@ -1,0 +1,33 @@
+name: computehcidcn2
+prefix: null
+cpu: "8"
+cpumodel: "host-passthrough"
+memory: "32768"
+swap: "0"
+deploy_os: false
+os:
+    type: "linux"
+    variant: "rhel7.0"
+disks:
+    disk1:
+        import_url: null
+        path: null
+        dev: "/dev/vda"
+        size: "50G"
+        cache: "unsafe"
+        preallocation: "metadata"
+    disk2:
+        import_url: null
+        path: null
+        dev: /dev/vdb
+        size: "220G"
+        cache: "unsafe"
+        preallocation: "metadata"
+interfaces: null
+
+groups:
+    - ceph
+    - computehci
+    - compute
+    - openstack_nodes
+    - overcloud_nodes
