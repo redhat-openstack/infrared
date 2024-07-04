@@ -14,6 +14,14 @@
   with_dict: "{{ topology_node.disks }}"
 
 - name: Create ifcfg files
+  vars:
+    dns1: "{{ hostvars.hypervisor.ansible_dns.nameservers[0] }}"
+    dns2: >-
+      {{
+        hostvars.hypervisor.ansible_dns.nameservers[1]
+        if hostvars.hypervisor.ansible_dns.nameservers | length > 1
+        else ""
+      }}
   shell: |
     set -ex
     {% set node_fullname = '-'.join((node_name, item | string(), 'disk1')) %}
@@ -34,7 +42,9 @@
       {% endif %}
       echo -e "PEERDNS=yes" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
       echo -e "DNS1={{ dns1 }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% if dns2 != "" %}
       echo -e "DNS2={{ dns2 }}" >> {{ tmp_ifcfg_dir }}/ifcfg-{{ node_fullname }}/ifcfg-eth{{ loop.index0 }}
+      {% endif %}
     {% endfor %}
   loop: '{{ topology_node.node_indexes }}'
 
