@@ -468,6 +468,16 @@ subparsers:
                           for overcloud_domain_name that was configured in undercloud.conf if set.
                       default: 'redhat.local'
 
+                  overcloud-concurrency:
+                      type: int
+                      help: |
+                          Maximum number of nodes to provision at once. (default=20)
+                          This is a parameter to pass to:
+                            openstack overcloud node introspect --concurrency
+                            openstack overcloud node provision --concurrency
+
+                      default: 20
+
                   freeipa-domain:
                       type: Value
                       help: |

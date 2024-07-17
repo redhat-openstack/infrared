@@ -101,7 +101,10 @@
             openstack baremetal import --json {{ instack_file_path.stat.path }}
             openstack baremetal configure boot
             {% else %}
-            openstack overcloud node import --instance-boot-option=local {{ install.ppc64le.nodes|ternary('--http-boot /var/lib/ironic/tftpboot ', '') }} {{ instack_file_path.stat.path }}
+            openstack overcloud node import --instance-boot-option=local \
+               {{ install.ppc64le.nodes|ternary('--http-boot /var/lib/ironic/tftpboot ', '') }} \
+               {{ instack_file_path.stat.path }} \
+               --concurrency {{ install.overcloud.concurrency }}
             {% endif %}
         tags:
             - ironic
@@ -207,7 +210,9 @@
             while openstack baremetal node list --fields provision_state | grep verifying; do
                sleep 0.5;
             done
-            openstack overcloud node introspect --provide --all-manageable
+            openstack overcloud node introspect --provide \
+            --concurrency {{ install.overcloud.concurrency }} \
+            --all-manageable
             {% endif %}
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
