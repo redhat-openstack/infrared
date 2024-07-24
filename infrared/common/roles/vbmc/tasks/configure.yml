@@ -63,6 +63,15 @@
     vars:
       ip_version: "{{ (vbmc_management_address | ipv6) | ternary('ipv6', 'ipv4') }}"
 
+  - name: update /etc/hosts with hypervisor as _gateway to skip ssh DNS
+    become: true
+    when: vbmc_host == 'undercloud'
+    lineinfile:
+        dest: "/etc/hosts"
+        line: "{{hostvars[vbmc_hypervisor][management_net].ipv4.address|default(hostvars[vbmc_hypervisor][ansible_external_name].ipv4.address)}} _gateway"
+        state: present
+        insertbefore: BOF
+
   - name: prepare vbmc_management_address_def to vbmc command
     set_fact:
       vbmc_management_address_def: "{{ (vbmc_management_address | ipv6)|ternary('', '::ffff:') + vbmc_management_address }}"
