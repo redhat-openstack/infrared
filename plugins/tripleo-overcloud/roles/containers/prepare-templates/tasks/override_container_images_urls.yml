@@ -53,15 +53,19 @@
     - debug:
         var: install_multirhel_container_images_overrides
 
-  - name: "read {{ template_base }}/docker-images.yaml (OSP<17)"
-    command: cat {{ template_base }}/docker-images.yaml
-    register: openstack_tripleo_container_image_prepare_output
+  - name: "Set the file name for container images (OSP<17)"
+    set_fact:
+      container_image_prepare_output_file: "{{ template_base }}/docker-images.yaml"
     when: install.version|default(undercloud_version)|openstack_release < 17
 
-  - name: "read {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_ (OSP>=17)"
-    command: cat {{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_
-    register: openstack_tripleo_container_image_prepare_output
+  - name: "Set the file name for container images (OSP>=17)"
+    set_fact:
+      container_image_prepare_output_file: "{{ template_base }}/openstack_tripleo_container_image_prepare_output.yaml_"
     when: install.version|default(undercloud_version)|openstack_release >= 17
+
+  - name: "read {{ container_image_prepare_output_file }}"
+    command: cat {{ container_image_prepare_output_file }}
+    register: openstack_tripleo_container_image_prepare_output
 
   - name: convert output of previous command into Ansible dict
     set_fact:
