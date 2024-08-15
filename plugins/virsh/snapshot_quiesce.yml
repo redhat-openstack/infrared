@@ -54,6 +54,15 @@
       when:
         install.mirror is defined
 
+- name: Configure vbmc
+  hosts: undercloud
+  any_errors_fatal: true
+  tasks:
+      - include_role:
+            name: vbmc
+        vars:
+            vbmc_nodes: "{{ groups.get('overcloud_nodes', []) }}"
+            vbmc_host: undercloud
 
 - name: Ensure that the Ceph cluster is up and healthy
   hosts: "{{ ('monitors' in groups) | ternary('monitors', ('serviceapi' in groups) | ternary('serviceapi', 'controller')) }}"
