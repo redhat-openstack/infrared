@@ -1,0 +1,188 @@
+sed "s/name: undercloud/name: undercloud1612/" plugins/virsh/defaults/topology/nodes/undercloud.yml > plugins/virsh/vars/topology/nodes/undercloud.yml
+
+
+infrared virsh -o cleanup --host-address seal54.lab.eng.tlv2.redhat.com --host-user root --host-key ~/.ssh/common_id_rsa --cleanup yes
+
+
+infrared virsh -o provision.yml --topology-nodes undercloud:1,controller:1,compute:1,ceph:1 --topology-network 3_nets --host-address seal54.lab.eng.tlv2.redhat.com --host-user root --host-key ~/.ssh/common_id_rsa --host-memory-overcommit False --image-url http://rhos-qe-mirror-tlv.usersys.redhat.com/rhel-9/rel-eng/RHEL-9/latest-RHEL-9.0.0/compose/BaseOS/x86_64/images/rhel-guest-image-9.0-20220420.0.x86_64.qcow2 --serial-files true -e override.undercloud.memory=24576
+
+curl -o undercloud_cdn.yml 'https://gitlab.cee.redhat.com/tkorol/satellite-settings/-/raw/main/undercloud_cdn.yml'
+SATELLITE_HOSTNAME=$(awk '/server_hostname/ {print $2}' undercloud_cdn.yml | tr -d \')
+curl -o remove_sat_nodes.py 'https://gitlab.cee.redhat.com/rhos-df/utils/raw/master/remove_sat_nodes.py'
+python remove_sat_nodes.py --delete-string 1612 --satellite-server ${SATELLITE_HOSTNAME}
+
+curl -o plugins/tripleo-overcloud/vars/overcloud/templates/overcloud_satellite.yml 'https://gitlab.cee.redhat.com/tkorol/satellite-settings/-/raw/main/overcloud_satellite.yml'
+
+
+infrared tripleo-undercloud -v --splitstack no --version 17.0 --cdn undercloud_cdn.yml --images-task rpm --registry-skip-puddle yes --registry-prefix default_organization-osp17.0_containers- --registry-mirror rhos-ci-satellite.lab.eng.tlv2.redhat.com --tls-ca https://password.corp.redhat.com/RH-IT-Root-CA.crt --registry-namespace 'rhos-ci-ansible.lab.eng.tlv2.redhat.com/' --registry-ceph-namespace 'rhos-ci-ansible.lab.eng.tlv2.redhat.com' --registry-ceph-image 'default_organization-ceph-5-containers-' --registry-ceph-username 'admin' --registry-ceph-password 'redhat'               --workarounds 'https://gitlab.cee.redhat.com/tkorol/satellite-settings/-/raw/main/satellite_ceph_workarounds_17.0.yaml'       --satellite-clean-nodes true         -e @undercloud_cdn.yml
+
+
+
+
+
+infrared tripleo-overcloud -o overcloud-install.yml --version 16.1 --deployment-files composable_roles --introspect yes --vbmc-force False --vbmc-host undercloud --tagging no --deploy no
+
+infrared tripleo-overcloud -o overcloud-install.yml --deployment-files composable_roles --version 17.0 --introspect no --tagging yes --deploy no
+
+infrared tripleo-overcloud -o overcloud-install.yml --version 17.0 --overcloud-templates overcloud_satellite --storage-backend ceph --overcloud-ssl yes --network-backend geneve --network-protocol ipv4 --network-bgpvpn no --network-dvr True --network-l2gw no --storage-external no --splitstack no --overcloud-debug yes --overcloud-fencing no --introspect no --tagging no --tht-roles yes --deploy yes --containers yes --registry-mirror titan98.lab.eng.tlv2.redhat.com --role-files ControllerOpenstack,Database,Messaging,Networker,CephStorage,Compute --ceph-cluster-name ceph --collect-ansible-facts False --ntp-pool clock.corp.redhat.com --config-heat OvercloudControllerOpenstackFlavor=controller --config-heat ControllerOpenstackCount=3 --config-heat ControllerOpenstackHostnameFormat='controller-%index%' --config-heat CephStorageHostnameFormat='ceph-%index%' --registry-tag tag --deployment-timeout 120 --custom-hostnames ceph-0=ceph1611-0,ceph-1=ceph1611-1,ceph-2=ceph1611-2,compute-0=compute1611-0,controller-0=controller1611-0,controller-1=controller1611-1,controller-2=controller1611-2,database-0=database1611-0,database-1=database1611-1,database-2=database1611-2,messaging-0=messaging1611-0,messaging-1=messaging1611-1,messaging-2=messaging1611-2,networker-0=networker1611-0,networker-1=networker1611-1 --registry-skip-puddle yes
+
+
+infrared tripleo-overcloud -v \\
+                            -o overcloud-install.yml \\
+                            --version ${{product_version_trunk}} \\
+                            --deployment-files virt \\
+                            --overcloud-templates {overcloud_templates} \\
+                            --overcloud-debug yes \\
+                            --network-backend {network_backend} \\
+                            --network-protocol {network_protocol} ${{network_opts}} \\
+                            --storage-backend {storage_backend} \\
+                            \${{storage_config}} --storage-external {storage_external} \\
+                            --overcloud-ssl {overcloud_ssl} \\
+                            --tls-everywhere {tls_everywhere} \\
+                            --introspect yes \\
+                            --tagging yes \\
+                            --deploy yes \\
+                            --ntp-server ${{ntp_server}} \\
+                            ${{container_opts}} \\
+                            ${{OVERCLOUD_CONTAINER_IMAGES_URLS}} \\
+                            ${{ OVERCLOUD_DEPLOY_OVERRIDE_OPTIONS }} \\
+                            ${{cdn_args}}
+
+infrared tripleo-overcloud -v
+                            -o /workspace/logs/infrared/overcloud-install.yml
+                            --version 17.0
+                            --deployment-files virt
+                            --overcloud-templates=none
+                            --overcloud-debug yes
+                            --network-backend geneve
+                            --network-l2gw false
+                            --network-protocol ipv4
+                            --network-dvr false
+                            --network-ovs false
+                            --network-bgpvpn false
+                            --storage-backend ceph
+                            --tls-everywhere no
+                            --storage-external no
+                            --overcloud-ssl no
+                            --ntp-pool clock.corp.redhat.com,time.google.com
+                            --enable-novajoin yes
+                            --network-ovn true
+                            --introspect yes
+                            --tagging yes
+                            --deploy yes
+
+
+                            infrared tripleo-overcloud -v \
+                                -o overcloud-install.yml \
+                                --version 17.0 \
+                                --deployment-files virt \
+                                --overcloud-templates overcloud_satellite \
+                                --overcloud-debug yes \
+                                --network-backend geneve \
+                                --network-protocol ipv4
+                                --network-dvr yes \
+                                --storage-backend ceph \
+                                ${storage_config}
+                                --storage-external no \
+                                --overcloud-ssl yes \
+                                --tls-everywhere no \
+                                --introspect yes \
+                                --tagging yes \
+                                --deploy yes \
+                                --ntp-server clock.corp.redhat.com,10.11.160.238,10.13.199.1 \
+                                 --containers yes  \
+                                 \
+                                --registry-mirror titan98.lab.eng.tlv2.redhat.com  --role-files ControllerOpenstack,Database,Messaging,Networker,CephStorage,Compute --registry-skip-puddle yes --ceph-cluster-name ceph --config-heat OvercloudControllerOpenstackFlavor=controller --config-heat ControllerOpenstackCount=1 --config-heat ControllerOpenstackHostnameFormat='controller-%index%' --config-heat CephStorageHostnameFormat='ceph-%index%' \
+
+infrared tripleo-overcloud \
+  -o overcloud-install.yml \
+  --version 17.0 \
+  --overcloud-templates overcloud_satellite \
+  --storage-backend ceph \
+  --overcloud-ssl yes \
+  --network-backend geneve \
+  --deployment-files virt \
+  --network-protocol ipv4 \
+  --network-bgpvpn no \
+  --network-dvr True \
+  --network-l2gw no \
+  --storage-external no \
+  --splitstack no \
+  --overcloud-debug yes \
+  --overcloud-fencing no \
+  --introspect no \
+  --tagging no \
+  --tht-roles yes \
+  --deploy yes \
+  --containers yes \
+  --registry-mirror rhos-ci-satellite.lab.eng.tlv2.redhat.com \
+  --role-files ControllerOpenstack,Database,Messaging,Networker,CephStorage,Compute \
+  --ceph-cluster-name ceph \
+  --collect-ansible-facts False \
+  --ntp-pool clock.corp.redhat.com \
+  --config-heat OvercloudControllerOpenstackFlavor=controller \
+  --config-heat ControllerOpenstackCount=1 \
+  --config-heat ControllerOpenstackHostnameFormat='controller-%index%' \
+  --config-heat CephStorageHostnameFormat='ceph-%index%' \
+  --registry-tag tag \
+  --deployment-timeout 120 \
+  --registry-skip-puddle yes
+
+
+05.01.2023
+
+wget https://gitlab.cee.redhat.com/tkorol/satellite-settings/-/raw/main/overcloud_satellite.yml
+
+wget https://gitlab.cee.redhat.com/tkorol/satellite-settings/-/raw/main/undercloud_cdn.yml
+
+infrared virsh -v -o provision.yml \
+--topology-nodes undercloud:1,controller:1,compute:1,ceph:1 --host-address seal54.lab.eng.tlv2.redhat.com \
+--host-key ~/.ssh/common_id_rsa \
+--image-url http://download.devel.redhat.com/rhel-9/rel-eng/RHEL-9/latest-RHEL-9.0.0/compose/BaseOS/x86_64/images/rhel-guest-image-9.0-20220420.0.x86_64.qcow2 \
+--host-memory-overcommit True \
+-e override.controller.cpu=8 \
+-e override.controller.memory=32768 \
+--serial-files True --bootmode uefi
+
+
+infrared tripleo-undercloud -v -o install.yml \
+-o undercloud.yml \
+--mirror "tlv" \
+--version 17.0 \
+--cdn undercloud_cdn.yml \
+--tls-everywhere no \
+--images-task rpm \
+--images-update no \
+--tls-ca https://password.corp.redhat.com/RH-IT-Root-CA.crt  \
+--config-options DEFAULT.undercloud_timezone=UTC \
+--registry-namespace 'rhos-ci-satellite.lab.eng.tlv2.redhat.com' \
+--registry-ceph-namespace 'rhos-ci-satellite.lab.eng.tlv2.redhat.com' \
+--registry-ceph-image 'default_organization-ceph-5-containers-rhceph' \
+--registry-ceph-username 'admin' --registry-ceph-password 'redhat'     \
+--workarounds https://gitlab.cee.redhat.com/tkorol/satellite-settings/-/raw/main/satellite_ceph_workarounds_17.0.yaml \
+--satellite-clean-nodes true \
+-e @undercloud_cdn.yml
+
+infrared tripleo-overcloud -vv -o overcloud-install.yml \
+--version 17.0 \
+--deployment-files virt \
+--overcloud-templates overcloud_satellite \
+--overcloud-debug yes \
+--network-backend geneve \
+--network-protocol ipv4 --network-dvr yes \
+--storage-backend ceph  \
+--storage-external no \
+--overcloud-ssl yes  \
+--tls-everywhere no  \
+--introspect yes  \
+--tagging yes  \
+--deploy yes  \
+--ntp-server clock.corp.redhat.com,10.11.160.238,10.13.199.1 \
+--containers yes \
+--registry-mirror rhos-ci-satellite.lab.eng.tlv2.redhat.com  \
+--registry-skip-puddle yes \
+--ceph-cluster-name ceph \
+--config-heat OvercloudControllerOpenstackFlavor=controller \
+--config-heat ControllerOpenstackCount=1 \
+--config-heat ControllerOpenstackHostnameFormat='controller-%index%' \
+--config-heat CephStorageHostnameFormat='ceph-%index%'

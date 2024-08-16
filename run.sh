@@ -1,0 +1,7 @@
+infrared virsh -o cleanup --host-address seal54.lab.eng.tlv2.redhat.com --host-user root --host-key ~/.ssh/common_id_rsa --cleanup yes
+
+infrared virsh -vv --host-address seal54 --host-user root --host-key ~/.ssh/common_id_rsa --image-url http://rhos-qe-mirror-rdu2.usersys.redhat.com/rhel-8/rel-eng/RHEL-8/latest-RHEL-8.4.0/compose/BaseOS/x86_64/images/rhel-guest-image-8.4-992.x86_64.qcow2 -e override.controller.cpu=8 -e override.controller.memory=32768 --collect-ansible-facts False --serial-files True --topology-nodes undercloud:1,controller:1,compute:1,ceph:1 --topology-network 3_nets --prefix TEST
+
+infrared tripleo-undercloud -vv  --mirror=tlv --version 16.2 --tls-everywhere no --images-task rpm --images-update no --tls-ca https://password.corp.redhat.com/RH-IT-Root-CA.crt --config-options DEFAULT.undercloud_timezone=UTC --build RHOS-16.2-RHEL-8-20220610.n.1 --enable-novajoin yes --selinux enforcing --ntp-pool clock.corp.redhat.com,time.google.com
+
+infrared tripleo-overcloud -vvv --version 16.2 --deployment-files virt --overcloud-templates=none --overcloud-debug yes --network-backend geneve --network-l2gw false --network-protocol ipv4 --network-dvr false --network-ovs false --network-bgpvpn false --storage-backend ceph --tls-everywhere no --storage-external no --overcloud-ssl no --ntp-pool clock.corp.redhat.com,time.google.com --enable-novajoin yes --network-ovn true --introspect yes --tagging yes --deploy yes --provision-prefix 'TEST-' 
