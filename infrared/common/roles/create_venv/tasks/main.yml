@@ -129,6 +129,7 @@
             _venv_pip_packages: "{{ venv_pip_packages | reject('equalto', '') | list }}"
           pip:
             name: "{{ _venv_pip_packages }}"
+            extra_args: "--trusted-host pypi.python.org"
             state: present
             virtualenv: "{{ venv_destination_path }}"
             extra_args: "{{ (venv_constraints != '') | ternary('--constraint ' ~ venv_destination_path ~ '/constraints.txt', omit) }}"
