@@ -55,6 +55,17 @@
   with_items: "{{ patched_rpms.results }}"
   when: item.stat.exists
 
+- name: Resize var lv to overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  register: image_repos
+  shell: |
+      cp {{ overcloud_image_file }} backup
+      qemu-img resize backup +2G
+      virt-resize {{ overcloud_image_file }} backup --expand /dev/sda4 --LV-expand /dev/vg/lv_var
+      cp backup {{ overcloud_image_file }}
+  when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
 - name: Upload yum config with enabled custom repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
@@ -168,6 +179,15 @@
   command: "virt-customize -a {{ overcloud_image_file }} --install {{ install.images.packages }} --selinux-relabel"
   register: image_packages
   when: install.images.packages|default(None) != None
+
+- name: Resize filesystem overcloud image
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  register: image_repos
+  shell: |
+      qemu-img resize {{ overcloud_image_file }} +1G
+      virt-customize -a {{ overcloud_image_file }} --run-command "xfs_growfs /dev/sda" --selinux-relabel
+  when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: update packages on repos
   environment:
