@@ -1,0 +1,76 @@
+# The following structure used for the hybrid deployments,
+# where Undercloud and Controllers are virtual, Computes baremetal
+# and the networks are bridged outside of the local hypervisor host.
+# The separation of the networks are the following:
+# * br-ctlplane - used for provisioning
+# * br-internal - used for OSPd internal network flow - Control/Data plane
+# * br-external - used for OSPd external network flow - External api/FIP
+---
+networks:
+    net1:
+        name: br-ctlplane
+        forward: bridge
+        nic: eno1
+    net2:
+        name: br-internal
+        forward: bridge
+        nic: enp6s0f0
+        ip_address: 192.168.24.150
+        netmask: 255.255.255.0
+    net3:
+        name: br-external
+        forward: bridge
+        nic: enp6s0f1
+    net4:
+        external_connectivity: yes
+        name: "management"
+        ip_address: "172.16.0.1"
+        netmask: "255.255.255.0"
+        forward: nat
+        dhcp:
+            range:
+                start: "172.16.0.2"
+                end: "172.16.0.100"
+            subnet_cidr: "172.16.0.0/24"
+            subnet_gateway: "172.16.0.1"
+        floating_ip:
+            start: "172.16.0.101"
+            end: "172.16.0.150"
+
+nodes:
+    undercloud:
+        interfaces:
+            - network: "br-ctlplane"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-external"
+              bridged: yes
+            - network: "management"
+        external_network:
+            network: "management"
+    controller:
+        interfaces:
+            - network: "br-ctlplane"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-internal"
+              bridged: yes
+            - network: "br-external"
+              bridged: yes
+            - network: "management"
+        external_network:
+            network: "management"
