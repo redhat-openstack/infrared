@@ -238,6 +238,12 @@ subparsers:
                           Use "ports" definition instead of "mac" in instackenv.json file.
                           This option is available since Rocky (also see RHBZ#1909010).
 
+                  instackenv-nfv:
+                      type: Bool
+                      default: no
+                      help: |
+                          Sets formating for instackenv that is required by nfv depployment environment
+
                   baremetal-deployment-file:
                       type: Value
                       help: |
