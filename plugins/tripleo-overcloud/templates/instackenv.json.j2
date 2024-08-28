@@ -22,7 +22,7 @@
       {# The "macs" field is deprecated. See: https://review.opendev.org/c/openstack/tripleo-common/+/556490 #}
       {% if install.version|default(undercloud_version)|openstack_release >= 17
            or (install.instackenv|default({}) and install.instackenv.useports|default(False)) %}
-      "ports": [{"address": "{{ host_data.mac }}", "local_link_connection": {"switch_id": "52:54:00:00:00:00", "port_id": "{{ loop.index }}"}}],
+      "ports": [{"address": "{{ host_data.mac }}"}],
       {% else %}
       "mac": ["{{ host_data.mac }}"],
       {% endif %}
