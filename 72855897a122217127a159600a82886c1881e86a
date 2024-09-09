@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2e531ca9_473642aa",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2024-09-09T12:50:22Z",
+      "side": 1,
+      "message": "I partially agree with Filip here, more info:\n\n1. the patched_rpms condition is true only when we run the CI jobs (deployments thru infrared) as \u0027gating\u0027 to patches, something that we have to do as part of testing but not something a customer would do with these overcloud images\n\n2. the images.update, that tells infrared to run dnf update on images, before the image is used in overcloud deployment, \nI can find some articles (e.g.: https://access.redhat.com/articles/1556833#sect6) regarding customisation of the overcloud image (for example before using it for overcloud deploy) hence I would image it\u0027s fine to do it in infrared for testing/CI purpose altho the fact (the link to the above article?) the image may need to be resized should be part of official documentation of the component (e.g.: OVS?) when instructing the user to install a newer version of the compoment (which enforces package updates)\n\nthe decision and work related to documenting the need to resize the image due to installing newer packages is outside of scope of infrared - it\u0027s the responsibility of component DFG\nLGTM from Infrared pov",
+      "revId": "72855897a122217127a159600a82886c1881e86a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0d2cc872_137d7d48",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2024-09-09T12:50:22Z",
+      "side": 1,
+      "message": "change to image_var_resize",
+      "range": {
+        "startLine": 61,
+        "startChar": 12,
+        "endLine": 61,
+        "endChar": 23
+      },
+      "revId": "72855897a122217127a159600a82886c1881e86a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5d614a70_da218ab7",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2024-09-09T12:50:22Z",
+      "side": 1,
+      "message": "maybe delete the \u0027backup\u0027 file after a successfull copy command?\nalso I would call it overcloud_image_file.backup_for_var_resize if anything (to distinguish what this file is on the machine - if we ever have to troubleshoot problems there)",
+      "range": {
+        "startLine": 66,
+        "startChar": 6,
+        "endLine": 66,
+        "endChar": 16
+      },
+      "revId": "72855897a122217127a159600a82886c1881e86a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "87a67860_15bdbe79",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2024-09-09T12:50:22Z",
+      "side": 1,
+      "message": "rename?",
+      "range": {
+        "startLine": 186,
+        "startChar": 12,
+        "endLine": 186,
+        "endChar": 23
+      },
+      "revId": "72855897a122217127a159600a82886c1881e86a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c5491fa0_7a6e5b9c",
+        "filename": "plugins/tripleo-undercloud/tasks/images/repos.yml",
+        "patchSetId": 5
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1010634
+      },
+      "writtenOn": "2024-09-09T12:50:22Z",
+      "side": 1,
+      "message": "should it be sda1?",
+      "range": {
+        "startLine": 189,
+        "startChar": 85,
+        "endLine": 189,
+        "endChar": 86
+      },
+      "revId": "72855897a122217127a159600a82886c1881e86a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
