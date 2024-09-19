@@ -16,6 +16,24 @@
       "message": "Need to confirm how it will interact with UC snapshots - e.g. if this will be correctly invoked after restoring UC from snapshot on different machine (and so with different hypervisor ip, or is the ip here local libvirts and always same)?",
       "revId": "f9032c9b178be38759661b91a57cd0ed77e71632",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "99e56cb2_b050e967",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1017622
+      },
+      "writtenOn": "2024-09-19T14:48:09Z",
+      "side": 1,
+      "message": "Maybe I\u0027m missing something, but I don\u0027t think having a line like `\u003cIP\u003e _gateway` on /etc/hosts would cause any harm, considering it is only used for reverse DNS resolution (it wouldn\u0027t match the HV\u0027s IP and that\u0027s all).\n\nIn any case, I think this vbmc role is also called by jobs using UC snapshots because those jobs run the Introspect stage as well.\n\nIn order to override any existing `\u003cIP\u003e _gateway` entry from the UC snapshot, we could add something like this to the lineinfile task:\n`regexp: \u0027^.* _gateway$\u0027`\n\nI\u0027m voting +2 because we need this patch for 17.1 BGP jobs. They are often failing due to timeout during node introspection and this patch seems to fix the issue (we just tested it).",
+      "parentUuid": "145fb60f_856dfb72",
+      "revId": "f9032c9b178be38759661b91a57cd0ed77e71632",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
   ]
 }
