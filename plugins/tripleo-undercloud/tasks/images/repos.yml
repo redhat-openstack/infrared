@@ -169,6 +169,12 @@
   register: image_packages
   when: install.images.packages|default(None) != None
 
+- name: Configure dnf not to check disk space
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  command: "virt-customize -a {{ overcloud_image_file }} --append-line '/etc/dnf/dnf.conf:diskspacecheck=0' --selinux-relabel"
+  when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
 - name: update packages on repos
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
