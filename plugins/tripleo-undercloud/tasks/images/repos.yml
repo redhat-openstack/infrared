@@ -180,15 +180,6 @@
   register: image_packages
   when: install.images.packages|default(None) != None
 
-- name: Resize filesystem overcloud image
-  environment:
-      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
-  register: image_repos
-  shell: |
-      qemu-img resize {{ overcloud_image_file }} +1G
-      virt-customize -a {{ overcloud_image_file }} --run-command "xfs_growfs /dev/sda" --selinux-relabel
-  when: install.images['update'] and not patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
-
 - name: update packages excluding kernel
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
