@@ -204,6 +204,13 @@
       requested_mem: "{{ [safe_mem|int, 500] | max }}"
   when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
+- name: clean packages
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  shell: |
+      virt-customize -a {{ overcloud_image_file }} --run-command "yum clean all" --selinux-relabel
+  when: install.images['update'] and not patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+
 - name: Set selinux state
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
