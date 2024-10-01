@@ -1,0 +1,13 @@
+[Unit]
+Description=sysctl watcher (https://issues.redhat.com/browse/OSPCIX-511)
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStartPre=/bin/mkdir -p /var/log/extra
+ExecStartPre=/bin/chmod -R 777 /var/log/extra
+ExecStart=/bin/bash -c 'export LOGFILE=/var/log/extra/sysctl_watcher.log; while true; do echo >> $LOGFILE; date >> $LOGFILE; sysctl -a >> $LOGFILE; sleep 1; done'
+
+[Install]
+WantedBy=multi-user.target

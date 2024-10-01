@@ -1,0 +1,17 @@
+---
+- name: deploy sysctl_watcher.service
+  template:
+      src: sysctl_watcher.service.j2
+      dest: /etc/systemd/system/sysctl_watcher.service
+  register: sysctl_watcher_service_file
+
+- name: reload systemd to pickup sysctl_watcher.service
+  systemd:
+    daemon-reload: yes
+  when: sysctl_watcher_service_file is changed
+
+- name: ensure sysctl_watcher.service is up and enabled at boot
+  service:
+    name: sysctl_watcher
+    enabled: true
+    state: restarted

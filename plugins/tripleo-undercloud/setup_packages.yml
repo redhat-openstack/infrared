@@ -20,6 +20,13 @@
       - name: gather undercloud facts since sometimes they are missing
         setup:
 
+      - name: Setup and start sysctl_watcher
+        import_role:
+          name: sysctl_watcher
+        vars:
+          sysctl_watcher_output_dir: '/var/log/extra'
+        tags: sysctl_watcher
+
       - name: Install custom CA if needed
         include_role:
             name: tls-ca
