@@ -61,7 +61,7 @@
   register: image_repos
   shell: |
       cp {{ overcloud_image_file }} backup
-      qemu-img resize backup +2G
+      qemu-img resize backup +1G
       virt-resize {{ overcloud_image_file }} backup --expand /dev/sda4 --LV-expand /dev/vg/lv_var
       cp backup {{ overcloud_image_file }}
   when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
@@ -227,3 +227,9 @@
   command: "virt-sysprep --selinux-relabel --enable customize --write /etc/machine-id:uninitialized -a {{ overcloud_image_file }}"
   when:
       - image_repos is changed or image_packages is changed or image_remove_packages is changed or image_update is changed or image_selinux is changed
+- name: clean packages
+  environment:
+      LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+  shell: |
+      virt-customize -a {{ overcloud_image_file }} --run-command "yum clean all" --selinux-relabel
+  when: install.images['update'] and not patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
