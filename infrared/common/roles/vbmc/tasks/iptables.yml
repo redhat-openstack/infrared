@@ -12,16 +12,35 @@
       with_dict: "{{ vbmc_ports }}"
       delegate_to: "{{ vbmc_hypervisor }}"
 
-    - name: Ease iptables rules on vbmc host
+    - name: Ease iptables rules on vbmc host - INPUT chain
       iptables:
           action: insert
-          comment: "Infrared: vbmc ports"
+          comment: "Infrared: vbmc ports - INPUT"
           table: filter
           chain: INPUT
           jump: ACCEPT
           ip_version: "{{ ip_version }}"
           protocol: "udp"
           destination_port: "{{ item.value }}"
+      with_dict: "{{ vbmc_ports }}"
+
+    # Remove this task when `destination_port` can be used in the next task
+    - name: Create TRIPLEO_INPUT chain
+      command: iptables -N TRIPLEO_INPUT
+      failed_when: false
+      changed_when: false
+
+    - name: Ease iptables rules on vbmc host - TRIPLEO_INPUT chain
+      iptables:
+          action: insert
+          comment: "Infrared: vbmc ports - TRIPLEO_INPUT"
+          table: filter
+          chain: TRIPLEO_INPUT
+          jump: ACCEPT
+          ip_version: "{{ ip_version }}"
+          protocol: "udp"
+          destination_port: "{{ item.value }}"
+          # chain_management: true not supported in this ansible version
       with_dict: "{{ vbmc_ports }}"
 
     - name: Install iptables-services
