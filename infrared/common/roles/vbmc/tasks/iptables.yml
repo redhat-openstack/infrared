@@ -12,16 +12,29 @@
       with_dict: "{{ vbmc_ports }}"
       delegate_to: "{{ vbmc_hypervisor }}"
 
-    - name: Ease iptables rules on vbmc host
+    - name: Ease iptables rules on vbmc host - INPUT chain
       iptables:
           action: insert
-          comment: "Infrared: vbmc ports"
+          comment: "Infrared: vbmc ports - INPUT"
           table: filter
           chain: INPUT
           jump: ACCEPT
           ip_version: "{{ ip_version }}"
           protocol: "udp"
           destination_port: "{{ item.value }}"
+      with_dict: "{{ vbmc_ports }}"
+
+    - name: Ease iptables rules on vbmc host - TRIPLEO_INPUT chain
+      iptables:
+          action: insert
+          comment: "Infrared: vbmc ports - TRIPLEO_INPUT"
+          table: filter
+          chain: TRIPLEO_INPUT
+          jump: ACCEPT
+          ip_version: "{{ ip_version }}"
+          protocol: "udp"
+          destination_port: "{{ item.value }}"
+          chain_management: true
       with_dict: "{{ vbmc_ports }}"
 
     - name: Install iptables-services
