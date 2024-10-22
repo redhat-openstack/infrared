@@ -16,6 +16,8 @@
       - custom_template: "{{ install.get('custom', {}).template|default('') }}"
       - custom_template_file: "{{ working_dir }}/custom_template.yaml"
       - custom_template_configured: "{{ (custom_template != '') | ternary(True, False) }}"
+      - disable_nftables_debug_file: "{{ working_dir }}/nftables_debug_false.yaml"
+      - undercloud_conf_path: "{{ working_dir }}/undercloud.conf"
   tasks:
       - name: set workingr_dir fact
         set_fact:
@@ -186,6 +188,14 @@
               - 'post_undercloud_deploy_workarounds'
         when: install.workarounds != ''
 
+      - name: Create file to disable tripleo_nftables_debug on undercloud
+        copy:
+          dest: "{{ disable_nftables_debug_file }}"
+          content: |
+            parameter_defaults:
+              UndercloudExtraGroupVars:
+                tripleo_nftables_debug: false
+
       - name: Preparing custom environment files for the undercloud deployment
         block:
           - name: Create custom environment file - Ironic Direct Deploy Interface
@@ -210,11 +220,11 @@
 
           - name: Set custom env files in undercloud.conf
             vars:
-              undercloud_conf_path: "{{ working_dir }}/undercloud.conf"
               env_files:
                 - "{{ deploy_interface_direct | ternary(ironic_custom_env_file,'') }}"
                 - "{{ configure_ntp_pool | ternary(ntp_custom_env_file,'') }}"
                 - "{{ custom_template_configured | ternary(custom_template_file,'') }}"
+                - "{{ disable_nftables_debug_file }}"
             ini_file:
               path: "{{ undercloud_conf_path }}"
               section: DEFAULT
@@ -233,3 +243,14 @@
               - "{{ install.version|openstack_release >= 15 }}"
           - configure_ntp_pool: "{{ (false in configure_ntp_pool_conditions) | ternary(False, True) }}"
         when: deploy_interface_direct or configure_ntp_pool or custom_template_configured
+
+      - name: Apply file to disable tripleo_nftables_debug as custom template file
+        when:
+          - not deploy_interface_direct
+          - not configure_ntp_pool
+          - not custom_template_configured
+        ini_file:
+          path: "{{ undercloud_conf_path }}"
+          section: DEFAULT
+          option: custom_env_files
+          value: "{{ disable_nftables_debug_file }}"
