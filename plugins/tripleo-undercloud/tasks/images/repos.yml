@@ -177,7 +177,7 @@
   command: |
     virt-customize -a {{ overcloud_image_file }} \
       --run-command "echo exclude=kernel* | tee -a /etc/dnf/dnf.conf" \
-      --update --memsize {{ requested_mem }} \
+      --memsize {{ requested_mem }} \
       --smp {{ (ansible_processor_vcpus/2)|round|int }} \
       --selinux-relabel
   register: image_update
