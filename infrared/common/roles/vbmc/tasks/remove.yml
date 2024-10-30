@@ -1,17 +1,20 @@
 ---
 - block:
   - name: check for any vbmc processes
-    command: pgrep vbmc
-    register: vbmc_proc
+    command: ps -edfl
+    register: all_procs
     failed_when: false
     changed_when: false
 
-  - name: remove existing Virtual BMCs
+  - name: remove all existing Virtual BMCs
     shell: |
-        {{ vbmc_bin }} stop {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
-        {{ vbmc_bin }} delete {{ hostvars[vbmc_node].original_name|default(vbmc_node) }}
+        for domain in $({{ vbmc_bin }} list -c "Domain name" -f value)
+        do
+          {{ vbmc_bin }} stop $domain
+          {{ vbmc_bin }} delete $domain
+        done
     failed_when: false
     when:
-        - vbmc_proc.rc == 0
-        - vbmc_node is defined
+        - all_procs.rc == 0
+        - 'vbmc' in all_procs.stdout
   delegate_to: "{{  vbmc_inventory_host }}"
