@@ -64,7 +64,7 @@
       qemu-img resize backup +2G
       virt-resize {{ overcloud_image_file }} backup --expand /dev/sda4 --LV-expand /dev/vg/lv_var
       cp backup {{ overcloud_image_file }}
-  when: patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+  when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
 
 - name: Upload yum config with enabled custom repository to overcloud image
   environment:
