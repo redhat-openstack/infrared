@@ -55,6 +55,29 @@
   with_items: "{{ patched_rpms.results }}"
   when: item.stat.exists
 
+- name: Resize filesystem overcloud image
+  when: install.images['update'] or patched_rpms.results|selectattr('stat.exists', 'equalto', True)|list|length > 0
+  block:
+    - name: Resize undercloud-full
+      environment:
+          LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      register: image_repos
+      shell: |
+          qemu-img resize {{ overcloud_image_file }} +2G
+          virt-customize -a {{ overcloud_image_file }} --run-command "xfs_growfs /dev/sda" --selinux-relabel
+      when: overcloud_image_name == "full"
+
+    - name: resize 'var' lv when updating packages
+      environment:
+          LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
+      register: image_repos
+      shell: |
+          cp {{ overcloud_image_file }} backup
+          qemu-img resize backup +2G
+          virt-resize {{ overcloud_image_file }} backup --expand /dev/sda4 --LV-expand /dev/vg/lv_var
+          cp backup {{ overcloud_image_file }}
+      when: overcloud_image_name == "hardened-uefi-full"
+
 - name: Upload yum config with enabled custom repository to overcloud image
   environment:
       LIBGUESTFS_BACKEND: "{{ libguestfs_backend }}"
