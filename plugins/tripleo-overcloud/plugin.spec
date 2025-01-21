@@ -761,7 +761,12 @@ subparsers:
                           This options allows configuring NFS backend for Nova component and includes the appropriate
                           THT template. storage-nova-nfs-share needs to be set when this is set to 'True'
                       default: False
-
+                  cinder-nfs-backend:
+                      type: Bool
+                      help: |
+                          This options allows configuring NFS backend for Cinder component and includes the appropriate
+                          THT template.
+                      default: False
                   storage-nova-nfs-share:
                       type: Value
                       help: |
