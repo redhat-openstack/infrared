@@ -749,6 +749,19 @@ subparsers:
                         The absolute path to an external NFS storage mount
                         NOTE: this needs to be set when nova-nfs-backend is set to 'True'
 
+                  cinder-nfs-backend:
+                      type: Bool
+                      help: |
+                          This options allows configuring NFS backend for Cinder component and includes the appropriate
+                          THT template.
+                      default: False
+
+                  storage-cinder-nfs-share:
+                      type: Value
+                      help: |
+                        The absolute path to an external NFS storage mount
+                        NOTE: this needs to be set when cinder-nfs-backend is set to 'True'
+
                   local-nfs-server:
                       type: Bool
                       help: |
