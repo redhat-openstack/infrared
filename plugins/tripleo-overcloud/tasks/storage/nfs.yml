@@ -1,1 +1,14 @@
-- include_tasks: netapp.yml
+- block:
+      - name: include default cinder nfs template
+        lineinfile:
+            dest: "{{ ansible_env.HOME }}/overcloud_deploy.sh"
+            line: "--environment-file {{ install.heat.templates.basedir }}/environments/storage/cinder-nfs.yaml \\"
+            insertbefore: "^--log-file.*"
+
+      - name: create custom cinder nfs template file
+        template:
+            dest: "{{ ansible_user_dir }}/{{ install.deployment.files | basename }}/cinder-nfs-custom.yaml"
+            src: storage/cinder-nfs-custom.yml.j2
+
+  when:
+      - install.cinder.nfs.backend | default(False)
