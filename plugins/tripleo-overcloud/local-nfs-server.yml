@@ -38,3 +38,22 @@
             jump: ACCEPT
             destination_port: 2049
             protocol: tcp
+
+      - name: Enable and start nftables service
+        systemd:
+          name: nftables
+          enabled: yes
+          state: started
+        ignore_errors: yes
+
+      - name: Ensure nftables table exists
+        command: nft add table inet filter
+        ignore_errors: yes
+
+      - name: Ensure nftables chain exists
+        command: nft add chain inet filter INPUT { type filter hook input priority 0 \; }
+        ignore_errors: yes
+
+      - name: Add rule to allow TCP traffic on port 2049
+        command: nft add rule inet filter INPUT tcp dport 2049 accept
+        ignore_errors: yes
