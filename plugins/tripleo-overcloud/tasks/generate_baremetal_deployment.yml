@@ -24,14 +24,13 @@
         path: "ansible_playbook"
         state: directory
 
-    - name: Copy growvols Ansible playbook Controller file
+    - name: Copy growvols Ansible playbook files
       copy:
         src: "{{ item }}"
         dest: "ansible_playbook/"
         mode: 0644
       with_fileglob:
-          - "files/ansible_playbook/Controller*.yaml"
-      when: (install.storage|default({})).backend != 'ceph'
+          - "files/ansible_playbook/*.yaml"
 
     - name: Copy sssd_selinux Ansible playbook Controller file
       template:
