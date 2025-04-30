@@ -23,7 +23,7 @@ subparsers:
                       type: Value
                       help: |
                           Git repo which contain the test.
-                      default: 'https://code.engineering.redhat.com/gerrit/rhos-qe-core-installer'
+                      default: 'https://gitlab.cee.redhat.com/eng/openstack/rhos-qe-core-installer'
 
                   file:
                       type: ListValue
