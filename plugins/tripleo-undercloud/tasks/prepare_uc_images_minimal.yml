@@ -1,0 +1,119 @@
+---
+- name: set working_dir fact
+  set_fact:
+      working_dir: "/home/{{ install.user.name }}"
+
+- name: set undercloud_version during installation
+  set_fact:
+      undercloud_version: "{{ install.version }}"
+  when:
+      - undercloud_version is not defined
+
+- name: set target version
+  vars:
+      is_upgrade: "{{ install.upgrade|default(false) }}"
+  set_fact:
+  # TODO(psedlak): replace '|int + 1' with special logic (helper/filter) which can do proper version increments (juno->kilo, 15-trunk->16-trunk etc)
+  #                - this code (as original version before it) is not allowing RDO + upgrade
+  #                  there is no conversion for 'version+1 => named rdo release', so if upgrade==yes then loosing the openstack_distribution information
+  #                - also, same issue will be when upgrade==yes with OSP15-trunk
+  #                  as 15-trunk needs to have that '-trunk' string part, so '|int + 1' will also strip this information
+  #                - likely solution is to add new |openstack_release_increment helper, where proper conversion can be handled (to after +1 convert back to name string)
+      target_install_version: "{{ install.version | default( is_upgrade | ternary((undercloud_version|openstack_release|int) + 1, undercloud_version) ) }}"
+
+- name: set registry namespace if from user input
+  set_fact:
+      registry_namespace: "{{ install.get('registry', {}).namespace | default('') }}"
+
+
+- name: Prepare info for image registry if we have it from user input and not from puddle
+  set_fact:
+      container_env:
+          container-image-prepare:
+              namespace: "{{ registry_namespace|default('rhosp' + (target_install_version|openstack_release|string)) }}"
+              prefix: "{{ install.registry.prefix|default('openstack-') }}"
+              tag: "{{ install.registry.tag|default('AUTODETECT') }}"
+  when: install.registry.skip.puddle
+
+- name: Fail non-osp deployment
+  fail:
+      msg: |
+          For non-OSP deployment set --registry-skip-puddle=yes and provide
+          '-registy-namespace' '--registry-tag' options.
+  when:
+      - (target_install_version|openstack_distribution) != 'OSP'
+      - container_env is not defined
+
+- block:
+    - name: containers_images_env facts
+      vars:
+          cont_img_yml: "{{ (target_install_version|openstack_release >= 15) | ternary('container_image_prepare.yaml', 'overcloud_container_image_prepare.yaml') }}"
+      set_fact:
+          containers_images_env_template_download_basename: "{{ cont_img_yml }}"
+          containers_images_env_template_dest_file: "{{ inventory_dir }}/{{ cont_img_yml }}"
+
+    - name: get puddle url from the repos
+      vars:
+          repod_file: "/etc/yum.repos.d/rhos-release-{{ target_install_version }}.repo"
+      shell: |
+          cat {{ repod_file }} | awk -F "=" '/puddle_baseurl/ {print $2}' | head -n1 | grep -Po '(^.*(?=\/compose\/.*\/\$basearch))|(^.*(?=\/.*\/\$basearch))'
+      register: containers_puddle_base_url
+
+    - name: get puddle number
+      command: "/usr/bin/puddle-version {{ containers_puddle_base_url.stdout }}"
+      register: containers_puddle_number
+
+    - name: puddle to be used
+      debug:
+          msg: "{{ containers_puddle_number.stdout }}"
+
+    - name: Downloading overcloud container images environment file
+      get_url:
+          url: "{{ containers_puddle_base_url.stdout }}/{{ containers_images_env_template_download_basename }}"
+          dest: "{{ containers_images_env_template_dest_file }}"
+          force: true
+      delegate_to: localhost
+
+    - name: Load variables from container environment file
+      include_vars:
+          file: "{{ containers_images_env_template_dest_file }}"
+          name: container_env
+
+  when: not install.registry.skip.puddle
+
+- name: determine final container registry host
+  vars:
+      user_mirror: "{{ install.get('registry').mirror|default('') }}"
+  set_fact:
+      registry_host: "{{ user_mirror | ternary(user_mirror, (container_env['container-image-prepare']['namespace'].split('/')[0] | container_mirror(install.mirror|default(''))) ) }}"
+
+- name: determine final container registry namespace and prefix
+  vars:
+      user_prefix: "{{ install.get('registry', {}).prefix | default('') }}"
+  set_fact:
+      registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
+      registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
+      # list of insecure registries is needed later in undercloud.conf.j2 template
+      insecure_registry_hosts: "['{{ registry_host }}']"
+
+# This is needed also for rdo deploympent.
+- name: generate container images environment file
+  shell: |
+      set -exo pipefail
+      openstack tripleo container image prepare default \
+      --output-env-file {{ working_dir }}/containers-prepare-parameter.yaml \
+      {% if not install.registry.undercloud.skip %}
+      --local-push-destination
+      {% endif %}
+
+# Set the overcloud-minimal image for ceph nodes
+- name: set overcloud-minimal image for ceph nodes
+  ansible.builtin.blockinfile:
+    path: "{{ template_base }}/network/baremetal_deployment.yaml"
+    insertafter: 'CephStorage'
+    block: |
+        defaults:  
+          image:
+            href: file:///var/lib/ironic/images/overcloud-minimal.raw
+            kernel: file://var/lib/ironic/images/overcloud-minimal.vmlinuz
+            ramdisk: file://var/lib/ironic/images/overcloud-minimal.initrd
