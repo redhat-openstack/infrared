@@ -26,3 +26,7 @@
 - name: Import prepare_uc_images for CDN
   import_tasks: prepare_uc_images_cdn.yml
   when: install.cdn is defined
+
+- name: Set overcloud-minimal images for ceph openstack_nodes
+  import_tasks: prepare_uc_images_minimal.yml
+  when: install.download.minimal.images
