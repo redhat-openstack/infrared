@@ -526,6 +526,12 @@ subparsers:
                               --fetchfiles-overcloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/environments/network-isolation-v6.j2.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/environments/network-isolation-v6.j2.yaml
                               --fetchfiles-overcloud https://git.openstack.org/cgit/openstack/tripleo-heat-templates/plain/puppet/services/opendaylight-api.yaml?h=refs/changes/15/585015/2,/usr/share/openstack-tripleo-heat-templates/puppet/services/opendaylight-api.yaml
 
+                  set-ceph-minimal-image:
+                      type: Bool
+                      help: |
+                          If set to true, deploy Ceph nodes with the overcloud-minimal image
+                      default: false
+            
             - title: Network Configuration
               options:
                   network-backend:
