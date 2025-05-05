@@ -67,3 +67,28 @@
         >{{ template_base }}/network/baremetal_deployment.yaml
 
   when: not baremetal_deployment.stat.exists
+
+# Set the overcloud-minimal image for ceph nodes
+- block:
+    - name: check that baremetal_deployment.yaml exists
+      stat:
+        path: "{{ template_base }}/network/baremetal_deployment.yaml"
+      register: baremetal_deployment_stat_result
+
+    - name: register contents of baremetal_deployment.yaml to a var
+      ansible.builtin.shell: cat {{ template_base }}/network/baremetal_deployment.yaml
+      register: baremetal_deployment_contents
+      when: baremetal_deployment_stat_result.stat.exists
+
+    - name: set overcloud-minimal image for ceph nodes
+      blockinfile:
+        path: "{{ template_base }}/network/baremetal_deployment.yaml"
+        insertbefore: 'profile: ceph-storage'
+        block: |2
+              image:
+                href: file:///var/lib/ironic/images/overcloud-minimal.raw
+                kernel: file:///var/lib/ironic/images/overcloud-minimal.vmlinuz
+                ramdisk: file:///var/lib/ironic/images/overcloud-minimal.initrd
+      when: "'profile: ceph-storage' in {{ baremetal_deployment_contents }}"
+
+  when: install.set.ceph.minimal.image # and 'profile: ceph-storage' in {{ baremetal_deployment_contents }}"
