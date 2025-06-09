@@ -4,7 +4,6 @@ test_dict:
       default: ''
     threads: '1'
     whitelist:
-        - "^neutron_plugin.tests.scenario.test_security_group_logging"
         - "^neutron_plugin.tests.scenario.test_l3ha_ovn"
         - "test_multicast.*restart"
         - "^neutron_plugin.*test_qos_user_policies"
@@ -16,6 +15,8 @@ test_dict:
     blacklist:
         - "^neutron_plugin.*reboot_node"
         - "^neutron_plugin.*networker_reboot"
+        # TODO(mblue): enable 16.2 security group logging tests when OSPRH-15952 resolved
+        - "^neutron_plugin.tests.scenario.test_security_group_logging"
     plugins:
         neutron-tempest-plugin:
             repo: "https://opendev.org/openstack/neutron-tempest-plugin"
