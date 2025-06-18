@@ -90,9 +90,11 @@
 - name: determine final container registry namespace and prefix
   vars:
       user_prefix: "{{ install.get('registry', {}).prefix | default('') }}"
+      user_tag: "{{ install.get('registry', {}).tag | default('') }}"
   set_fact:
       registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
       registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
+      registry_tag: "{{ user_tag | ternary ( user_tag, container_env['container-image-prepare']['tag'] ) }}"
       # list of insecure registries is needed later in undercloud.conf.j2 template
       insecure_registry_hosts: "['{{ registry_host }}']"
 
@@ -105,6 +107,27 @@
       {% if not install.registry.undercloud.skip %}
       --local-push-destination
       {% endif %}
+
+- name: Check whenever Container Registry requires authentication
+  uri:
+    url: "https://{{ registry_host }}/v2/auth"
+    validate_certs: no
+    status_code: 200, 404, 401
+  register: _registry_check
+
+- debug:
+    var: _registry_check
+
+### REMOVE CREDENTIALS BEFORE MERGE ###
+- name: add credentials to container images environment file
+  vars:
+    redhat_username: '6340056|atropos'
+    redhat_password: 'eyJhbGciOiJSUzUxMiJ9.eyJzdWIiOiIxMjFlNzIxMGZlYmE0NTk4YmM5NGI1ZjlmOTVlMmQ2NCJ9.LJYxBhnUGYov6mnlP7sRaFQiruR0MM9z1yJciVNgMf-f1Q5nQuOEblgedBoOT4VQJjPKBkoJdM-K63PJu7qNqpRgMS2R-v3wAmdEGD5mdDolwDmhy1Ct3fkE4R3ui7WLsBfao3kmP7-VOFTb6EeOLdIZcGRI_BgCsGadLmn_mXp52Q9KIeBehFhwTRMGzcD2MwdafxULxEqmXOFEc6tOd35yUCG9m5kEh0FD6wdq8MxsC5JQL-F7YxRNhz6U6kVGwM4E340hOkiyEHy9STcz_AoRMq3VheFWMXwf2omsq3atI1yVPiBZ1_vRZgu9t_JRoG_uCXj8fgDi39QAjRCWHRa612BqCpr0ah8gkgU11MgkrMOFxBGCi0g0aqWcaEwVjwurWENFUs4KIYWHqfoXyLTJMvx6IDNaWoOKcCdlbYan1uQtLzgxEDmTJRfP61waWYGN35cRjredzcUFobnHjHFdp2Zmc9mZoUNfGh9cxS_BGwvz_a-5lzppNHmrF0e7SFjmocshwCywk7ZjOto4dMomI6K_fCDjoKeJaxtfLTcfy-saCwHW4Uz0L11UvC6OQdcguuRkR69caHu0jocxvipGqOxSCS9VzonvJL3DPTkmOFRrEfwA3--SzFtieaptBJvPAJ4VyIa-KKayhDNlYZ5FTWi5oYxnGM5DgwB7dwg'
+  blockinfile:
+    dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
+    insertafter: EOF
+    block: "  ContainerImageRegistryCredentials:\n    {{ registry_host }}:\n      {{ redhat_username }}: {{ redhat_password }}"
+  when: _registry_check['status'] == 401 and _registry_check['msg'] is search('Unauthorized')
 
 - block:
     # 'undercloud update' is running 'container image prepare' but is not using 'heat' templates which normally
@@ -242,18 +265,9 @@
             {% endif %}"
 
     - set_fact:
-        ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
-        ternary(
-            install.registry.get('ceph', {}).get('namespace', ''),
-            ceph_namespace_fromfile | default('registry.access.redhat.com/rhceph')) }}"
-        ceph_image: "{{ install.registry.get('ceph', {}).image is defined |
-        ternary(
-            install.registry.get('ceph', {}).get('image', ''),
-            ceph_image_fromfile | default('rhceph-3-rhel7')) }}"
-        ceph_tag: "{{ install.registry.get('ceph', {}).tag is defined |
-        ternary(
-            install.registry.get('ceph', {}).get('tag', ''),
-            ceph_tag_fromfile | default('latest')) }}"
+        ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined | ternary(install.registry.get('ceph', {}).get('namespace', ''), ceph_namespace_fromfile | default('registry.access.redhat.com/rhceph')) }}"
+        ceph_image: "{{ install.registry.get('ceph', {}).image is defined | ternary(install.registry.get('ceph', {}).get('image', ''), ceph_image_fromfile | default('rhceph-3-rhel7')) }}"
+        ceph_tag: "{{ install.registry.get('ceph', {}).tag is defined | ternary(install.registry.get('ceph', {}).get('tag', ''), ceph_tag_fromfile | default('latest')) }}"
 
     - name: append ceph to list of insecure registries
       when: ceph_registry_host|default(False)
@@ -292,7 +306,7 @@
           replace:
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
               regexp: '(^\ +)tag: .*'
-              replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
+              replace: "\\1tag: {{ registry_tag }}"
       when: not install.registry.skip.puddle
 
     - name: set insecure registry in containers-prepare-parameter file
