@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "351dacb8_0b8c89e9",
+        "filename": "plugins/tripleo-overcloud/tasks/generate_baremetal_deployment.yml",
+        "patchSetId": 17
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1017989
+      },
+      "writtenOn": "2025-06-23T12:31:01Z",
+      "side": 1,
+      "message": "Ack, updated the section to use slurp instead of shell + cat\nTesting this latest patchset right now",
+      "parentUuid": "1b860d0d_598a4c3f",
+      "revId": "2010f5af6f28383bef5b4ccb2ae137fe4fbf67ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "20e95e10_0dd20c4c",
         "filename": "plugins/tripleo-overcloud/tasks/generate_baremetal_deployment.yml",
         "patchSetId": 17
@@ -31,6 +49,24 @@
       "writtenOn": "2025-06-23T11:57:52Z",
       "side": 1,
       "message": "should we fail if \u0027profile: ceph-storage\u0027 in baremetal_deployment_contents.stdout is false?\n\n(I\u0027ve double checked and we can\u0027t simply ignore if insertbefore fails, because in that case the block is added at the end of the file. Which may work by accident or not",
+      "revId": "2010f5af6f28383bef5b4ccb2ae137fe4fbf67ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7f541363_4eed66ac",
+        "filename": "plugins/tripleo-overcloud/tasks/generate_baremetal_deployment.yml",
+        "patchSetId": 17
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1017989
+      },
+      "writtenOn": "2025-06-23T12:31:01Z",
+      "side": 1,
+      "message": "yes, I think we should fail if contents.stdout is false. This is because for contents.stdout to even be false, set-ceph-minimal-image must be set to true first. \n\nIf \u0027profile: ceph-storage\u0027 is not in baremetal_deployment_contents.stdout and set-ceph-minimal-image is true, then something has gone wrong (either a missing baremetal_deployment.yaml or there are no deployed ceph nodes) and the deployment should fail.\n\nI added a new section to fail when ceph-storage is not in baremetal_deployment.yaml",
+      "parentUuid": "20e95e10_0dd20c4c",
       "revId": "2010f5af6f28383bef5b4ccb2ae137fe4fbf67ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
     }
