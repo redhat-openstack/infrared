@@ -7,6 +7,7 @@ __registry_port_map = {
     'brew-pulp-docker01.web.prod.ext.phx2.redhat.com:8888': '{mirror}:5001',
     'registry-proxy.engineering.redhat.com': '{mirror}:5002',
     'docker-registry.upshift.redhat.com': '{mirror}:5003',
+    'registry.stage.redhat.io': '{mirror}:5008',
 }
 
 
