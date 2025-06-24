@@ -90,9 +90,11 @@
 - name: determine final container registry namespace and prefix
   vars:
       user_prefix: "{{ install.get('registry', {}).prefix | default('') }}"
+      user_tag: "{{ install.get('registry', {}).tag | default('') }}"
   set_fact:
       registry_namespace: "{{ registry_host }}/{{ registry_namespace | ternary(registry_namespace, container_env['container-image-prepare']['namespace'].split('/')[1] ) }}"
       registry_prefix: "{{ user_prefix | ternary ( user_prefix, container_env['container-image-prepare']['prefix'] ) }}"
+      registry_tag: "{{ user_tag | ternary ( user_tag, container_env['container-image-prepare']['tag'] ) }}"
       # list of insecure registries is needed later in undercloud.conf.j2 template
       insecure_registry_hosts: "['{{ registry_host }}']"
 
@@ -224,41 +226,30 @@
 
     # Complex processing of container_image_prepare.yaml folows as the format
     # of the file slightly changed for OSP17, see RHOSINFRA-4180 for details
-    - set_fact:
-        ceph_namespace_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-namespace'] }}\
-            {% else %}\
-            {{ container_env['container-image-prepare']['ceph_namespace'] }}\
-            {% endif %}"
-        ceph_image_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-image'] }}\
-            {% else %}\
-            {{ container_env['container-image-prepare']['ceph_image'] }}\
-            {% endif %}"
-        ceph_tag_fromfile: "{% if (target_install_version|openstack_release) < 17 %}\
-            {{ container_env['container-image-prepare']['ceph-tag'] }}\
-            {% else %}\
-            {{ container_env['container-image-prepare']['ceph_tag'] }}\
-            {% endif %}"
 
     - set_fact:
-        ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
-        ternary(
-            install.registry.get('ceph', {}).get('namespace', ''),
-            ceph_namespace_fromfile | default('registry.access.redhat.com/rhceph')) }}"
-        ceph_image: "{{ install.registry.get('ceph', {}).image is defined |
-        ternary(
-            install.registry.get('ceph', {}).get('image', ''),
-            ceph_image_fromfile | default('rhceph-3-rhel7')) }}"
-        ceph_tag: "{{ install.registry.get('ceph', {}).tag is defined |
-        ternary(
-            install.registry.get('ceph', {}).get('tag', ''),
-            ceph_tag_fromfile | default('latest')) }}"
+        ceph_namespace_fromfile: "{{ (target_install_version|openstack_release|int < 17) | ternary((container_env['container-image-prepare']['ceph-namespace']), (container_env['container-image-prepare']['ceph_namespace'])) }}"
+        ceph_image_fromfile: "{{ (target_install_version|openstack_release|int < 17) | ternary((container_env['container-image-prepare']['ceph-image']), (container_env['container-image-prepare']['ceph_image'])) }}"
+        ceph_tag_fromfile: "{{ (target_install_version|openstack_release|int < 17) | ternary((container_env['container-image-prepare']['ceph-tag']), (container_env['container-image-prepare']['ceph_tag'])) }}"
+
+    - name: determine final ceph namespace and prefix
+      vars:
+            user_mirror: "{{ install.get('registry').mirror|default('') }}"
+      set_fact:
+          ceph_namespace: "{{ install.registry.get('ceph', {}).namespace is defined |
+                  ternary(install.registry.get('ceph', {}).get('namespace', ''),
+                  user_mirror | ternary(user_mirror, ceph_namespace_fromfile|default('registry.access.redhat.com/rhceph')|
+                  container_mirror(install.mirror|default('')))) }}"
+          ceph_image: "{{ install.registry.get('ceph', {}).image is defined | ternary(install.registry.get('ceph', {}).get('image', ''), ceph_image_fromfile | default('rhceph-3-rhel7')) }}"
+          ceph_tag: "{{ install.registry.get('ceph', {}).tag is defined | ternary(install.registry.get('ceph', {}).get('tag', ''), ceph_tag_fromfile | default('latest')) }}"
+
+    - name: Set ceph registry host
+      set_fact:
+          # list of insecure registries is needed later in undercloud.conf.j2 template
+          ceph_registry_host: "['{{ ceph_namespace.split('/')[0] }}']"
 
     - name: append ceph to list of insecure registries
       when: ceph_registry_host|default(False)
-      vars:
-        ceph_registry_host: "{{ ceph_namespace.split('/')[0] }}"
       set_fact:
         # list of insecure registries is needed later in undercloud.conf.j2 template
         insecure_registry_hosts: "{{ insecure_registry_hosts }} + ['{{ ceph_registry_host }}']"
@@ -292,7 +283,7 @@
           replace:
               path: "{{ working_dir }}/containers-prepare-parameter.yaml"
               regexp: '(^\ +)tag: .*'
-              replace: "\\1tag: {{ container_env['container-image-prepare']['tag'] }}"
+              replace: "\\1tag: {{ registry_tag }}"
       when: not install.registry.skip.puddle
 
     - name: set insecure registry in containers-prepare-parameter file
@@ -306,20 +297,6 @@
             {% endfor %}
       when: install.registry.insecure.containers.parameter is defined
 
-    - block:
-        - name: set satellite namespace
-          replace:
-              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-              regexp: '(^\ +)namespace.*'
-              replace: "\\1namespace: {{ install.registry.mirror }}"
-
-        - name: set satellite prefix
-          replace:
-              path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-              regexp: '(^\ +)name_prefix.*'
-              replace: "\\1name_prefix: {{ install.registry.prefix }}"
-      when: install.cdn|default(False)
-
     - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
       blockinfile:
         path: "{{ working_dir }}/containers-prepare-parameter.yaml"
@@ -331,6 +308,62 @@
         - install.get('registry', {}).get('ceph', {}).get('username', '')
         - install.get('registry', {}).get('ceph', {}).get('password', '')
         - install.get('registry', {}).get('ceph', {}).get('namespace', '')
+
+    - name: Check whenever Container Registry requires authentication
+      uri:
+        url: "https://{{ registry_host }}/v2/auth"
+        validate_certs: no
+        status_code: 200, 404, 401
+      register: _registry_check
+
+    - name: add credentials to container images environment file
+      vars:
+        redhat_username: "{{ install.get('registry').username }}"
+        redhat_password: "{{ install.get('registry').password }}"
+      blockinfile:
+        dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
+        insertafter: EOF
+        block: |2
+            ContainerImageRegistryCredentials:
+              {{ registry_host }}:
+                {{ redhat_username }}: {{ redhat_password }}
+      when:
+        - _registry_check['status'] == 401
+        - _registry_check['msg'] is search('Unauthorized')
+        - install.get('registry').username is defined
+        - install.get('registry').password is defined
+
+    - block:
+        - name: Check whenever Ceph Registry requires authentication
+          uri:
+            url: "https://{{ ceph_registry_host }}/v2/auth"
+            validate_certs: no
+            status_code: 200, 404, 401
+          register: _ceph_registry_check
+
+        - name: add ceph credentials to container images environment file
+          vars:
+            redhat_username: "{{ install.get('registry').username }}"
+            redhat_password: "{{ install.get('registry').password }}"
+          blockinfile:
+            dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
+            insertafter: EOF
+            block: |2
+                ContainerImageRegistryCredentials:
+                  {{ ceph_registry_host }}:
+                    {{ redhat_username }}: {{ redhat_password }}
+          when:
+            - _registry_check['status'] == 401
+            - _registry_check['msg'] is search('Unauthorized')
+            - install.get('registry').username is defined
+            - install.get('registry').password is defined
+      vars:
+        ceph_registry_host: "{{ ceph_namespace.split('/')[0] }}"
+      when:
+        - not install.get('registry', {}).get('ceph', {}).get('username', '')
+        - not install.get('registry', {}).get('ceph', {}).get('password', '')
+        - not install.get('registry', {}).get('ceph', {}).get('namespace', '')
+        - ceph_registry_host != registry_host
 
     - name: Configure container registries for Ceph Dashboard
       when: (target_install_version|openstack_release) >= 16
