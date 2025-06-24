@@ -567,6 +567,14 @@ subparsers:
                           Container images prefix.
                           Defaults to value per compose/puddle (otherwise to 'openstack-').
 
+                  registry-username:
+                      type: Value
+                      help: An username/token-paired username string to authenticate with a registry
+
+                  registry-password:
+                      type: Value
+                      help: A password/token string to authenticate with a registry
+
                   bip-address:
                       type: Value
                       help: |
