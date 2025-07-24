@@ -21,6 +21,10 @@
       state: "{{ ir_default_pip_versions[item] is defined | ternary('present', 'latest') }}"
       virtualenv: "{{ rally.path }}"
   with_items:
+      - "distlib<=0.3.9"
+      - "oslo.log<=7.1.0"
+      - "oslo.db<=17.2.1"
+      - "python_novaclient<=18.9.0"
       - "decorator==4.4.2"
       - "importlib-metadata<2,>=0.12"
       - "pyrsistent<=0.16.0"
