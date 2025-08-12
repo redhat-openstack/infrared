@@ -17,8 +17,8 @@
       reg_namespace:  "{{ install.get('registry', {}).namespace|default(reg_namespace_default) }}"
       undercloud_reg_base: "{% if os_version|float < 16 %}{{ ansible_br_ctlplane['ipv4']['address'] }}{% else %}{{ ansible_fqdn }}{% endif %}:8787/{{ reg_namespace }}"
       undercloud_reg_base_ceph: "{% if os_version|float < 16 %}{{ ansible_br_ctlplane['ipv4']['address'] }}{% else %}{{ ansible_fqdn }}{% endif %}:8787"
-      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}/{{ reg_namespace }}"
-      external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_insecure_registry) }}"
+      external_reg_base: "{{ install.get('registry', {}).mirror|default(docker_registry) }}/{{ reg_namespace }}"
+      external_reg_base_ceph: "{{ install.get('registry', {}).mirror|default(docker_registry) }}"
       reg_base: "{{ install.registry.undercloud.skip|ternary(external_reg_base, undercloud_reg_base)  }}"
       reg_base_ceph: "{{ install.registry.undercloud.skip|ternary(external_reg_base_ceph, undercloud_reg_base_ceph) }}"
   shell: |
