@@ -30,8 +30,8 @@ python-bugzilla>=2.3.0 ; python_version >= '3' # Required by 'fetch_bz' Ansible 
 python-bugzilla<3.0.0 ; python_version < '3' # Required by 'fetch_bz' Ansible module
 passlib; sys_platform == 'darwin' # Avoid 'password_hash requires the passlib python module to generate password hashes on Mac OS X/Darwin'
 junit_xml>=1.8 # Required by 'junit' callback plugin
-# from https://github.com/psf/requests/blob/v2.22.0/setup.py#L47
-urllib3>=1.21.1,<1.25 # 1.25 is flaky version
+urllib3>=1.21.1,<1.25 ; python_version == '3.6' # 1.25 is flaky version
+urllib3>1.25 ; python_version > '3.6'
 # requirements for openstack plugin
 python-openstackclient>=5.0.0
 tenacity # retry decorator used for git cloning plugins
