@@ -41,32 +41,70 @@
 
         - name: get docker registry name
           set_fact:
-              docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
+              docker_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
           tags: container-images-packages
 
         - name: set insecure ceph registry
           set_fact:
-              docker_insecure_ceph_registry: "{{ container_env['container-image-prepare']['ceph-namespace'].split('/')[0] }}"
+              ceph_registry: "{{ container_env['container-image-prepare']['ceph-namespace'].split('/')[0] }}"
           when:
               - container_env['container-image-prepare']['ceph-namespace'] != ''
+
+        - name: Check whenever Container Registry requires authentication
+          uri:
+            url: "https://{{ docker_registry }}/v2/auth"
+            validate_certs: no
+            status_code: 200, 404, 401
+          register: _registry_check
 
         - name: replace IP with hostname in /etc/sysconfig/docker
           replace:
               dest: /etc/sysconfig/docker
               regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-              replace: '\1 {{ docker_insecure_registry }} --insecure-registry'
+              replace: '\1 {{ docker_registry }} --insecure-registry'
               backup: no
           become: true
+
+        - name: Add credentials to Docker
+          docker_login:
+            registry: "{{ docker_registry }}"
+            username: "{{ install.get('registry').username }}"
+            password: "{{ install.get('registry').password }}"
+          when:
+            - _registry_check['status'] == 401
+            - _registry_check['msg'] is search('Unauthorized')
+            - install.get('registry').username is defined
+            - install.get('registry').password is defined
 
         - name: add insecure ceph registry to /etc/sysconfig/docker
           replace:
               dest: /etc/sysconfig/docker
               regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-              replace: '\1 {{ docker_insecure_ceph_registry }} --insecure-registry'
+              replace: '\1 {{ ceph_registry }} --insecure-registry'
               backup: no
           become: true
           when:
-              - docker_insecure_ceph_registry is defined
+              - ceph_registry is defined
+
+        - block:
+            - name: Check whenever Ceph Registry requires authentication
+              uri:
+                url: "https://{{ ceph_registry }}/v2/auth"
+                validate_certs: no
+                status_code: 200, 404, 401
+              register: _ceph_registry_check
+
+            - name: Add Ceph credentials to Docker
+              docker_login:
+                registry: "{{ ceph_registry }}"
+                username: "{{ install.get('registry').username }}"
+                password: "{{ install.get('registry').password }}"
+              when:
+                - _ceph_registry_check['status'] == 401
+                - _ceph_registry_check['msg'] is search('Unauthorized')
+                - install.get('registry').username is defined
+                - install.get('registry').password is defined
+          when: ceph_registry != docker_registry
 
         - name: restart docker service
           service:
