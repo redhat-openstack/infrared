@@ -2,6 +2,46 @@
 # versions and registry addresses is job metadata we want to collect in json file
 # when 'collect-ansible-facts' role is called hence using set_facts instead of vars
 - block:
+    - name: Install Docker CE repo
+      get_url:
+        url: 'https://download.docker.com/linux/centos/docker-ce.repo'
+        dest: '/etc/yum.repos.d/docker-ce.repo'
+        mode: '0440'
+
+    - name: Block docker from installing
+      lineinfile:
+        line: 'exclude=docker'
+        insertafter: EOF
+        dest: /etc/yum.conf
+      become: true
+      become_user: root
+
+    - name: Remove old Docker
+      package:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - docker
+        - docker-client
+        - docker-common
+        - docker-rhel-push-plugin
+
+    - name: Install docker-CE
+      package:
+        name:  docker-ce
+        state: latest
+
+    - name: Started docker service
+      service:
+          name: docker
+          state: started
+
+  become: true
+  become_user: root
+
+  when: install.version|default(undercloud_version)|openstack_release < 14
+
+- block:
     - name: set required facts for "container image prepare"
       set_fact:
           container_image:
@@ -41,7 +81,7 @@
 
         - name: get docker registry name
           set_fact:
-              docker_insecure_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
+              docker_registry: "{{ container_image_external['reg_namespace'].split('/')[0] }}"
           tags: container-images-packages
 
         - name: set insecure ceph registry
@@ -50,23 +90,48 @@
           when:
               - container_env['container-image-prepare']['ceph-namespace'] != ''
 
-        - name: replace IP with hostname in /etc/sysconfig/docker
-          replace:
-              dest: /etc/sysconfig/docker
-              regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-              replace: '\1 {{ docker_insecure_registry }} --insecure-registry'
-              backup: no
-          become: true
+        - name: Check whenever Container Registry requires authentication
+          uri:
+            url: "https://{{ docker_registry }}/v2/auth"
+            validate_certs: no
+            status_code: 200, 404, 401
+          register: _registry_check
 
-        - name: add insecure ceph registry to /etc/sysconfig/docker
-          replace:
-              dest: /etc/sysconfig/docker
-              regexp: '^(INSECURE_REGISTRY=.--insecure-registry)'
-              replace: '\1 {{ docker_insecure_ceph_registry }} --insecure-registry'
-              backup: no
+        - name: add insecure registry to /etc/docker/daemon.json
+          blockinfile:
+            path: /etc/docker/daemon.json
+            insertafter: EOF
+            create: yes
+            mark: ''
+            block: |
+              {
+                 "insecure-registries" : [ "{{ docker_registry }}" ]
+              }
           become: true
+          when: _registry_check['status'] == 200
+
+        - name: add insecure ceph registry to /etc/docker/daemon.json
+          blockinfile:
+            path: /etc/docker/daemon.json
+            insertafter: EOF
+            create: yes
+            block: |
+              {
+                 "insecure-registries" : [ "{{ docker_insecure_ceph_registry }}" ]
+              }
+          become: true
+          when: docker_insecure_ceph_registry is defined
+
+        - name: Add credentials to Docker
+          docker_login:
+            registry: "{{ docker_registry }}"
+            username: "{{ install.get('registry').username }}"
+            password: "{{ install.get('registry').password }}"
           when:
-              - docker_insecure_ceph_registry is defined
+            - _registry_check['status'] == 401
+            - _registry_check['msg'] is search('Unauthorized')
+            - install.get('registry').username is defined
+            - install.get('registry').password is defined
 
         - name: restart docker service
           service:
