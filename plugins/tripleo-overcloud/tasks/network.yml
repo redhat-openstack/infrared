@@ -101,6 +101,11 @@
 
 - name: Upload roles data file to add custom roles to deployment
   block:
+    - name: create roles folder
+        file:
+            path: "{{ template_base }}/roles"
+            state: directory
+
     - name: Add roles data file
       copy:
           src: "{{ install.custom.data.roles.file }}"
