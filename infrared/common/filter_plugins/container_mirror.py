@@ -5,6 +5,7 @@ from __future__ import print_function
 __registry_port_map = {
     'registry-proxy.engineering.redhat.com': '{mirror}:5002',
     'images.paas.redhat.com': '{mirror}:5003',
+    'registry.stage.redhat.io': '{mirror}:5008',
 }
 
 
