@@ -177,6 +177,12 @@
           dstat_output_dir: '/var/log/extra'
         tags: dstat
 
+      - name: Update system packages
+        package:
+            state: latest
+            name: "*"
+        register: update
+
       - name: install packages on Undercloud
         package:
           name: "{{ _package_list }}"
@@ -199,12 +205,6 @@
             {%-   set _ = package_list.append('deltarpm') %}
             {%- endif %}
             {{- package_list }}
-
-      - name: Update system packages
-        package:
-            state: latest
-            name: "*"
-        register: update
 
       - name: Set FIPS mode on the undercloud
         command: fips-mode-setup --enable
