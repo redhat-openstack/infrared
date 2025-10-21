@@ -162,6 +162,7 @@
             set -eo pipefail
 
             export NAMESPACE=$(awk '/\s+namespace:/ {print $2}' ~/containers-prepare-parameter.yaml)
+            export REG=$(echo $NAMESPACE | awk -F/ '{print $1}')
 
             EL9_COMPOSE={{ containers_puddle_number.stdout }} # i.e. EL9_COMPOSE=RHOS-17.1-RHEL-9-20230315.n.1
             EL9_TAGS=$(cat ~/containers-prepare-parameter.yaml | sed 's/: / /g' | sed "s/''//g" | awk '/^ *tag |^ *namespace |^ *name_/ {print "\""$1"\":\""$2"\","}')
@@ -172,7 +173,8 @@
             # discover which 17.1-RHEL8 compose is "linked" to the 17.1-RHEL9 compose that is being deployed
             EL8_COMPOSE=$(curl -4 -k -L http://${DOWNLOAD_HOST}/rcm-guest/puddles/OpenStack/17.1-RHEL-9/${EL9_COMPOSE}/RHEL8_COMPOSE_ID)
             EL8_TAGS=$(curl -4 -k -L http://${DOWNLOAD_HOST}/rcm-guest/puddles/OpenStack/17.1-RHEL-8/${EL8_COMPOSE}/container_image_prepare_parameter_defaults.yaml \
-            | sed 's/: / /g' | sed "s/''//g"| sed "s#registry-proxy.engineering.redhat.com/rh-osbs#${NAMESPACE}#g" | awk '/^ *tag |^ *namespace |^ *name_/ {print "\""$1"\":\""$2"\","}')
+            | sed 's/: / /g' | sed "s/''//g"| sed -e "s#registry-proxy.engineering.redhat.com/rh-osbs#${NAMESPACE}#g" -e "s#registry.stage.redhat.io#${REG}#g" \
+            | awk '/^ *tag |^ *namespace |^ *name_/ {print "\""$1"\":\""$2"\","}' | sed -e "s/'//g" )
 
             /usr/share/openstack-tripleo-heat-templates/tools/multi-rhel-container-image-prepare.py \
                --enable-multi-rhel \
@@ -182,6 +184,8 @@
                --minor-override "{${EL8_TAGS}${CEPH_TAGS}\"no_tag\":\"not_used\"}" --major-override "{${EL9_TAGS}${CEPH_TAGS}\"no_tag\":\"not_used\"}" \
                --local-push-destination \
                --output-env-file ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
+
+            sed -n '/  ContainerImageRegistryCredentials:/, /# END ANSIBLE MANAGED BLOCK/p'  ~/containers-prepare-parameter.yaml  | sed '$d' >> {{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
 
         - name: (multirhel) remove ComputeContainerImagePrepare from container image prepare parameter file
           shell: sed -i '/ComputeContainerImagePrepare/d' {{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
