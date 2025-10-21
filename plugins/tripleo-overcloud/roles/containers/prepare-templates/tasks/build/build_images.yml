@@ -183,6 +183,8 @@
                --local-push-destination \
                --output-env-file ~/{{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
 
+            sed -n '/  ContainerImageRegistryCredentials:/, /# END ANSIBLE MANAGED BLOCK/p'  ~/containers-prepare-parameter.yaml  | sed '$d' >> {{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
+
         - name: (multirhel) remove ComputeContainerImagePrepare from container image prepare parameter file
           shell: sed -i '/ComputeContainerImagePrepare/d' {{ multirhel_overcloud_container_image_prepare_parameter_file_name }}
 
