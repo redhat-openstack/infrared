@@ -4,8 +4,10 @@
     OS_CLOUD: undercloud
   command: openstack stack list -c "Stack Name" -f value
   register: export_stacks
+  failed_when: false
 
 - name: remove export file if exits
+  when: export_stacks.rc == 0
   file:
     state: absent
     path: "/home/stack/{{ item }}-export.yaml"
@@ -13,6 +15,7 @@
 
 - name: export the stacks
   become: true
+  when: export_stacks.rc == 0
   environment:
     OS_CLOUD: undercloud
   command: openstack overcloud export --stack {{ item }}
