@@ -48,6 +48,8 @@
 - name: Configure containers-prepare-parameter.yaml for image modification
   blockinfile:
       path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+      insertbefore: "ContainerImageRegistryCredentials:"
+      marker: "# {mark} PATCH CONTAINER IMAGES"
       block: |2
             modify_role: tripleo-modify-image
             modify_append_tag: '-patched'
