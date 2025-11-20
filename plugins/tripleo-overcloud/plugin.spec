@@ -148,10 +148,19 @@ subparsers:
                           If this option is set then infrared will try to get
                           tag hash using the openstack overcloud container image tag discover
                           command
+                          
                   registry-tag-image:
                       type: Value
                       help: |
                           The image to use to read the tab hash
+
+                  registry-username:
+                      type: Value
+                      help: An username/token-paired username string to authenticate with a registry
+
+                  registry-password:
+                      type: Value
+                      help: A password/token string to authenticate with a registry
 
                   registry-ceph-namespace:
                       type: Value
