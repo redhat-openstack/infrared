@@ -65,6 +65,14 @@ subparsers:
                             List of repositories URLs to use in containers to update existing packages.
                             It will link provided repos to the container and perform 'yum update'.
 
+                  customize-cinder-pure-enabled:
+                      type: Bool
+                      help: |
+                            Enable customization of cinder-volume container image for Pure Storage backend.
+                            When enabled, the cinder-volume container will be modified to include the purestorage
+                            Python library required for Pure Storage FlashArray and FlashBlade integration.
+                      default: False
+
                   update_repo:
                       type: Value
                       help: |
