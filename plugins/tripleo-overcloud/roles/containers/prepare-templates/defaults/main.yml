@@ -1,0 +1,10 @@
+# Container image customization for Pure Storage
+customize_cinder_pure_dockerfile_dir: "/home/stack/cinder-pure"
+customize_cinder_pure_append_tag: "-pure"
+
+# Container image settings - derived from containers-prepare-parameter.yaml
+customize_cinder_pure_registry: "{{ container_env['container-image-prepare']['namespace'].split('/')[0] }}"
+customize_cinder_pure_namespace: "{{ container_env['container-image-prepare']['namespace'] }}"
+customize_cinder_pure_name_prefix: "{{ container_env['container-image-prepare']['prefix'] }}"
+customize_cinder_pure_name_suffix: "{{ container_env['container-image-prepare'].get('name_suffix', '') }}"
+customize_cinder_pure_tag: "{{ container_env['container-image-prepare']['tag'] }}"
