@@ -1,0 +1,13 @@
+FROM {{ pure_namespace }}/{{ pure_name_prefix }}-cinder-volume{{ pure_name_suffix }}:{{ pure_tag }}
+
+LABEL name="{{ pure_name_prefix }}-cinder-volume-pure" \
+      summary="Red Hat OpenStack Platform {{ install.version|default(undercloud_version)|openstack_release }} cinder-volume Pure Storage" \
+      description="Cinder plugin for Pure Storage"
+
+USER root
+
+RUN python3 -m ensurepip --upgrade && \
+    pip3 install purestorage && \
+    pip3 uninstall -y pip
+
+USER cinder
