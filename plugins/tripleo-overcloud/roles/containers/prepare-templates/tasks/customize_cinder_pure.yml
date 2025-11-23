@@ -1,0 +1,48 @@
+---
+- name: Create Pure Storage cinder-volume customization directory
+  file:
+    path: "/home/stack/cinder-pure"
+    state: directory
+    owner: stack
+    group: stack
+    mode: '0755'
+
+- name: Deploy Dockerfile for Pure Storage cinder-volume customization
+  template:
+    src: cinder-pure-Dockerfile.j2
+    dest: "/home/stack/cinder-pure/Dockerfile"
+    owner: stack
+    group: stack
+    mode: '0644'
+
+- name: Inject Pure Storage customization into containers-prepare-parameter.yaml
+  blockinfile:
+    path: "{{ containers_home_dir }}/containers-prepare-parameter.yaml"
+    marker: "# {mark} Customize c-vol image for Pure Storage"
+    insertbefore: "^  ContainerImageRegistryCredentials:"
+    block: |2
+          excludes:
+          - cinder-volume
+        - set:
+            name_prefix: {{ container_env['container-image-prepare']['prefix'] }}
+            name_suffix: '{{ container_env['container-image-prepare'].get('name_suffix', '') }}'
+            namespace: {{ container_env['container-image-prepare']['namespace'] | container_mirror(install.mirror|default('')) }}
+            rhel_containers: false
+            tag: {{ container_env['container-image-prepare']['tag'] }}
+          includes:
+          - cinder-volume
+          modify_role: tripleo-modify-image
+          modify_append_tag: "-pure"
+          modify_vars:
+            tasks_from: modify_image.yml
+            modify_dir_path: /home/stack/cinder-pure
+          push_destination: true
+
+- name: Show contents of containers-prepare-parameter.yaml after Pure Storage customization
+  command: cat {{ containers_home_dir }}/containers-prepare-parameter.yaml
+  register: cpp_pure_content
+  changed_when: false
+
+- name: Display containers-prepare-parameter.yaml
+  debug:
+    msg: "{{ cpp_pure_content.stdout_lines }}"

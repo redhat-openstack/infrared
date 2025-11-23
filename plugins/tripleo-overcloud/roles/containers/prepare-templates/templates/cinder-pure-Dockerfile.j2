@@ -1,0 +1,13 @@
+FROM {{ container_env['container-image-prepare']['namespace'] | container_mirror(install.mirror|default('')) }}/{{ container_env['container-image-prepare']['prefix'] }}-cinder-volume{{ container_env['container-image-prepare'].get('name_suffix', '') }}:{{ container_env['container-image-prepare']['tag'] }}
+
+LABEL name="{{ container_env['container-image-prepare']['namespace'] | container_mirror(install.mirror|default('')) }}/{{ container_env['container-image-prepare']['prefix'] }}-cinder-volume-pure" \
+      summary="Red Hat OpenStack Platform {{ install.version|default(undercloud_version)|openstack_release }} cinder-volume Pure Storage" \
+      description="Cinder plugin for Pure Storage"
+
+USER root
+
+RUN python3 -m ensurepip --upgrade && \
+    pip3 install purestorage && \
+    pip3 uninstall -y pip
+
+USER cinder
