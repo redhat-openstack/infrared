@@ -1,0 +1,18 @@
+# BEGIN Customize c-vol image for Pure Storage
+    excludes:
+    - cinder-volume
+  - set:
+      name_prefix: {{ customize_cinder_pure_name_prefix }}
+      name_suffix: '{{ customize_cinder_pure_name_suffix }}'
+      namespace: {{ customize_cinder_pure_namespace }}
+      rhel_containers: false
+      tag: {{ customize_cinder_pure_tag }}
+    includes:
+    - cinder-volume
+    modify_role: tripleo-modify-image
+    modify_append_tag: "{{ customize_cinder_pure_append_tag }}"
+    modify_vars:
+      tasks_from: modify_image.yml
+      modify_dir_path: {{ customize_cinder_pure_dockerfile_dir }}
+    push_destination: true
+# END Customize c-vol image for Pure Storage
