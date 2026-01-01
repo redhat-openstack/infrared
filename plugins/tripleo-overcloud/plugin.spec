@@ -316,6 +316,15 @@ subparsers:
                       help: Specifies if ppc64le nodes are being utilized in this overcloud deployment
                       default: false
 
+                  set-boot-device-pxe:
+                      type: Bool
+                      help: |
+                          Set boot device to PXE for all nodes before introspection.
+                          This is useful for baremetal deployments where BIOS boot order
+                          has local disk (RAID) before network boot, which causes nodes
+                          to boot from disk instead of PXE during introspection.
+                      default: false
+
             - title: Overcloud Options
               options:
                   overcloud-predeploy-action:

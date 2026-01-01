@@ -111,6 +111,14 @@
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
 
+      # Custom hook: Set boot device to PXE for all nodes before introspection
+      # This is needed for baremetal deployments where BIOS boot order has RAID first
+      - name: Include boot device PXE setup
+        include_tasks: tasks/set_boot_device_pxe.yml
+        when:
+          - set_boot_device_pxe is defined
+          - set_boot_device_pxe | bool
+
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
             source ~/stackrc

@@ -1,0 +1,35 @@
+---
+# Custom task to set boot device to PXE for all baremetal nodes
+# This runs after node import but before introspection
+# Addresses the issue where BIOS boot order has RAID first, causing nodes to boot from local disk
+
+- name: Set boot device to PXE for all baremetal nodes
+  when:
+    - set_boot_device_pxe is defined
+    - set_boot_device_pxe | bool
+  block:
+    - name: Set PXE boot device for all nodes before introspection
+      shell: |
+        set -eo pipefail
+        source ~/stackrc
+
+        echo "=== Setting boot order to PXE for all nodes before introspection ==="
+
+        # Set boot device for all nodes to PXE with persistent flag
+        for node in $(openstack baremetal node list -f value -c UUID); do
+          echo "Setting boot device for node: $node"
+          openstack baremetal node boot device set "$node" pxe --persistent
+        done
+
+        # Verify boot device is set
+        echo "=== Verifying boot device settings ==="
+        openstack baremetal node list -c UUID -c Name -c "Power State" -c "Provisioning State"
+        for node in $(openstack baremetal node list -f value -c UUID); do
+          openstack baremetal node boot device show "$node"
+        done
+
+        echo "=== Boot order set complete ==="
+      args:
+        executable: /bin/bash
+      tags:
+        - skip_ansible_lint
