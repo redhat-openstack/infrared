@@ -111,6 +111,27 @@
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
             - skip_ansible_lint
 
+      # Disable automated cleaning for baremetal nodes to prevent boot device issues
+      # Automated cleaning clears boot device, causing nodes to fail PXE boot into cleaning ramdisk
+      - name: Disable automated cleaning for baremetal nodes
+        shell: |
+            set -eo pipefail
+            source ~/stackrc
+
+            echo "=== Disabling automated cleaning for all nodes ==="
+            for node in $(openstack baremetal node list -f value -c UUID); do
+              echo "Disabling automated clean for node: $node"
+              openstack baremetal node set --no-automated-clean "$node"
+              # Set boot device to PXE persistently for future operations
+              openstack baremetal node boot device set "$node" pxe --persistent
+            done
+            echo "=== Automated cleaning disabled for all nodes ==="
+        when:
+          - (install.set.boot.device.pxe is defined and install.set.boot.device.pxe | bool) or ('bmc' in groups)
+        tags:
+            - ironic
+            - skip_ansible_lint
+
       - name: set the root device for baremetal nodes (with size hint)
         shell: |
             source ~/stackrc
@@ -181,6 +202,7 @@
             - install.image_direct_deploy != 'iscsi'
             - install.version|default(undercloud_version) | openstack_release >= 13
 
+
       # Because introspection is faulty and tricky especially on baremetals
       # we need to check multiple times if any failure occured. Reasonable time
       # for this process to take is < 10 minutes no matter how many nodes for baremetals.
@@ -193,6 +215,14 @@
       # Sometimes, on OSP10 in particular, introspection succeeds but there are some nodes
       # which are left in a 'manageable' state instead of an 'available' state. For this
       # case we manually force the state to 'manageable'.
+
+      # Custom hook: Set boot device to PXE immediately before introspection
+      # This addresses baremetal deployments where BIOS boot order has RAID/HDD first
+      - name: Debug - Check set_boot_device_pxe parameter value
+        debug:
+          msg: "install.set.boot.device.pxe = {{ install.set.boot.device.pxe | default('UNDEFINED') }}"
+        tags:
+            - skip_ansible_lint
 
       - name: start node introspection
         shell: |
@@ -210,9 +240,41 @@
             while openstack baremetal node list --fields provision_state | grep verifying; do
                sleep 0.5;
             done
+
+            {% if (install.set.boot.device.pxe is defined and install.set.boot.device.pxe | bool) or ('bmc' in groups) %}
+            # Custom introspection for baremetal to preserve boot device settings
+            # Run introspection node-by-node to work around boot device being cleared
+            echo "=== Running custom introspection for baremetal ==="
+            for node in $(openstack baremetal node list -f value -c UUID -c "Provisioning State" | awk '/manageable/ {print $1}'); do
+              echo "Introspecting node: $node"
+              # Power on node to PXE boot (boot device already set to PXE)
+              openstack baremetal node power on "$node"
+              # Start introspection without managing boot
+              openstack baremetal introspection start "$node"
+            done
+
+            # Wait for all introspections to complete
+            echo "Waiting for introspection to complete..."
+            for i in {1..120}; do
+              introspecting=$(openstack baremetal introspection list -f value -c "Finished" | grep -c "False" || true)
+              if [ "$introspecting" -eq 0 ]; then
+                echo "All introspections completed"
+                break
+              fi
+              echo "  Still introspecting $introspecting nodes..."
+              sleep 10
+            done
+
+            # Provide nodes (make them available)
+            for node in $(openstack baremetal node list -f value -c UUID -c "Provisioning State" | awk '/manageable/ {print $1}'); do
+              echo "Providing node: $node"
+              openstack baremetal node provide "$node"
+            done
+            {% else %}
             openstack overcloud node introspect --provide \
             --concurrency {{ install.overcloud.concurrency }} \
             --all-manageable
+            {% endif %}
             {% endif %}
         tags:
             # FIXME(yfried) use "--os-cloud" instead of "source rc" and replace with command
