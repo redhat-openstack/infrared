@@ -30,10 +30,56 @@
           - install.version|openstack_distribution == 'OSP'
           - install.version|openstack_release <= 10
 
+      - name: set default frr container registry facts
+        set_fact:
+          frr_container_registry_url: ""
+          frr_container_registry_user: ""
+          frr_container_registry_pass: ""
+
+      - name: extract frr container registry credentials when bgp is enabled
+        block:
+          - name: read custom_template.yaml from remote
+            slurp:
+              src: ~/custom_template.yaml
+            register: custom_template_file
+
+          - name: parse custom_template.yaml
+            set_fact:
+              custom_template_params: "{{ custom_template_file.content | b64decode | from_yaml }}"
+
+          - name: extract registry URL from ContainerFrrImage
+            set_fact:
+              frr_container_registry_url: "{{ custom_template_params.parameter_defaults.ContainerFrrImage.split('/')[0] }}"
+
+          - name: read containers-prepare-parameter.yaml from remote
+            slurp:
+              src: ~/containers-prepare-parameter.yaml
+            register: container_params_file
+
+          - name: parse containers-prepare-parameter.yaml
+            set_fact:
+              container_params: "{{ container_params_file.content | b64decode | from_yaml }}"
+
+          - name: set frr container registry credentials
+            set_fact:
+              frr_container_registry_user: "{{ (container_params.parameter_defaults.ContainerImageRegistryCredentials.values() | list | first).keys() | list | first }}"
+              frr_container_registry_pass: "{{ (container_params.parameter_defaults.ContainerImageRegistryCredentials.values() | list | first).values() | list | first }}"
+        when: install.bgp.enabled|default(false)|bool
+
       - name: install the undercloud
-        command: bash ~/undercloud_deploy.sh
+        shell: |
+          {% if install.bgp.enabled|default(false)|bool %}
+          echo "BGP enabled, performing podman login to {{ frr_container_registry_url }}"
+          echo "{{ frr_container_registry_pass }}" | podman login -u "{{ frr_container_registry_user }}" --password-stdin "{{ frr_container_registry_url }}"
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Podman login failed"
+            exit 1
+          fi
+          {% endif %}
+          bash ~/undercloud_deploy.sh
         register: undercloud_deployment
         ignore_errors: yes
+        no_log: true
 
       - name: print the last 60 lines of the undercloud installation
         command: tail -n60 undercloud_install.log
