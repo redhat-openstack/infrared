@@ -76,12 +76,14 @@
         - ansible_distribution in ['CentOS', 'RedHat']
         - ansible_distribution_major_version is version("9", "<")
 
-  - name: Install Red Hat CA
+  - name: Install Red Hat CA (using tls-ca role)
+    import_role:
+      name: tls-ca
+    vars:
+      tlsca: "{{ install.tls.ca }}"
     become: yes
-    shell: |
-        update-ca-trust enable
-        curl https://password.corp.redhat.com/RH-IT-Root-CA.crt -o /etc/pki/ca-trust/source/anchors/2015-RH-IT-Root-CA.pem
-        update-ca-trust extract
+    become_user: root
+    when: install.tls.ca is defined and install.tls.ca != ''
 
   - name: Update repos
     become: yes
