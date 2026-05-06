@@ -7,7 +7,11 @@ packages:
     - python3-libselinux
     - python3-libvirt
     - python3-lxml
-    - qemu-kvm
+    # related to OSPCIX-1332
+    # some issue affects qemu-kvm version 21, making `virsh install` commands
+    # fail in the future, we need to check if newer qemu-kvm versions fix that
+    # issue and revert this workaround (remove the pinned version)
+    - qemu-kvm-17:8.2.0-11.el9_4.19
     - virt-install
     - wget
 
