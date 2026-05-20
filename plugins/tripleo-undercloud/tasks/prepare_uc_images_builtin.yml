@@ -310,45 +310,15 @@
             {% endfor %}
       when: install.registry.insecure.containers.parameter is defined
 
-    - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
-      blockinfile:
-        path: "{{ working_dir }}/containers-prepare-parameter.yaml"
-        block: |2
-            ContainerImageRegistryCredentials:
-              {{ install.registry.ceph.namespace }}:
-                {{ install.registry.ceph.username }}: {{ install.registry.ceph.password }}
-      when:
-        - install.get('registry', {}).get('ceph', {}).get('username', '')
-        - install.get('registry', {}).get('ceph', {}).get('password', '')
-        - install.get('registry', {}).get('ceph', {}).get('namespace', '')
-
-    - name: Check whenever Container Registry requires authentication
-      uri:
-        url: "https://{{ registry_host }}/v2/auth"
-        validate_certs: no
-        status_code: 200, 404, 401
-      ignore_errors: true
-      register: _registry_check
-
-    - name: add credentials to container images environment file
-      vars:
-        redhat_username: "{{ install.get('registry').username }}"
-        redhat_password: "{{ install.get('registry').password }}"
-      blockinfile:
-        dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
-        insertafter: EOF
-        block: |2
-            ContainerImageRegistryCredentials:
-              {{ registry_host }}:
-                {{ redhat_username }}: {{ redhat_password }}
-      no_log: True
-      when:
-        - _registry_check['status'] == 401
-        - _registry_check['msg'] is search('Unauthorized')
-        - install.get('registry').username is defined
-        - install.get('registry').password is defined
-
     - block:
+        - name: Check whenever Container Registry requires authentication
+          uri:
+            url: "https://{{ registry_host }}/v2/auth"
+            validate_certs: no
+            status_code: 200, 404, 401
+          ignore_errors: true
+          register: _registry_check
+
         - name: Check whenever Ceph Registry requires authentication
           uri:
             url: "https://{{ ceph_registry_host }}/v2/auth"
@@ -356,30 +326,42 @@
             status_code: 200, 404, 401
           ignore_errors: true
           register: _ceph_registry_check
+          when:
+            - ceph_registry_host != registry_host
+            - not install.get('registry', {}).get('ceph', {}).get('username', '')
+            - not install.get('registry', {}).get('ceph', {}).get('password', '')
 
-        - name: add ceph credentials to container images environment file
-          vars:
-            redhat_username: "{{ install.get('registry').username }}"
-            redhat_password: "{{ install.get('registry').password }}"
+        - name: Set up proper credentials
+          set_fact:
+              registry_username: "{{ install.get('registry').username }}"
+              registry_password: "{{ install.get('registry').password }}"
+              ceph_registry_username: "{{ (install.get('registry', {}).get('ceph', {}).get('username', '') is defined)
+                      | ternary((install.get('registry', {}).get('ceph', {}).get('username', '')),
+                      (install.get('registry', {}).username)) }}"
+              ceph_registry_password: "{{ (install.get('registry', {}).get('ceph', {}).get('password', '') is defined)
+                      | ternary((install.get('registry', {}).get('ceph', {}).get('password', '')),
+                      (install.get('registry', {}).password)) }}"
+              _registry_creds_add: "{{ _registry_check['status'] == 401 and _registry_check['msg'] is search('Unauthorized')
+                      | ternary(true, false) }}"
+              _ceph_creds_add: "{{ (_ceph_registry_check['changed'] and _ceph_registry_check['status'] == 401 and _ceph_registry_check['msg'] is search('Unauthorized')) or
+                      (install.get('registry', {}).get('ceph', {}).get('username', '') is defined and install.get('registry', {}).get('ceph', {}).get('username', '') is defined)
+                      | ternary(true, false) }}"
+
+        - name: Add auth details in containers-prepare-parameter.yaml
           blockinfile:
             dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
-            insertafter: EOF
             block: |2
                 ContainerImageRegistryCredentials:
+                  {% if _registry_creds_add -%}
+                  {{ registry_host }}:
+                    {{ registry_username }}: {{ registry_password }}{% endif %}
+                  {% if _ceph_creds_add %}
                   {{ ceph_registry_host }}:
-                    {{ redhat_username }}: {{ redhat_password }}
-          when:
-            - _registry_check['status'] == 401
-            - _registry_check['msg'] is search('Unauthorized')
-            - install.get('registry').username is defined
-            - install.get('registry').password is defined
-      vars:
-        ceph_registry_host: "{{ ceph_namespace.split('/')[0] }}"
-      when:
-        - not install.get('registry', {}).get('ceph', {}).get('username', '')
-        - not install.get('registry', {}).get('ceph', {}).get('password', '')
-        - not install.get('registry', {}).get('ceph', {}).get('namespace', '')
-        - ceph_registry_host != registry_host
+                    {{ ceph_registry_username }}: {{ ceph_registry_password }}
+                  {% endif %}
+
+      when: ((install.get('registry').username is defined) and (install.get('registry').password is defined)) or
+            ((install.get('registry', {}).get('ceph', {}).get('username', '')) and (install.get('registry', {}).get('ceph', {}).get('password', '')))
 
     - name: Configure container registries for Ceph Dashboard
       when: (target_install_version|openstack_release) >= 16
