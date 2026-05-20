@@ -312,11 +312,13 @@
 
     - name: Add auth details for ceph registry in containers-prepare-parameter.yaml
       blockinfile:
-        path: "{{ working_dir }}/containers-prepare-parameter.yaml"
+        dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
+        insertafter: EOF
         block: |2
             ContainerImageRegistryCredentials:
               {{ install.registry.ceph.namespace }}:
                 {{ install.registry.ceph.username }}: {{ install.registry.ceph.password }}
+      register: _ceph_creds_updated
       when:
         - install.get('registry', {}).get('ceph', {}).get('username', '')
         - install.get('registry', {}).get('ceph', {}).get('password', '')
@@ -338,10 +340,11 @@
         dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
         insertafter: EOF
         block: |2
-            ContainerImageRegistryCredentials:
+            {% if not _ceph_creds_updated.changed %} ContainerImageRegistryCredentials:{% endif %}
               {{ registry_host }}:
                 {{ redhat_username }}: {{ redhat_password }}
-      no_log: True
+      #no_log: True
+      register: _reg_creds_updated
       when:
         - _registry_check['status'] == 401
         - _registry_check['msg'] is search('Unauthorized')
@@ -365,7 +368,7 @@
             dest: "{{ working_dir }}/containers-prepare-parameter.yaml"
             insertafter: EOF
             block: |2
-                ContainerImageRegistryCredentials:
+                {% if not _reg_creds_updated.changed %}ContainerImageRegistryCredentials:{% endif %}
                   {{ ceph_registry_host }}:
                     {{ redhat_username }}: {{ redhat_password }}
           when:
