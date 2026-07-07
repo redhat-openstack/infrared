@@ -143,8 +143,11 @@
           ironic node-set-provision-state {{ item }} provide;
       fi
       {% else %}
-      export PROV_STATE=$(openstack baremetal node show {{ item }} | grep ' provision_state ');
-      if [[ $PROV_STATE != *"available"* ]]; then
+      if [[ $PROV_STATE == *"inspect failed"* ]]; then
+          openstack baremetal node manage {{ item }};
+          sleep 5;
+          openstack baremetal node provide {{ item }};
+      elif [[ $PROV_STATE != *"available"* ]]; then
           openstack baremetal node provide {{ item }};
       fi
       {% endif %}
