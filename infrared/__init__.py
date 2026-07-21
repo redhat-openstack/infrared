@@ -240,5 +240,10 @@ PLUGINS_REGISTRY = {
         'src': 'plugins/virsh',
         'desc': 'Provision virtual machines on a single Hypervisor using libvirt',
         'type': 'provision'
+    },
+    'virtual-external-ceph': {
+        'src': 'https://gitlab.cee.redhat.com/rhos-ci/virtual-external-ceph.git',
+        'desc': 'Deploy a Virtual External Ceph cluster given Virsh deployed cephext nodes',
+        'type': 'install'
     }
 }
