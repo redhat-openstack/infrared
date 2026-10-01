@@ -32,6 +32,11 @@
       retries: 10
       delay: 15
       until: _katello_download is successful
+      when: cdn_creds.registration_command is not defined
+
+    - name: Deploy global registration script for Satellite 6.20
+      command: "{{ cdn_creds.registration_command }}"
+      when: cdn_creds.registration_command is defined
 
     - name: remove hosts from Satellite server
       uri:
@@ -41,7 +46,7 @@
           method: DELETE
           force_basic_auth: yes
           return_content: yes
-          validate_certs: false
+          validate_certs: no
           status_code: [200,201,202]
           body_format: json
       with_items: "{{ groups.all | difference(['localhost']) | difference(['hypervisor']) | difference(('hypervisor' in groups) | ternary(groups.hypervisor, [])) }}"
