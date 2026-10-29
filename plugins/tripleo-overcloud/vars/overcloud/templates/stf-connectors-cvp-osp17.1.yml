@@ -19,6 +19,12 @@ custom_templates:
       driver: amqp
       topic: cloud1-metering
     CeilometerQdrPublishMetrics: true
+    # TripleO Heat Templates (THT) default for ManagePipeline is false;
+    # when false the notifier://
+    # amqp publisher is never written to ceilometer pipeline.yaml and no
+    # meters reach STF. Set explicitly instead of relying on the
+    # enable-legacy-telemetry.yaml side effect.
+    ManagePipeline: true
     RsyslogElasticsearchSetting:
         allowunsignedcerts: 'on'
         server: https://elastic-service-telemetry.apps.leonidcluster.lab.upshift.rdu2.redhat.com
